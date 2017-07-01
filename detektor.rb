@@ -14,7 +14,7 @@ class Detektor
   VALUES = %w{ Volume Last Bid Ask } # you can add as you wish OpenBuyOrders OpenSellOrders
   PUMP_PERCENTAGE = 1.02 # if one second changes that percentage for any VALUES it will warn
   DUMP_PERCENTAGE = 0.93 # if one second changes that percentage for any VALUES it will warn
-  TIMEFRAME_FOR_PUMP_ACCEPTATION = 50 # cycles/seconds, every THAT bot will reset counters
+  TIMEFRAME_FOR_PUMP_ACCEPTATION = 5 # cycles/seconds, every THAT bot will reset counters
   PUMP_CERTAIN_COUNT = 3 # continued seconds for pump to be recognized as real
   DEBUG_MODE = false
   FAVORITE_COINS = /(ANS|DGB|SC|SNT)/
