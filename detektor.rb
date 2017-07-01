@@ -14,7 +14,7 @@ class Detektor
   VALUES = %w{ Volume Last Bid Ask } # you can add as you wish OpenBuyOrders OpenSellOrders
   PUMP_PERCENTAGE = 1.02 # if one second changes that percentage for any VALUES it will warn
   DUMP_PERCENTAGE = 0.93 # if one second changes that percentage for any VALUES it will warn
-  TIMEFRAME_FOR_PUMP_ACCEPTATION = 5 # cycles/seconds, every THAT bot will reset counters
+  TIMEFRAME_FOR_PUMP_ACCEPTATION = 50 # cycles/seconds, every THAT bot will reset counters
   PUMP_CERTAIN_COUNT = 3 # continued seconds for pump to be recognized as real
   DEBUG_MODE = false
   FAVORITE_COINS = /(ANS|DGB|SC|SNT)/
@@ -26,7 +26,7 @@ class Detektor
 
   class << self
 
-    attr_accessor :previous_data, :current_data, :changes, :pump_market_count
+    attr_accessor :previous_data, :current_data, :changes, :pump_market_count, :order_track
 
     def watch
       log_debug "Reading first info..."
@@ -46,6 +46,7 @@ class Detektor
         warn_changes_detected
         keep_track_of_pump_for_next_second
         warn_of_definitive_pump_detected
+        verify_if_orders_won
         @previous_data = res
 
         wait_until { Time.now - fetch_time >= 1 } # try to make sure we do exactly one second, no less
@@ -145,6 +146,13 @@ class Detektor
     end
 
     def make_order(market)
+      @order_track ||= {}
+      @order_track[market] ||= {}
+
+      return if order_track[market]["ban_until"] && order_track[market]["ban_until"] >= (Time.now - 3600)
+      log "Making order for #{market}"
+      @order_track[market]["ban_until"] = Time.now
+      @order_track[market]["check_again"] = Time.now + 5
       price = last_price_of_market(market)
       buy_when = price * BUY_PRICE
       sell_when = price * SELL_PRICE
@@ -154,6 +162,13 @@ class Detektor
       reward = currencies_to_buy * sell_when * 0.9975 # 0.0025% fee
       profit = reward - cost
       log "[AUTOORDER] #{market} [BUY: price #{fts buy_when} cost #{fts cost}] [SELL price #{fts sell_when} #{fts reward}] [PROFIT: #{fts profit}]"
+    end
+
+    def verify_if_orders_won
+      return unless @order_track
+      @order_track.select{|mk, v| v["check_again"] > Time.now}.each do |mk, v|
+        log "[AUTOORDER] Price check #{mk} after #{v["check_again"] - Time.now} #{fts last_price_of_market(mk)}"
+      end
     end
 
     def public_get(url, params = {})
