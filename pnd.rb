@@ -4,12 +4,15 @@ require 'base64'
 require 'uri'
 require 'net/http'
 require 'openssl'
+require 'time'
 
 # class Client
 
 HOST="https://bittrex.com/api/v1.1"
 
+#   z = client.pnd(0.01, 0.998, 1.01, 'ANS')
 
+class Client
   def connection
     @connection ||= Faraday.new(:url => HOST) do |faraday|
       faraday.request  :url_encoded
@@ -20,7 +23,7 @@ HOST="https://bittrex.com/api/v1.1"
   def get(path, params = {}, headers = {})
     nonce = Time.now.to_i
     uri = URI("#{HOST}/#{path}")
-    uri.query = URI.encode_www_form(params.merge(apikey: KEY, nonce: nonce))
+    uri.query = URI.encode_www_form(params.merge(apikey: ENV['KEY'], nonce: nonce))
     url = uri.to_s
 
     req = Net::HTTP::Get.new(uri.to_s)
@@ -39,7 +42,7 @@ HOST="https://bittrex.com/api/v1.1"
   end
 
   def signature(url)
-    OpenSSL::HMAC.hexdigest('sha512', SECRET, url)
+    OpenSSL::HMAC.hexdigest('sha512', ENV['SECRET'], url)
   end
 
   def currency_price(currency = 'ANS')
@@ -79,6 +82,25 @@ HOST="https://bittrex.com/api/v1.1"
     get_orders.each {|order| cancel_order(order["OrderUuid"])}
   end
 
+  #  client.watch({currencies: %w{ ANS SC DGB EMC2 SNT }, cicles: 20})
+  def watch(opts) # watches currencies forever
+    cicles = opts[:cicles]
+    _cicles = 0
+    currencies = opts[:currencies]
+    currs = currencies.map{|cur| [cur, {}]}.to_h
+    puts "Watching on currencies #{opts['currencies']}"
+    currencies.each { |cur| currs[cur][:initial] = currency_price(cur) }
+    while(cicles >= _cicles) do
+      currencies.each do |cur|
+        price = currency_price(cur)
+        currs[cur][:last] = price
+        currs[cur][:change] = (1- (price / currs[cur][:initial]).round(2))
+      end
+      puts currs.map{|cur, vals| "#{cur}: #{vals[:last]} (#{vals[:change].round(2) * 100}%)"}.join(" | ")
+      _cicles += 1
+    end
+  end
+
   def pnd(amount, buy_when, sell_when, currency)
     start_time = Time.now
     amount = 0.01 # BTC
@@ -113,9 +135,6 @@ HOST="https://bittrex.com/api/v1.1"
       puts "Waiting for order to complete... current_price is #{price}, sold set at #{sell_at_price}, coins_remaining = #{res["QuantityRemaining"]}"
       sleep 0.5
     end
-    puts "SOLD! profits = #{((currencies_to_buy * sell_at_price) - (currencies_to_buy * buy_at_price)) * 0.994}" # 0.2 for buying 0.2 for selling
+    puts "SOLD! profits = #{((currencies_to_buy * sell_at_price * 0.998) - (currencies_to_buy * buy_at_price * 1.002))}" # 0.2 for buying 0.2 for selling
   end
-
-  z = pnd(0.01, 1.001, 1.005, 'ANS')
-
-
+end
