@@ -88,15 +88,16 @@ class Client
     _cicles = 0
     currencies = opts[:currencies]
     currs = currencies.map{|cur| [cur, {}]}.to_h
-    puts "Watching on currencies #{opts['currencies']}"
+    log "Watching on currencies #{opts['currencies']}"
     currencies.each { |cur| currs[cur][:initial] = currency_price(cur) }
+    log currs.map{|cur, vals| "#{cur}: #{fts vals[:initial]} (0.00%)"}.join(" | ")
     while(cicles >= _cicles) do
       currencies.each do |cur|
         price = currency_price(cur)
         currs[cur][:last] = price
-        currs[cur][:change] = (1- (price / currs[cur][:initial]).round(2))
+        currs[cur][:change] = (1 - (currs[cur][:initial] / price))
       end
-      puts currs.map{|cur, vals| "#{cur}: #{vals[:last]} (#{vals[:change].round(2) * 100}%)"}.join(" | ")
+      log currs.map{|cur, vals| "#{cur}: #{fts vals[:last]} (#{"%1.2f" % (vals[:change] * 100)}%)"}.join(" | ")
       _cicles += 1
     end
   end
@@ -107,34 +108,45 @@ class Client
     currency_to_buy = currency # currency
 
     current_price = currency_price(currency_to_buy)
-    buy_at_price = current_price * buy_when
-    currencies_to_buy = amount / buy_at_price
+    buy_at_price = (current_price * buy_when).round(8)
+    currencies_to_buy = (amount / buy_at_price).round(8)
 
     # make buy order
-    puts "Current price is #{current_price}, set order for #{currencies_to_buy} at #{buy_at_price}, took #{Time.now - start_time} ms"
+    log "Current price is #{fts current_price}"
+    log "Putting buy order for #{fts currencies_to_buy} #{currency} at #{fts buy_at_price} BTC, took #{Time.now - start_time} ms"
     order = market_buy_limit(currency_to_buy, currencies_to_buy, buy_at_price)
-    puts "Order id is #{order["uuid"]}"
+    log "Order id is #{order["uuid"]}"
     # wait
     while (res = get_order(order["uuid"]))["Closed"].nil?
       price = currency_price(currency_to_buy)
-      puts "Waiting for order to complete... current_price is #{price}, bought set at #{buy_at_price}, coins_remaining = #{res["QuantityRemaining"]}"
+      log "Waiting for buy order to complete... current_price is #{price.round(8)}, bought set at #{fts buy_at_price}"
       sleep 0.5
     end
 
-    puts "BOUGHT! Now selling..."
+    log "BOUGHT! Now selling..."
 
     # make sell order
-    sell_at_price = current_price * sell_when
-    puts "Putting sell order for #{currencies_to_buy} at #{sell_at_price}"
+    sell_at_price = (current_price * sell_when).round(8)
+    log "Putting sell order for #{fts currencies_to_buy} #{currency} at #{fts sell_at_price} BTC"
     order = market_sell_limit(currency, currencies_to_buy, sell_at_price)
-    puts "Order id is #{order["uuid"]}"
+    log "Order id is #{order["uuid"]}"
 
     # wait
     while (res = get_order(order["uuid"]))["Closed"].nil?
       price = currency_price(currency_to_buy)
-      puts "Waiting for order to complete... current_price is #{price}, sold set at #{sell_at_price}, coins_remaining = #{res["QuantityRemaining"]}"
+      log "Waiting for sell order to complete... current_price is #{price.round(8)}, sold set at #{fts sell_at_price}"
       sleep 0.5
     end
-    puts "SOLD! profits = #{((currencies_to_buy * sell_at_price * 0.998) - (currencies_to_buy * buy_at_price * 1.002))}" # 0.2 for buying 0.2 for selling
+    cost = currencies_to_buy * buy_at_price * 1.0025 # 0.0025% fee
+    reward = currencies_to_buy * sell_at_price * 0.9975 # 0.0025% fee
+    log "SOLD! profits = #{fts(reward - cost)}"
+  end
+
+  def fts(n)
+    "%1.8f" % n
+  end
+
+  def log(str)
+    puts "[#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}] #{str}"
   end
 end
