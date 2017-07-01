@@ -13,6 +13,7 @@ HOST="https://bittrex.com/api/v1.1"
 #   z = client.pnd(0.01, 0.998, 1.01, 'ANS')
 
 class Client
+  attr_accessor :buy_count
   def connection
     @connection ||= Faraday.new(:url => HOST) do |faraday|
       faraday.request  :url_encoded
@@ -102,7 +103,9 @@ class Client
     end
   end
 
-  def pnd(amount, buy_when, sell_when, currency)
+  def pnd(amount, buy_when, sell_when, currency, recursive = false)
+    @buy_count ||= 0
+    @buy_count += 1
     start_time = Time.now
     amount = 0.01 # BTC
     currency_to_buy = currency # currency
@@ -119,7 +122,7 @@ class Client
     # wait
     while (res = get_order(order["uuid"]))["Closed"].nil?
       price = currency_price(currency_to_buy)
-      log "Waiting for buy order to complete... current_price is #{price.round(8)}, bought set at #{fts buy_at_price}"
+      log "[#{buy_count}] Waiting for buy order to complete... current_price is #{price.round(8)}, bought set at #{fts buy_at_price}"
       sleep 0.5
     end
 
@@ -134,12 +137,14 @@ class Client
     # wait
     while (res = get_order(order["uuid"]))["Closed"].nil?
       price = currency_price(currency_to_buy)
-      log "Waiting for sell order to complete... current_price is #{price.round(8)}, sold set at #{fts sell_at_price}"
+      log "[#{buy_count}] Waiting for sell order to complete... current_price is #{price.round(8)}, sold set at #{fts sell_at_price}"
       sleep 0.5
     end
     cost = currencies_to_buy * buy_at_price * 1.0025 # 0.0025% fee
     reward = currencies_to_buy * sell_at_price * 0.9975 # 0.0025% fee
-    log "SOLD! profits = #{fts(reward - cost)}"
+    profit = reward - cost
+    log "SOLD! profit = #{fts(profit)}"
+    pnd(amount, buy_when, sell_when, currency, recursive) if recursive
   end
 
   def fts(n)
