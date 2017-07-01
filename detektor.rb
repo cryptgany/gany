@@ -1,3 +1,5 @@
+#          require './detektor'; Detektor.watch
+
 require 'json'
 require 'uri'
 require 'net/http'
@@ -7,16 +9,20 @@ require 'time'
 HOST="https://bittrex.com/api/v1.1"
 #   z = Detektor.watch(0.01, 0.998, 1.01, 'ANS')
 
-#          require './detektor'; Detektor.watch
 #          z = 
 class Detektor
   VALUES = %w{ Volume Last Bid Ask } # you can add as you wish OpenBuyOrders OpenSellOrders
   PUMP_PERCENTAGE = 1.02 # if one second changes that percentage for any VALUES it will warn
   DUMP_PERCENTAGE = 0.93 # if one second changes that percentage for any VALUES it will warn
+  TIMEFRAME_FOR_PUMP_ACCEPTATION = 5 # cycles/seconds, every THAT bot will reset counters
   PUMP_CERTAIN_COUNT = 3 # continued seconds for pump to be recognized as real
   DEBUG_MODE = false
   FAVORITE_COINS = /(ANS|DGB|SC|SNT)/
   USE_FAVORITE_COINS_ONLY = false
+
+  BUY_PRICE = 1.01
+  SELL_PRICE = 1.1
+  AMOUNT = 0.1
 
   class << self
 
@@ -64,6 +70,14 @@ class Detektor
       @current_data.reject! {|d| d["MarketName"] !~ /^BTC/}
     end
 
+    def data_for_market(market)
+      @current_data.select{|x| x["MarketName"] == market}[0]
+    end
+
+    def last_price_of_market(market)
+      data_for_market(market)['Last']
+    end
+
     def detect_changes
       leave_only_favorite_coins
       clean_volume_0_coins
@@ -100,7 +114,7 @@ class Detektor
           str = ""
           detection.each do |dtype, values|
             change_values = values.map {|val, chg| "#{val}(#{pts (chg[1] / chg[0]).round(2)}%): #{fts chg[0]} vs #{fts chg[1]}"}.join(" | ")
-            str = "[#{dtype} on #{market}]: #{change_values}"
+            str = "[#{dtype.upcase} on #{market}]: #{change_values}"
           end
           log str
         end
@@ -108,15 +122,38 @@ class Detektor
     end
 
     def keep_track_of_pump_for_next_second
-      pump_markets = @changes.select{|_, chg| chg["pump"] }.map{|market| market}
-      pump_market_count.reject!{|mk,_| !pump_markets.include? mk } # reject any non_continuous pump
-      pump_markets.each { |market, _| pump_market_count[market] ||= 0; pump_market_count[market] += 1}
+      pump_markets = @changes.select{|_, chg| chg["pump"] }.map{|market, _| market}
+      pump_market_count.select{|mk, _| !pump_markets.include?(mk) }.each{|mk, values| values["life"] -= 1}
+      pump_market_count.reject!{|mk, v| !pump_markets.include?(mk) && v["life"] <= 0 } # reject any non_continuous pump
+      pump_markets.each do |market, _|
+        pump_market_count[market] ||= {}
+        pump_market_count[market]["count"] ||= 0
+        pump_market_count[market]["count"] += 1
+        pump_market_count[market]["life"] = TIMEFRAME_FOR_PUMP_ACCEPTATION
+      end
     end
 
     def warn_of_definitive_pump_detected
-      detected = pump_market_count.select{|_,v| v >= PUMP_CERTAIN_COUNT }.map{|m,_| m}.join(" | ")
-      log "cound: #{pump_market_count}" if pump_market_count.any?
+      pumped_markets = pump_market_count.select{|_,v| v["count"] >= PUMP_CERTAIN_COUNT }.map{|m,_| m}
+
+      detected = pumped_markets.join(" | ")
+
       log "DEFINITIVE PUMP DETECTED #{detected}" if detected != ""
+      pumped_markets.each do |pumped_market|
+        make_order(pumped_market)
+      end
+    end
+
+    def make_order(market)
+      price = last_price_of_market(market)
+      buy_when = price * BUY_PRICE
+      sell_when = price * SELL_PRICE
+      currencies_to_buy = (AMOUNT / buy_when).round(8)
+
+      cost = currencies_to_buy * buy_when * 1.0025 # 0.0025% fee
+      reward = currencies_to_buy * sell_when * 0.9975 # 0.0025% fee
+      profit = reward - cost
+      log "[AUTOORDER] #{market} [BUY: price #{fts buy_when} cost #{fts cost}] [SELL price #{fts sell_when} #{fts reward}] [PROFIT: #{fts profit}]"
     end
 
     def public_get(url, params = {})
