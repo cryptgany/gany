@@ -74,6 +74,7 @@ class Client
   def cancel_all
     get_orders.each {|order| cancel_order(order["OrderUuid"])}
   end
+  alias_method :x, :cancel_all
 
   #  client.watch({currencies: %w{ ANS SC DGB EMC2 SNT }, cicles: 20})
   def watch(opts) # watches currencies forever
@@ -114,7 +115,7 @@ class Client
     # wait
     while (res = get_order(order["uuid"]))["Closed"].nil?
       price = currency_price(currency_to_buy)
-      log "[#{buy_count}] Waiting for buy order to complete... current_price is #{price.round(8)}, bought set at #{fts buy_at_price}"
+      log "[#{buy_count}] Waiting for buy order to complete... current_price is #{fts price.round(8)}, bought set at #{fts buy_at_price}"
       sleep 0.5
     end
 
@@ -129,7 +130,7 @@ class Client
     # wait
     while (res = get_order(order["uuid"]))["Closed"].nil?
       price = currency_price(currency_to_buy)
-      log "[#{buy_count}] Waiting for sell order to complete... current_price is #{price.round(8)}, sold set at #{fts sell_at_price}"
+      log "[#{buy_count}] Waiting for sell order to complete... current_price is #{fts price.round(8)}, sold set at #{fts sell_at_price}"
       sleep 0.5
     end
     cost = currencies_to_buy * buy_at_price * 1.0025 # 0.0025% fee

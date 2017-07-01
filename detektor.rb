@@ -11,21 +11,23 @@ HOST="https://bittrex.com/api/v1.1"
 #          z = 
 class Detektor
   VALUES = %w{ Volume Last Bid Ask } # you can add as you wish OpenBuyOrders OpenSellOrders
-  PUMP_PERCENTAGE = 1.05 # if one second changes that percentage for any VALUES it will warn
-  DUMP_PERCENTAGE = 0.95 # if one second changes that percentage for any VALUES it will warn
+  PUMP_PERCENTAGE = 1.02 # if one second changes that percentage for any VALUES it will warn
+  DUMP_PERCENTAGE = 0.93 # if one second changes that percentage for any VALUES it will warn
+  PUMP_CERTAIN_COUNT = 3 # continued seconds for pump to be recognized as real
   DEBUG_MODE = false
   FAVORITE_COINS = /(ANS|DGB|SC|SNT)/
   USE_FAVORITE_COINS_ONLY = false
 
   class << self
 
-    attr_accessor :previous_data, :current_data, :changes
+    attr_accessor :previous_data, :current_data, :changes, :pump_market_count
 
     def watch
       log_debug "Reading first info..."
       res = public_get("#{HOST}/public/getmarketsummaries")["result"]
       log_debug "Got it, going for cycle"
       @previous_data = res
+      @pump_market_count = {}
 
       while (true) do # every second, get market information
         fetch_time = Time.now
@@ -36,6 +38,8 @@ class Detektor
         log_debug "Got it, detecting changes"
         detect_changes
         warn_changes_detected
+        keep_track_of_pump_for_next_second
+        warn_of_definitive_pump_detected
         @previous_data = res
 
         wait_until { Time.now - fetch_time >= 1 } # try to make sure we do exactly one second, no less
@@ -101,6 +105,18 @@ class Detektor
           log str
         end
       end
+    end
+
+    def keep_track_of_pump_for_next_second
+      pump_markets = @changes.select{|_, chg| chg["pump"] }.map{|market| market}
+      pump_market_count.reject!{|mk,_| !pump_markets.include? mk } # reject any non_continuous pump
+      pump_markets.each { |market, _| pump_market_count[market] ||= 0; pump_market_count[market] += 1}
+    end
+
+    def warn_of_definitive_pump_detected
+      detected = pump_market_count.select{|_,v| v >= PUMP_CERTAIN_COUNT }.map{|m,_| m}.join(" | ")
+      log "cound: #{pump_market_count}" if pump_market_count.any?
+      log "DEFINITIVE PUMP DETECTED #{detected}" if detected != ""
     end
 
     def public_get(url, params = {})
