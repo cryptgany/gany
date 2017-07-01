@@ -1,4 +1,3 @@
-require 'faraday'
 require 'json'
 require 'base64'
 require 'uri'
@@ -14,13 +13,6 @@ HOST="https://bittrex.com/api/v1.1"
 
 class Client
   attr_accessor :buy_count
-  def connection
-    @connection ||= Faraday.new(:url => HOST) do |faraday|
-      faraday.request  :url_encoded
-      faraday.adapter  Faraday.default_adapter
-    end
-  end
-
   def get(path, params = {}, headers = {})
     nonce = Time.now.to_i
     uri = URI("#{HOST}/#{path}")
