@@ -13,7 +13,7 @@ class Detektor
   VALUES = %w{ Last Bid } # you can add as you wish Volume Ask OpenBuyOrders OpenSellOrders
   PUMP_PERCENTAGE = 1.03 # if one second changes that percentage for any VALUES it will warn
   DUMP_PERCENTAGE = 0.93 # if one second changes that percentage for any VALUES it will warn
-  TIMEFRAME_FOR_PUMP_ACCEPTATION = 3 # cycles/seconds, every THAT bot will reset counters
+  TIMEFRAME_FOR_PUMP_ACCEPTATION = 5 # cycles/seconds, every THAT bot will reset counters
   PUMP_CERTAIN_COUNT = 3 # continued seconds for pump to be recognized as real
   DEBUG_MODE = false
   FAVORITE_COINS = /(ANS|DGB|SC|SNT)/
@@ -21,14 +21,14 @@ class Detektor
   USE_REAL_ORDERS = true
   ORDER_SELL_STRATEGY = :time # fixed_price | time
   ORDER_SELL_TIME_STRATEGY_TIME = 10 # seconds for time strategy
-  AUTOTRADER_AMOUNT = 0.001 # btc
-  AUTOTRADER_BUY_PRICE = 1.01
-  AUTOTRADER_SELL_PRICE = 1.1
-  AMOUNT = 0.001 # BTC
+  AUTOTRADER_AMOUNT = 0.05 # btc
+  AUTOTRADER_BUY_PRICE = 1.01 # percentage
+  AUTOTRADER_SELL_PRICE = 1.1 # percentage
+  AUTOTRADER_MAX_AMOUNT = 0.1 # max btc to use in orders
 
   class << self
 
-    attr_accessor :previous_data, :current_data, :changes, :pump_market_count, :order_track
+    attr_accessor :previous_data, :current_data, :changes, :pump_market_count, :order_track, :autotrader_max_amount
 
     def watch
       log_debug "Reading first info..."
@@ -36,6 +36,7 @@ class Detektor
       log_debug "Got it, going for cycle"
       @previous_data = res
       @pump_market_count = {}
+      @autotrader_max_amount = AUTOTRADER_MAX_AMOUNT
 
       while (true) do # every second, get market information
         fetch_time = Time.now
@@ -164,9 +165,14 @@ class Detektor
       price = last_price_of_market(market)
       buy_when = price * AUTOTRADER_BUY_PRICE
       sell_when = price * AUTOTRADER_SELL_PRICE
-      currencies_to_buy = (AMOUNT / buy_when).round(8)
+      currencies_to_buy = (AUTOTRADER_AMOUNT / buy_when).round(8)
 
       if USE_REAL_ORDERS
+        if @autotrader_max_amount < AUTOTRADER_AMOUNT
+          log "[AUTOTRADER] INSUFICIENT FUNDS"
+          return
+        end
+        @autotrader_max_amount -= AUTOTRADER_AMOUNT
         if ORDER_SELL_STRATEGY == :time
           log "[AUTOTRADER] Placing real order [TIME STRATEGY]"
           Thread::new{
