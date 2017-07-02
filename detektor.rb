@@ -204,7 +204,7 @@ class Detektor
     def verify_if_orders_won
       return unless @order_track
       @order_track.select{|mk, v| v["check_again"] > Time.now}.each do |mk, v|
-        log "[AUTOTRADER] Price check #{mk} after #{v["check_again"] - Time.now} #{fts last_price_of_market(mk)}"
+        log "[AUTOTRADER] Price check #{mk} after #{5 - (v["check_again"] - Time.now)} #{fts last_price_of_market(mk)}"
       end
     end
 

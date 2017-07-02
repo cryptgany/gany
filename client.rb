@@ -1,8 +1,12 @@
 #   require './client'; Client.pnd_fixed_price(0.001, Client.currency_price("BTC-ANS"), Client.currency_price("BTC-ANS"), 'BTC-ANS')
 
-#   require './client'; Client.pnd_time_based(0.001, Client.currency_price("BTC-ANS"), 10, 'BTC-ANS')
+#   require './client'; Client.pnd_in_time(0.1, 0.9, 3, "BTC-ANS")
 
-#   require './client'; Client.pnd(0.001, 0.98, 1.02, 'BTC-XEL', true)
+#   require './client'; Client.pnd(0.4, 1.2, 1.02, 'BTC-XEL', true)
+
+# REAL USE CASE FOR MANUAL PUMP
+# require './client';
+# Client.pnd_in_time(0.1, 1.3, 15, "BTC-ANS")
 
 require 'json'
 require 'base64'
@@ -80,6 +84,12 @@ class Client
       get_orders.each {|order| cancel_order(order["OrderUuid"])}
     end
     alias_method :x, :cancel_all
+
+    def pnd_in_time(amount, buy_at, wait_seconds, market)
+      current_price = currency_price(market)
+      buy_price = (current_price * buy_at).round(8)
+      pnd_time_based(amount, buy_price, wait_seconds, market)
+    end
 
     def pnd_time_based(amount, buy_price, wait_seconds, market) # buys, waits time, sells
       @buy_count ||= 0
