@@ -25,10 +25,11 @@ class Detektor
   AUTOTRADER_BUY_PRICE = 1.01 # percentage
   AUTOTRADER_SELL_PRICE = 1.1 # percentage
   AUTOTRADER_MAX_AMOUNT = 0.002 # max btc to use in orders
+  AUTOTRADER_MAX_TRADES = 10 # total maximum to use for any pump encountered
 
   class << self
 
-    attr_accessor :previous_data, :current_data, :changes, :pump_market_count, :order_track, :autotrader_max_amount
+    attr_accessor :previous_data, :current_data, :changes, :pump_market_count, :order_track, :autotrader_max_amount, :autotrader_max_trades
 
     def watch
       log_debug "Reading first info..."
@@ -37,6 +38,7 @@ class Detektor
       @previous_data = res
       @pump_market_count = {}
       @autotrader_max_amount = AUTOTRADER_MAX_AMOUNT
+      @autotrader_max_trades = AUTOTRADER_MAX_TRADES
 
       while (true) do # every second, get market information
         fetch_time = Time.now
@@ -172,6 +174,11 @@ class Detektor
           log "[AUTOTRADER] INSUFICIENT FUNDS"
           return
         end
+        if @autotrader_max_trades <= 0
+          log "[AUTOTRADER] MAX ORDERS LIMIT REACHED"
+          return
+        end
+        @autotrader_max_trades -= 1
         @autotrader_max_amount -= AUTOTRADER_AMOUNT
         if ORDER_SELL_STRATEGY == :time
           log "[AUTOTRADER] Placing real order [TIME STRATEGY]"
