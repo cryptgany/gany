@@ -1,3 +1,5 @@
+#   require './client'; Client.pnd_fixed_price(0.001, Client.currency_price("BTC-ANS"), Client.currency_price("BTC-ANS"), 'BTC-ANS')
+
 #   require './client'; Client.pnd_time_based(0.001, Client.currency_price("BTC-ANS"), 10, 'BTC-ANS')
 
 #   require './client'; Client.pnd(0.001, 0.98, 1.02, 'BTC-XEL', true)
@@ -9,10 +11,9 @@ require 'net/http'
 require 'openssl'
 require 'time'
 
-HOST="https://bittrex.com/api/v1.1"
-
 
 class Client
+  HOST="https://bittrex.com/api/v1.1"
   class << self
     attr_accessor :buy_count
     def get(path, params = {}, headers = {})
@@ -26,7 +27,6 @@ class Client
       response = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => true) {|http|
         http.request(req)
       }
-      # [JSON.parse(response.body)["result"], response]
       JSON.parse(response.body)["result"]
     end
 
@@ -88,7 +88,7 @@ class Client
 
       currencies_to_buy = (amount / buy_price).round(8)
       # make buy order
-      log "Putting buy order for #{fts currencies_to_buy} #{market} at #{fts buy_price} BTC, took #{fts Time.now - start_time} ms"
+      log "Placing buy order for #{fts currencies_to_buy} #{market} at #{fts buy_price} BTC, took #{fts Time.now - start_time} ms"
       order = market_buy_limit(market, currencies_to_buy, buy_price)
       log "Order id is #{order["uuid"]}"
 
@@ -104,7 +104,7 @@ class Client
       else
         # make sell order, take profit
         sell_price = currency_price(market)
-        log "Putting sell order for #{fts currencies_to_buy} #{market} at #{fts sell_price} BTC"
+        log "Placing sell order for #{fts currencies_to_buy} #{market} at #{fts sell_price} BTC"
         order = market_sell_limit(market, currencies_to_buy, sell_price)
         log "Order id is #{order["uuid"]}"
 
@@ -121,11 +121,41 @@ class Client
       end
     end
 
+    def pnd_fixed_price(amount, buy_price, sell_price, market)
+      start_time = Time.now
+      currencies_to_buy = (amount / buy_price).round(8)
+      log "Placing buy order for #{fts currencies_to_buy} #{market} at #{fts buy_price} BTC, took #{fts Time.now - start_time} ms"
+      order = market_buy_limit(market, currencies_to_buy, buy_price)
+      log "Order id is #{order["uuid"]}"
+      # wait
+      while (res = get_order(order["uuid"]))["Closed"].nil?
+        price = currency_price(market)
+        log "Waiting for buy order to complete... current_price is #{fts price.round(8)}, bought set at #{fts buy_price}"
+        sleep 0.5
+      end
+      log "BOUGHT! Now selling..."
+
+      # make sell order
+      log "Placing sell order for #{fts currencies_to_buy} #{market} at #{fts sell_price} BTC"
+      order = market_sell_limit(market, currencies_to_buy, sell_price)
+      log "Order id is #{order["uuid"]}"
+
+      # wait
+      while (res = get_order(order["uuid"]))["Closed"].nil?
+        price = currency_price(market)
+        log "Waiting for sell order to complete... current_price is #{fts price.round(8)}, sold set at #{fts sell_price}"
+        sleep 0.5
+      end
+      cost = currencies_to_buy * buy_price * 1.0025 # 0.0025% fee
+      reward = currencies_to_buy * sell_price * 0.9975 # 0.0025% fee
+      profit = reward - cost
+      log "SOLD! PROFIT = #{fts(profit)}"
+    end
+
     def pnd(amount, buy_when, sell_when, market, recursive = false)
       @buy_count ||= 0
       @buy_count += 1
       start_time = Time.now
-      amount = 0.001 # BTC
 
       current_price = currency_price(market)
       buy_at_price = (current_price * buy_when).round(8)
@@ -133,7 +163,7 @@ class Client
 
       # make buy order
       log "Current price is #{fts current_price}"
-      log "Putting buy order for #{fts currencies_to_buy} #{market} at #{fts buy_at_price} BTC, took #{fts Time.now - start_time} ms"
+      log "Placing buy order for #{fts currencies_to_buy} #{market} at #{fts buy_at_price} BTC, took #{fts Time.now - start_time} ms"
       order = market_buy_limit(market, currencies_to_buy, buy_at_price)
       log "Order id is #{order["uuid"]}"
       # wait
@@ -147,7 +177,7 @@ class Client
 
       # make sell order
       sell_at_price = (current_price * sell_when).round(8)
-      log "Putting sell order for #{fts currencies_to_buy} #{market} at #{fts sell_at_price} BTC"
+      log "Placing sell order for #{fts currencies_to_buy} #{market} at #{fts sell_at_price} BTC"
       order = market_sell_limit(market, currencies_to_buy, sell_at_price)
       log "Order id is #{order["uuid"]}"
 
