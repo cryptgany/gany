@@ -7,14 +7,12 @@ require 'time'
 
 # class Client
 HOST="https://bittrex.com/api/v1.1"
-#   z = Detektor.watch(0.01, 0.998, 1.01, 'ANS')
 
-#          z = 
 class Detektor
-  VALUES = %w{ Volume Last Bid Ask } # you can add as you wish OpenBuyOrders OpenSellOrders
-  PUMP_PERCENTAGE = 1.02 # if one second changes that percentage for any VALUES it will warn
+  VALUES = %w{ Last Bid } # you can add as you wish Volume Ask OpenBuyOrders OpenSellOrders
+  PUMP_PERCENTAGE = 1.03 # if one second changes that percentage for any VALUES it will warn
   DUMP_PERCENTAGE = 0.93 # if one second changes that percentage for any VALUES it will warn
-  TIMEFRAME_FOR_PUMP_ACCEPTATION = 5 # cycles/seconds, every THAT bot will reset counters
+  TIMEFRAME_FOR_PUMP_ACCEPTATION = 3 # cycles/seconds, every THAT bot will reset counters
   PUMP_CERTAIN_COUNT = 3 # continued seconds for pump to be recognized as real
   DEBUG_MODE = false
   FAVORITE_COINS = /(ANS|DGB|SC|SNT)/
@@ -39,7 +37,13 @@ class Detektor
         fetch_time = Time.now
 
         log_debug "Reading current info..."
-        res = public_get("#{HOST}/public/getmarketsummaries")["result"]
+        result = public_get("#{HOST}/public/getmarketsummaries")
+        unless result["success"]
+          log "[ERROR] #{result["message"]}"
+          raise "ERROR"
+        end
+
+        res = result["result"]
         @current_data = res
         log_debug "Got it, detecting changes"
         detect_changes
@@ -61,8 +65,8 @@ class Detektor
 
     def clean_volume_0_coins
       log_debug "Cleaning volume 0 coins"
-      @previous_data.reject!{|d| d["Volume"] <= 0}
-      @current_data.reject!{|d| d["Volume"] <= 0}
+      @previous_data.reject!{|d| d["Volume"].nil? || d["Volume"] <= 0}
+      @current_data.reject!{|d| d["Volume"].nil? || d["Volume"] <= 0}
     end
 
     def leave_only_btc_markets # optional?
