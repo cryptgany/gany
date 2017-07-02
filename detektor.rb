@@ -4,11 +4,12 @@ require 'json'
 require 'uri'
 require 'net/http'
 require 'time'
+require './client'
 
 # class Client
-HOST="https://bittrex.com/api/v1.1"
 
 class Detektor
+  HOST="https://bittrex.com/api/v1.1"
   VALUES = %w{ Last Bid } # you can add as you wish Volume Ask OpenBuyOrders OpenSellOrders
   PUMP_PERCENTAGE = 1.03 # if one second changes that percentage for any VALUES it will warn
   DUMP_PERCENTAGE = 0.93 # if one second changes that percentage for any VALUES it will warn
@@ -17,10 +18,13 @@ class Detektor
   DEBUG_MODE = false
   FAVORITE_COINS = /(ANS|DGB|SC|SNT)/
   USE_FAVORITE_COINS_ONLY = false
-
-  BUY_PRICE = 1.01
-  SELL_PRICE = 1.1
-  AMOUNT = 0.1
+  USE_REAL_ORDERS = true
+  ORDER_SELL_STRATEGY = :time # fixed_price | time
+  ORDER_SELL_TIME_STRATEGY_TIME = 10 # seconds for time strategy
+  AUTOTRADER_AMOUNT = 0.001 # btc
+  AUTOTRADER_BUY_PRICE = 1.01
+  AUTOTRADER_SELL_PRICE = 1.1
+  AMOUNT = 0.001 # BTC
 
   class << self
 
@@ -158,20 +162,34 @@ class Detektor
       @order_track[market]["ban_until"] = Time.now
       @order_track[market]["check_again"] = Time.now + 5
       price = last_price_of_market(market)
-      buy_when = price * BUY_PRICE
-      sell_when = price * SELL_PRICE
+      buy_when = price * AUTOTRADER_BUY_PRICE
+      sell_when = price * AUTOTRADER_SELL_PRICE
       currencies_to_buy = (AMOUNT / buy_when).round(8)
 
-      cost = currencies_to_buy * buy_when * 1.0025 # 0.0025% fee
-      reward = currencies_to_buy * sell_when * 0.9975 # 0.0025% fee
-      profit = reward - cost
-      log "[AUTOORDER] #{market} [BUY: price #{fts buy_when} cost #{fts cost}] [SELL price #{fts sell_when} #{fts reward}] [PROFIT: #{fts profit}]"
+      if USE_REAL_ORDERS
+        if ORDER_SELL_STRATEGY == :time
+          log "[AUTOTRADER] Placing real order [TIME STRATEGY]"
+          Thread::new{
+            Client.pnd_time_based(AUTOTRADER_AMOUNT, buy_when, ORDER_SELL_TIME_STRATEGY_TIME, market)
+          }
+        else
+          log "[AUTOTRADER] Placing real order [FIXED PRICE STRATEGY]"
+          Thread::new{
+             Client.pnd_fixed_price(AUTOTRADER_AMOUNT, buy_when, sell_when, market)
+          }
+        end
+      else
+        cost = currencies_to_buy * buy_when * 1.0025 # 0.0025% fee
+        reward = currencies_to_buy * sell_when * 0.9975 # 0.0025% fee
+        profit = reward - cost
+        log "[AUTOTRADER] #{market} [BUY: price #{fts buy_when} cost #{fts cost}] [SELL price #{fts sell_when} #{fts reward}] [PROFIT: #{fts profit}]"
+      end
     end
 
     def verify_if_orders_won
       return unless @order_track
       @order_track.select{|mk, v| v["check_again"] > Time.now}.each do |mk, v|
-        log "[AUTOORDER] Price check #{mk} after #{v["check_again"] - Time.now} #{fts last_price_of_market(mk)}"
+        log "[AUTOTRADER] Price check #{mk} after #{v["check_again"] - Time.now} #{fts last_price_of_market(mk)}"
       end
     end
 
