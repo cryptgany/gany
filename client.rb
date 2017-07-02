@@ -118,6 +118,7 @@ class Client
         reward = currencies_to_buy * sell_price * 0.9975 # 0.0025% fee
         profit = reward - cost
         log "SOLD! profit = #{fts(profit)}"
+        profit
       end
     end
 
@@ -150,6 +151,7 @@ class Client
       reward = currencies_to_buy * sell_price * 0.9975 # 0.0025% fee
       profit = reward - cost
       log "SOLD! PROFIT = #{fts(profit)}"
+      profit
     end
 
     def pnd(amount, buy_when, sell_when, market, recursive = false)

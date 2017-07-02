@@ -20,11 +20,11 @@ class Detektor
   USE_FAVORITE_COINS_ONLY = false
   USE_REAL_ORDERS = true
   ORDER_SELL_STRATEGY = :time # fixed_price | time
-  ORDER_SELL_TIME_STRATEGY_TIME = 10 # seconds for time strategy
-  AUTOTRADER_AMOUNT = 0.05 # btc
+  ORDER_SELL_TIME_STRATEGY_TIME = 5 # seconds for time strategy
+  AUTOTRADER_AMOUNT = 0.001 # btc
   AUTOTRADER_BUY_PRICE = 1.01 # percentage
   AUTOTRADER_SELL_PRICE = 1.1 # percentage
-  AUTOTRADER_MAX_AMOUNT = 0.1 # max btc to use in orders
+  AUTOTRADER_MAX_AMOUNT = 0.002 # max btc to use in orders
 
   class << self
 
@@ -176,12 +176,14 @@ class Detektor
         if ORDER_SELL_STRATEGY == :time
           log "[AUTOTRADER] Placing real order [TIME STRATEGY]"
           Thread::new{
-            Client.pnd_time_based(AUTOTRADER_AMOUNT, buy_when, ORDER_SELL_TIME_STRATEGY_TIME, market)
+            res = Client.pnd_time_based(AUTOTRADER_AMOUNT, buy_when, ORDER_SELL_TIME_STRATEGY_TIME, market)
+            @autotrader_max_amount += res if res.is_a?(Float)
           }
         else
           log "[AUTOTRADER] Placing real order [FIXED PRICE STRATEGY]"
           Thread::new{
-             Client.pnd_fixed_price(AUTOTRADER_AMOUNT, buy_when, sell_when, market)
+            res = Client.pnd_fixed_price(AUTOTRADER_AMOUNT, buy_when, sell_when, market)
+            @autotrader_max_amount += res if res.is_a?(Float)
           }
         end
       else
