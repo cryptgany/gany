@@ -86,7 +86,7 @@ class Client
       @buy_count += 1
       start_time = Time.now
 
-      currencies_to_buy = (amount / buy_price).round(8)
+      currencies_to_buy = (real_amount(amount) / buy_price).round(8)
       # make buy order
       log "Placing buy order for #{fts currencies_to_buy} #{market} at #{fts buy_price} BTC, took #{fts Time.now - start_time} ms"
       order = market_buy_limit(market, currencies_to_buy, buy_price)
@@ -123,7 +123,7 @@ class Client
 
     def pnd_fixed_price(amount, buy_price, sell_price, market)
       start_time = Time.now
-      currencies_to_buy = (amount / buy_price).round(8)
+      currencies_to_buy = (real_amount(amount) / buy_price).round(8)
       log "Placing buy order for #{fts currencies_to_buy} #{market} at #{fts buy_price} BTC, took #{fts Time.now - start_time} ms"
       order = market_buy_limit(market, currencies_to_buy, buy_price)
       log "Order id is #{order["uuid"]}"
@@ -159,7 +159,7 @@ class Client
 
       current_price = currency_price(market)
       buy_at_price = (current_price * buy_when).round(8)
-      currencies_to_buy = (amount / buy_at_price).round(8)
+      currencies_to_buy = (real_amount(amount) / buy_at_price).round(8)
 
       # make buy order
       log "Current price is #{fts current_price}"
@@ -194,12 +194,16 @@ class Client
       pnd(amount, buy_when, sell_when, market, recursive) if recursive
     end
 
+    def real_amount(n) # calculate btc to use without FEES so fees are 100% of provided amount
+      n * 0.9975
+    end
+
     def fts(n)
       "%1.8f" % n
     end
 
     def log(str)
-      puts "[#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}] #{str}"
+      puts "[#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}] [AUTOTRADER] #{str}"
     end
   end
 end
