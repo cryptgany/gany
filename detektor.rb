@@ -10,7 +10,7 @@ require './client'
 
 class Detektor
   HOST="https://bittrex.com/api/v1.1"
-  VALUES = %w{ Last Bid } # you can add as you wish Volume Ask OpenBuyOrders OpenSellOrders
+  VALUES = %w{ Last } # you can add as you wish Volume Ask Bid OpenBuyOrders OpenSellOrders
   PUMP_PERCENTAGE = 1.03 # if one second changes that percentage for any VALUES it will warn
   DUMP_PERCENTAGE = 0.93 # if one second changes that percentage for any VALUES it will warn
   TIMEFRAME_FOR_PUMP_ACCEPTATION = 5 # cycles/seconds, every THAT bot will reset counters
@@ -25,7 +25,7 @@ class Detektor
   AUTOTRADER_BUY_PRICE = 1.01 # percentage
   AUTOTRADER_SELL_PRICE = 1.1 # percentage
   AUTOTRADER_MAX_AMOUNT = 0.002 # max btc to use in orders
-  AUTOTRADER_MAX_TRADES = 10 # total maximum to use for any pump encountered
+  AUTOTRADER_MAX_TRADES = 10 # total maximum of trades for any pump encountered
 
   class << self
 
@@ -150,7 +150,6 @@ class Detektor
 
       detected = pumped_markets.join(" | ")
 
-      log "DEFINITIVE PUMP DETECTED #{detected}" if detected != ""
       pumped_markets.each do |pumped_market|
         make_order(pumped_market)
       end
@@ -161,7 +160,8 @@ class Detektor
       @order_track[market] ||= {}
 
       return if order_track[market]["ban_until"] && order_track[market]["ban_until"] >= (Time.now - 3600)
-      log "Making order for #{market}"
+      log "DEFINITIVE PUMP DETECTED #{market}, placing order..."
+
       @order_track[market]["ban_until"] = Time.now
       @order_track[market]["check_again"] = Time.now + 5
       price = last_price_of_market(market)
