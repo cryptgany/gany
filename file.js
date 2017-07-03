@@ -10,6 +10,22 @@ fs.readFile('./original_debug.log', 'utf8', function (err,data) {
   this.data = data.split("\n").map(function(elem) { return JSON.parse(elem); });
 });
 
+var big_buys = this.data.filter(function(e) {
+  if (e.Fills.length > 0) {
+    buys = e.Fills.filter(function(e) { return e.OrderType == 'BUY'; });
+    buy_amount = buys.length == 0 ? 0 : buys.map(function(e) { return e.Quantity * e.Rate; }).reduce(function(sum, e) { return sum+e; });
+
+    if (buys.length > 50)
+      return true;
+
+    if (buy_amount > 10)
+      return true;
+
+  } else {
+    return false;
+  }
+});
+
 // get SLS
 var all_sls = this.data.filter(function(e) { return e.MarketName.match(/SLS/); });
 
@@ -34,10 +50,19 @@ function readsells(object) {
   console.log(object.Fills[0].TimeStamp);
 }
 
-var x = all_sls.filter(function(e) { return e.Fills.length > 0}).map(function(e) { 
-  buys = e.Fills.filter(function(e) { return e.OrderType == 'BUY'; }).length;
-  sells = e.Fills.filter(function(e) { return e.OrderType == 'SELL'; }).length;
-  timestamp = e.Fills[0].TimeStamp
+var x = big_buys.filter(function(e) { return e.Fills.length > 0}).map(function(e) {
+  buys = e.Fills.filter(function(e) { return e.OrderType == 'BUY'; });
+  buy_amount = buys.length == 0 ? 0 : buys.map(function(e) { return e.Quantity * e.Rate; }).reduce(function(sum, e) { return sum+e; });
+  sells = e.Fills.filter(function(e) { return e.OrderType == 'SELL'; });
+  sell_amount = sells.length == 0 ? 0 : sells.map(function(e) { return e.Quantity * e.Rate; }).reduce(function(sum, e) { return sum+e; });
+  first_fill = e.Fills.last();
+  last_fill = e.Fills[0];
   winner = buys > sells ? " WINNER: buys" : " WINNER: sells";
-  console.log("TIME: " + timestamp + ", buy amount: " + buys + ", sell amount: " + sells + winner);
-}); 
+  console.log("[" + e.MarketName + "] " + "[OPEN " + first_fill.TimeStamp + " " + first_fill.Rate + "] [CLOSE " + last_fill.TimeStamp + " " + last_fill.Rate + "] buy amount: " + buys.length + " (" + buy_amount.toFixed(4) + " BTC), sell amount: " + sells.length + "(" + sell_amount.toFixed(4) + " BTC)" + winner);
+});
+
+
+
+Array.prototype.last = function() {
+  return this[this.length-1];
+}
