@@ -1,0 +1,16 @@
+{
+  "name": "detektor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "detektor.js",
+  "dependencies": {
+    "node-datetime": "^1.0.1",
+    "node.bittrex.api": "^0.3.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node detektor.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

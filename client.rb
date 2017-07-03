@@ -8,6 +8,17 @@
 # require './client';
 # Client.pnd_in_time(0.1, 1.3, 15, "BTC-ANS")
 
+
+# PurePumps | Crypto Investments
+# 2623 members
+# Buy In: 1.05 | Sell time: 20
+# Client.pnd_in_time(0.2, 1.05, 20, "BTC-")
+
+# Pump Notifier/Trading Signals
+# 17363 members
+# Buy In: 1.05 | Sell time: 20
+# Client.pnd_in_time(0.4, 1.05, 20, "BTC-")
+
 require 'json'
 require 'base64'
 require 'uri'

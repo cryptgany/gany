@@ -20,7 +20,7 @@ class Detektor
   USE_FAVORITE_COINS_ONLY = false
   USE_REAL_ORDERS = true
   ORDER_SELL_STRATEGY = :time # fixed_price | time
-  ORDER_SELL_TIME_STRATEGY_TIME = 5 # seconds for time strategy
+  ORDER_SELL_TIME_STRATEGY_TIME = 20 # seconds for time strategy
   AUTOTRADER_AMOUNT = 0.001 # btc
   AUTOTRADER_BUY_PRICE = 1.01 # percentage
   AUTOTRADER_SELL_PRICE = 1.1 # percentage
