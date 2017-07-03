@@ -4,12 +4,14 @@
   "description": "",
   "main": "detektor.js",
   "dependencies": {
+    "jsonfile": "^3.0.0",
     "node-datetime": "^1.0.1",
     "node.bittrex.api": "^0.3.2"
   },
   "devDependencies": {},
   "scripts": {
-    "start": "node detektor.js"
+    "start": "node detektor.js",
+    "test": "node file.js"
   },
   "author": "",
   "license": "ISC"
