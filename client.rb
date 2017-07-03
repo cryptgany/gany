@@ -2,7 +2,7 @@
 
 #   require './client'; Client.pnd_in_time(0.1, 0.9, 3, "BTC-ANS")
 
-#   require './client'; Client.pnd(0.4, 1.2, 1.02, 'BTC-XEL', true)
+#   require './client'; Client.pnd(0.2, 1.05, 2.1, 'BTC-')
 
 # REAL USE CASE FOR MANUAL PUMP
 # require './client';
