@@ -4,6 +4,7 @@
   "description": "",
   "main": "detektor.js",
   "dependencies": {
+    "dotenv": "^4.0.0",
     "jsonfile": "^3.0.0",
     "node-datetime": "^1.0.1",
     "node.bittrex.api": "^0.3.2"
