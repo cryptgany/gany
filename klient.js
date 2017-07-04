@@ -37,6 +37,18 @@ Klient = {
       console.log( data );
     }, true);
   },
+  orders: function() {
+    bittrex.getopenorders( {}, function( data ) {
+      console.log( data );
+    });
+  },
+  x: function() {
+    bittrex.getopenorders( {}, function( data ) {
+      data.result.map(function(e) {
+        Klient.cancelOrder(e.OrderUuid);
+      });
+    });
+  },
   updateTicker: function (market, object) {
     object[market]
   }
