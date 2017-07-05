@@ -47,15 +47,20 @@ app.pumps = [];
 app.count = 0;
 
 function analyze_trade(e) {
-  result = false
+  result = false;
+  buy_at = 0;
+  sell_at = 0;
   if (e.Fills.length > 0) {
     buys = e.Fills.filter(function(e) { return e.OrderType == 'BUY'; });
     buy_amount = buys.length == 0 ? 0 : buys.map(function(e) { return e.Quantity * e.Rate; }).sum();
     first_fill = e.Fills.last();
     last_fill = e.Fills.first();
     change = last_fill.Rate / first_fill.Rate;
-    if ( (change > 1.05) && (buys.length > 50 || buy_amount > 5) )
-      result = true;
+    // if ( (change > 1.05) && (buys.length > 50 || buy_amount > 5) )
+    //   result = true;
+    if ( (change > 1.20) && (buys.length > 30 || buy_amount > 2) ) {
+      result = true; buy_at = 1.04; sell_at = 1.2;
+    }
   }
   if (result) {
     app.count += 1;
@@ -67,11 +72,11 @@ function analyze_trade(e) {
         last_fill = e.Fills.first();
         logger.log("PUMP DETECTED ON " + e.MarketName + " => STARTING PUMP HANDLER, LAST PRICE WAS " + last_fill.Rate);
         first_ask = last_fill.Rate;
-        btc_amount = 0.0008; // BTC AMOUNT
+        btc_amount = 0.005; // BTC AMOUNT
         // rate = (first_ask * 1.05); // RATE (+) TO BUY ORDER
         rate = first_ask; // RATE (+) TO BUY ORDER
         app.pumps_bought[e.MarketName] = true;
-        var pump = new PumpHandler(app.pumpEvents, e.MarketName, btc_amount, rate); // COMMENT THIS LINE FOR REAL TESTING
+        var pump = new PumpHandler(app.pumpEvents, e.MarketName, btc_amount, rate, buy_at, sell_at); // COMMENT THIS LINE FOR REAL TESTING
         pump.start();
         app.pumps.push(pump); // later review
       } else {
