@@ -8,6 +8,13 @@ function rf(path, store) {
     data.split("\n").map(function(elem) { store.push(JSON.parse(elem)); });
   });
 }
+
+const PumpHandler = require('./pump_handler.js');
+const EventEmitter = require('events');
+
+class PumpEvents extends EventEmitter {}
+const pumpEvents = new PumpEvents();
+
 this.data = [];
 rf('./original_debug.log', this.data);
 rf('./log/5k_debug.log', this.data);

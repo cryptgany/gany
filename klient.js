@@ -3,13 +3,12 @@ var bittrex = require('node.bittrex.api');
 var datetime = require('node-datetime');
 require('./protofunctions.js');
 
-
 bittrex.options({
   'apikey' : process.env.KEY,
-  'apisecret' : process.env.SECRET, 
-  'stream' : false, // will be removed from future versions 
-  'verbose' : true,
-  'cleartext' : false 
+  'apisecret' : process.env.SECRET,
+  'stream' : false, // will be removed from future versions
+  'verbose' : false,
+  'cleartext' : false
 });
 
 Klient = {
@@ -18,17 +17,18 @@ Klient = {
       console.log( currency + ": " + data.result.Available );
     });
   },
-  getOrder: function(orderId) {
-    bittrex.getorder({ uuid : orderId }, function( data ) {
-      console.log( data );
-    });
+  getOrder: function(orderId, callback) {
+    bittrex.getorder({ uuid : orderId }, callback);
   },
-  buyOrder: function(market, quantity, rate) {
+  buyOrder: function(market, quantity, rate, callback) {
     var url = 'https://bittrex.com/api/v1.1/market/buylimit?market=' + market + "&quantity=" + quantity + "&rate=" + rate;
 
-    bittrex.sendCustomRequest( url, function( data ) {
-      console.log( data );
-    }, true);
+    bittrex.sendCustomRequest( url, callback, true );
+  },
+  sellOrder: function(market, quantity, rate, callback) {
+    var url = 'https://bittrex.com/api/v1.1/market/selllimit?market=' + market + "&quantity=" + quantity + "&rate=" + rate;
+
+    bittrex.sendCustomRequest( url, callback, true );
   },
   cancelOrder: function(uuid) {
     var url = 'https://bittrex.com/api/v1.1/market/cancel?uuid=' + uuid;

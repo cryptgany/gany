@@ -26,11 +26,20 @@ bittrex.options({
   'cleartext' : false 
 });
 
+const PumpHandler = require('./pump_handler.js');
+const EventEmitter = require('events');
+
+class PumpEvents extends EventEmitter {}
+
+// var pumpHandler = new PumpHandler(pumpEvents, 'BTC-ANS', 0.3, 0.00292989);
+
+
 
 // REAL CODING
 
 app = {}
 app.pumps_bought = [];
+app.pumpEvents = new PumpEvents();
 
 function analyze_trade(e) {
   result = false
@@ -50,12 +59,12 @@ function analyze_trade(e) {
       last_fill = e.Fills.first();
       console.log("[" + time + "]" + "[" + e.MarketName + "] PUMP DETECTED => SETTING BUY ORDER..." +  " Last fill was " + last_fill.Rate);
       first_ask = last_fill.Rate;
-      btc_amount = 0.05; // BTC AMOUNT
+      btc_amount = 0.001; // BTC AMOUNT
       rate = (first_ask * 1.05); // RATE (+) TO BUY ORDER
       quantity = btc_amount / rate;
       time = datetime.create()._now;
       app.pumps_bought[e.MarketName] = time;
-      Klient.buyOrder(e.MarketName, quantity, rate); // UNCOMMENT THIS LINE FOR REAL TESTING
+      new PumpHandler(app.pumpEvents, e.MarketName, quantity, rate); // COMMENT THIS LINE FOR REAL TESTING
       console.log("[" + time + "]" + "[" + e.MarketName + "] ORDER SET AT " + rate + " FOR " + quantity + " COINS.");
 
       sells = e.Fills.filter(function(e) { return e.OrderType == 'SELL'; });
