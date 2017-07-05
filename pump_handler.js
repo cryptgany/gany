@@ -1,16 +1,16 @@
 // Should place order
 // Should keep track of order
 // Should make sell order after buying
-require('./klient.js');
-const DateTime = require('node-datetime');
+require('./klient');
+const Logger = require('./logger');
 
 function PumpHandler(eventHandler, market, quantity, rate) {
   this.market = market;
   this.quantity = quantity;
-  this.buy_rate = rate * 1.5;
+  this.buy_rate = rate * 1.5; // * 1.5;
   this.eventHandler = eventHandler;
 
-  this.sell_price_percentage = 0.8; // 200%, by now
+  this.sell_price_percentage = 2; // 200%, by now
   this.sell_rate = rate * this.sell_price_percentage;
 
   this.buy_order = undefined;
@@ -19,7 +19,7 @@ function PumpHandler(eventHandler, market, quantity, rate) {
   this.sell_order = undefined;
   this.sell_order_completed = false;
   this.sell_order_id = undefined;
-  this.start();
+  this.logger = new Logger(market);
 }
 
 PumpHandler.prototype.start = function() {
@@ -29,12 +29,12 @@ PumpHandler.prototype.start = function() {
   // configure events
   self.eventHandler.on('ordercomplete', function(order) {
     if (self.buy_order_id == order.OrderUuid) {// is a buy order
-      console.log("BUY ORDER COMPLETE! ID = " + order.OrderUuid);
+      self.logger.log("BUY ORDER COMPLETE! ID = " + order.OrderUuid);
       self.buy_order = order;
       self.buy_order_completed = true;
       self.sell_on_peak();
     } else {
-      console.log("SELL ORDER COMPLETED ID = " + order.OrderUuid);
+      self.logger.log("SELL ORDER COMPLETED ID = " + order.OrderUuid);
       self.sell_order = order;
       self.sell_order_completed = true;
       self.print_result();
@@ -42,11 +42,11 @@ PumpHandler.prototype.start = function() {
   });
 
   // start buy process
-  console.log("Placing buy order... ")
+  self.logger.log("Placing buy order... ")
   Klient.buyOrder(self.market, self.quantity, self.buy_rate, function(data) {
     self.buy_order_id = data.result.uuid;
     // wait order completion
-    console.log("Waiting for BUY order to complete... rate: " + self.buy_rate + ", order_id: " + data.result.uuid);
+    self.logger.log("Waiting for BUY order to complete... rate: " + self.buy_rate + ", order_id: " + data.result.uuid);
     self.waitForComplete(data.result.uuid);
   });
 }
@@ -64,12 +64,12 @@ PumpHandler.prototype.waitForComplete = function(order_id) {
 
 PumpHandler.prototype.sell_on_peak = function() {
   // TO DO: IMPLEMENT SELL PEAK DETECTION STRATEGY
-  console.log("Placing sell order...")
   var self = this;
+  self.logger.log("Placing sell order...")
   Klient.sellOrder(this.market, this.quantity, this.sell_rate, function(data) {
     self.sell_order_id = data.result.uuid;
     // wait order completion
-    console.log("Waiting for SELL order to complete... rate: " + self.sell_rate + ", order_id: " + data.result.uuid);
+    self.logger.log("Waiting for SELL order to complete... rate: " + self.sell_rate + ", order_id: " + data.result.uuid);
     self.waitForComplete(data.result.uuid);
   });
 }
@@ -81,7 +81,7 @@ PumpHandler.prototype.print_result = function() {
   var sell_return = this.sell_order.Quantity * sell_price * 0.9975; // 0.0025% fee
   var profit = sell_return - buy_cost;
 
-  console.log("PUMP ON MARKET " + this.market + " COMPLETE! [ BUY: " + buy_price + " ]|[ SELL: " + sell_price + " ]|[ PROFIT: " + profit + " ]");
+  this.logger.log("PUMP ON MARKET " + this.market + " COMPLETE! [ BUY: " + buy_price + " ]|[ SELL: " + sell_price + " ]|[ PROFIT: " + profit + " ]");
 }
 
 module.exports = PumpHandler;
