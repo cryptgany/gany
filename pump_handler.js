@@ -7,6 +7,7 @@ const Logger = require('./logger');
 function PumpHandler(eventHandler, market, quantity, rate) {
   this.market = market;
   this.quantity = quantity;
+  this.base_rate = rate;
   this.buy_rate = rate * 1.5; // * 1.5;
   this.eventHandler = eventHandler;
 
@@ -24,7 +25,7 @@ function PumpHandler(eventHandler, market, quantity, rate) {
 
 PumpHandler.prototype.start = function() {
   var self = this; // for callbacks
-  console.log("Starting pnd! market = " + self.market);
+  self.logger.log("Starting pnd! base rate: " + this.base_rate);
 
   // configure events
   self.eventHandler.on('ordercomplete', function(order) {
