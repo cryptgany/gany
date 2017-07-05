@@ -4,15 +4,16 @@
 require('./klient');
 const Logger = require('./logger');
 
-function PumpHandler(eventHandler, market, quantity, rate) {
+function PumpHandler(eventHandler, market, btc_amount, base_rate) {
   this.market = market;
-  this.quantity = quantity;
-  this.base_rate = rate;
-  this.buy_rate = rate * 1.5; // * 1.5;
+  this.btc_amount = btc_amount * 0.9975; // ensure we don't use more than expected BTC amount (fees)
+  this.base_rate = base_rate;
+  this.buy_rate = this.base_rate * 0.998; // * 1.5;
   this.eventHandler = eventHandler;
+  this.quantity = this.btc_amount / this.buy_rate;
 
-  this.sell_price_percentage = 2; // 200%, by now
-  this.sell_rate = rate * this.sell_price_percentage;
+  this.sell_price_percentage = 1.002; // 2 by now
+  this.sell_rate = this.base_rate * this.sell_price_percentage;
 
   this.buy_order = undefined;
   this.buy_order_completed = false;
