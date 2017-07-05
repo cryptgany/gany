@@ -50,20 +50,20 @@ function analyze_trade(e) {
       last_fill = e.Fills.first();
       console.log("[" + time + "]" + "[" + e.MarketName + "] PUMP DETECTED => SETTING BUY ORDER..." +  " Last fill was " + last_fill.Rate);
       first_ask = last_fill.Rate;
-      btc_amount = 0.001; // BTC AMOUNT
+      btc_amount = 0.05; // BTC AMOUNT
       rate = (first_ask * 1.05); // RATE (+) TO BUY ORDER
       quantity = btc_amount / rate;
       time = datetime.create()._now;
       app.pumps_bought[e.MarketName] = time;
-      // Klient.buyOrder(e.MarketName, quantity, rate); // UNCOMMENT THIS LINE FOR REAL TESTING
-      console.log("[" + time + "]" + "[" + e.MarketName + "] PUMP DETECTED => SETTING BUY ORDER AT " + rate + " FOR " + quantity + " COINS.");
+      Klient.buyOrder(e.MarketName, quantity, rate); // UNCOMMENT THIS LINE FOR REAL TESTING
+      console.log("[" + time + "]" + "[" + e.MarketName + "] ORDER SET AT " + rate + " FOR " + quantity + " COINS.");
 
       sells = e.Fills.filter(function(e) { return e.OrderType == 'SELL'; });
       sell_amount = sells.length == 0 ? 0 : sells.map(function(e) { return e.Quantity * e.Rate; }).reduce(function(sum, e) { return sum+e; });
       winner = buys > sells ? " WINNER: buys" : " WINNER: sells";
       console.log("[" + e.MarketName + "] " + " [" + change + "]" + "[OPEN " + first_fill.TimeStamp + " " + first_fill.Rate + "] [CLOSE " + last_fill.TimeStamp + " " + last_fill.Rate + "] buy amount: " + buys.length + " (" + buy_amount.toFixed(4) + " BTC), sell amount: " + sells.length + "(" + sell_amount.toFixed(4) + " BTC)" + winner);
     } else {
-      console.log("PUMP detected but already placed order")
+      console.log("PUMP detected on " + e.MarketName + " but already placed order");
     }
   }
 }
