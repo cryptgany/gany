@@ -35,7 +35,8 @@ PumpHandler.prototype.start = function() {
       self.buy_order = order;
       self.buy_order_completed = true;
       self.sell_on_peak();
-    } else {
+    }
+    if (self.sell_order_id == order.OrderUuid) {// is a sell order
       self.logger.log("SELL ORDER COMPLETED ID = " + order.OrderUuid);
       self.sell_order = order;
       self.sell_order_completed = true;

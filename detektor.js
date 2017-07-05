@@ -50,6 +50,7 @@ function analyze_trade(e) {
   result = false;
   buy_at = 0;
   sell_at = 0;
+  btc_amount = 0;
   if (e.Fills.length > 0) {
     buys = e.Fills.filter(function(e) { return e.OrderType == 'BUY'; });
     buy_amount = buys.length == 0 ? 0 : buys.map(function(e) { return e.Quantity * e.Rate; }).sum();
@@ -58,21 +59,23 @@ function analyze_trade(e) {
     change = last_fill.Rate / first_fill.Rate;
     // if ( (change > 1.05) && (buys.length > 50 || buy_amount > 5) )
     //   result = true;
-    if ( (change > 1.20) && (buys.length > 30 || buy_amount > 2) ) {
-      result = true; buy_at = 1.04; sell_at = 1.2;
+    if ( (change > 1.04) && (buys.length > 40 || buy_amount > 3.5) ) {
+      result = true; buy_at = 1.01; sell_at = 1.08; btc_amount = 0.001;
+    }
+    if ( (change > 1.05) && (buys.length > 50 || buy_amount > 5) ) {
+      result = true; buy_at = 1.05; sell_at = 1.35; btc_amount = 0.003;
     }
   }
   if (result) {
     app.count += 1;
-    if (app.count > 3) {
+    if (app.count > 10) {
       logger.log("PUMP DETECTED ON " + e.MarketName + " BUT ALREADY REACHED MAX BUY/SELLS")
     } else {
       if (app.pumps_bought[e.MarketName] == undefined) {
         // get ticker info and make BUY order
         last_fill = e.Fills.first();
-        logger.log("PUMP DETECTED ON " + e.MarketName + " => STARTING PUMP HANDLER, LAST PRICE WAS " + last_fill.Rate);
+        logger.log("PUMP DETECTED ON " + e.MarketName + " => STARTING PUMP HANDLER WITH " + btc_amount + " BTC, LAST PRICE WAS " + last_fill.Rate);
         first_ask = last_fill.Rate;
-        btc_amount = 0.005; // BTC AMOUNT
         // rate = (first_ask * 1.05); // RATE (+) TO BUY ORDER
         rate = first_ask; // RATE (+) TO BUY ORDER
         app.pumps_bought[e.MarketName] = true;
