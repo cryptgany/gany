@@ -13,22 +13,25 @@ function GanyTheBot() {
 }
 
 GanyTheBot.prototype.start = function() {
-  this.telegram_bot.onText(/\/dudeimking/, (msg, match) => {
+  self = this;
+  self.telegram_bot.onText(/\/dudeimking/, (msg, match) => {
     // Subscribers
     const chatId = msg.chat.id;
     const resp = match[1]; // the captured "whatever"
-    if (this.chats.includes(msg.chat.id)) {
-      this.telegram_bot.sendMessage(chatId, "You are already subscribed");
+    if (self.chats.includes(msg.chat.id)) {
+      self.telegram_bot.sendMessage(chatId, "You are already subscribed");
     } else {
-      this.chats.push(chatId);
-      this.telegram_bot.sendMessage(chatId, "Hello stranger. " + chatId + " subscribed.");
+      console.log("Subscribed " + chatId);
+      self.chats.push(chatId);
+      self.telegram_bot.sendMessage(chatId, "Hello stranger. " + chatId + " subscribed.");
     }
   });
 }
 
 GanyTheBot.prototype.broadcast = function(text) {
-  this.chats.forEach(function(chat_id) {
-    this.telegram_bot.sendMessage(chat_id, text).catch((error) => {
+  self = this;
+  self.chats.forEach(function(chat_id) {
+    self.telegram_bot.sendMessage(chat_id, text).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'
       console.log(error.response.body); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
     });
