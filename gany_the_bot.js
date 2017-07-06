@@ -8,7 +8,7 @@ const token = process.env.GANY_KEY;
 const gany_the_bot = new TelegramBot(token, {polling: true});
 
 this.chats = [];
-this.chats.push(parseInt(process.env.WARNINGS_GROUP));
+// this.chats.push(parseInt(process.env.WARNINGS_GROUP)); // disable for testing
 this.chats.push(parseInt(process.env.PERSONAL_CHANNEL))
 
 gany_the_bot.onText(/\/dudeimking/, (msg, match) => {
