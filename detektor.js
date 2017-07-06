@@ -61,11 +61,11 @@ function analyze_trade(e) {
     // if ( (change > 1.05) && (buys.length > 50 || buy_amount > 5) )
     //   result = true;
     if ( (change > 1.04) && (buys.length > 40 || buy_amount > 3.5) ) {
-      result = true; buy_at = 1.01; sell_at = 1.08; btc_amount = 0.001;
+      result = true; buy_at = 1.01; sell_at = 1.05; btc_amount = 0.001;
     }
-    if ( (change > 1.05) && (buys.length > 50 || buy_amount > 5) ) {
-      result = true; buy_at = 1.05; sell_at = 1.35; btc_amount = 0.003;
-    }
+    // if ( (change > 1.05) && (buys.length > 50 || buy_amount > 5) ) {
+    //   result = true; buy_at = 1.05; sell_at = 1.35; btc_amount = 0.003;
+    // }
   }
   if (result) {
     app.count += 1;
