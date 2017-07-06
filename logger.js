@@ -5,6 +5,7 @@ const GanyTheBot = require('./gany_the_bot');
 function Logger(market) {
   this.market = market;
   this.gany_the_bot = new GanyTheBot();
+  this.gany_the_bot.start();
 }
 
 Logger.prototype.log = function(str) {
