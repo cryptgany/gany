@@ -5,7 +5,7 @@ const PumpHandler = require('./pump_handler.js');
 require('./protofunctions.js');
 
 // REAL CODING
-function Detektor(logger, api, markets, pump_events) {
+function Detektor(logger, api, markets, pump_events, test_mode) {
   this.logger = logger;
   this.api = api;
   this.markets = markets;
@@ -13,6 +13,7 @@ function Detektor(logger, api, markets, pump_events) {
   this.pump_events = pump_events;
   this.pumps = [];
   this.count = 0;
+  this.test_mode = test_mode;
 }
 
 Detektor.prototype.start = function() {
@@ -76,9 +77,13 @@ Detektor.prototype.analyze_market = function(data) {
         // rate = (first_ask * 1.05); // RATE (+) TO BUY ORDER
         rate = first_ask; // RATE (+) TO BUY ORDER
         self.pumps_bought[market_name] = true;
-        var pump = new PumpHandler(self.pump_events, self.logger, market_name, btc_amount, rate, buy_at, sell_at); // COMMENT THIS LINE FOR REAL TESTING
-        pump.start();
-        self.pumps.push(pump); // later review
+        if (self.test_mode) {
+          self.logger.log(market_name, "Test values: Amount: " + btc_amount * 0.9975 / buy_at * rate + " | Buy price " + buy_at * rate + " | Sell price: " + sell_at * rate);
+        } else {
+          var pump = new PumpHandler(self.pump_events, self.logger, market_name, btc_amount, rate, buy_at, sell_at); // COMMENT THIS LINE FOR REAL TESTING
+          pump.start();
+          self.pumps.push(pump); // later review
+        }
       } else {
         self.logger.log(market_name, "PUMP detected on but already started pump handler");
       }
