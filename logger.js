@@ -1,3 +1,4 @@
+require('./protofunctions.js');
 var DateTime = require('node-datetime');
 
 const GanyTheBot = require('./gany_the_bot');

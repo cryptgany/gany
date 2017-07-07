@@ -18,16 +18,18 @@ function Detektor(logger, api, markets, pump_events, test_mode) {
 
 Detektor.prototype.start = function() {
   // Configure listeners
-  self = this;
-  this.logger.log('Detektor', 'Starting watch');
-  this.api.websockets.subscribe(this.markets, function(data) {
-    if (data.M === 'updateExchangeState') {
-      data.A.forEach(function(data_for) {
-        self.logger.log_to_file(JSON.stringify(data_for));
-        self.analyze_market(data_for);
-      });
-    }
-  });
+  // this.logger.log('Detektor', 'Starting watch');
+  setTimeout(() => {
+    var self = this;
+    self.api.websockets.subscribe(self.markets, function(data) {
+      if (data.M === 'updateExchangeState') {
+        data.A.forEach(function(data_for) {
+          self.logger.log_to_file(JSON.stringify(data_for));
+          self.analyze_market(data_for);
+        });
+      }
+    });
+  }, 1000);
   // // Listen to markets updates
   // setTimeout(function() {
   //     this.api.websockets.listen( function( data ) {
