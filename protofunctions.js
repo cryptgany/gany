@@ -9,3 +9,8 @@ Array.prototype.first = function() {
 Array.prototype.last = function() {
   return this[this.length-1];
 }
+
+// converts date into an usable string for filename
+Date.prototype.toFileName = function() {
+  return this.toJSON().replace(/(\-|\:|(\..*[A-Z]))/gi, "");
+}
