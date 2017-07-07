@@ -16,7 +16,7 @@ class PumpEvents extends EventEmitter {}
 const pumpEvents = new PumpEvents();
 
 this.data = [];
-rf('./original_debug.log', this.data);
+rf('./debug.log', this.data);
 rf('./log/5k_debug.log', this.data);
 rf('./log/captain_debug.log', this.data);
 rf('./log/debug-3h.log', this.data);

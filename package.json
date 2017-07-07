@@ -12,7 +12,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "start": "node detektor.js",
+    "start": "node run.js",
     "test": "node file.js"
   },
   "author": "",
