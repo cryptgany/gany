@@ -7,7 +7,7 @@ const Util = require('util');
 
 function Logger(bot_enabled = true, test_mode = false) {
   this.start = DateTime.create()._now;
-  this.log_file = FileSystem.createWriteStream(__dirname + '/debug_' + this.start.toFileName() + '.log', {flags : 'w'});
+  this.log_file = FileSystem.createWriteStream(__dirname + '/log/debug_' + this.start.toFileName() + '.log', {flags : 'w'});
   console.log("Logfile is " + 'debug_' + this.start.toFileName());
   this.bot_enabled = bot_enabled;
   this.test_mode = test_mode;

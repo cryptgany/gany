@@ -68,13 +68,13 @@ Detektor.prototype.analyze_market = function(data) {
   }
   if (result) {
     self.count += 1;
-    if (self.count > 2) {
+    if (self.count > 100) {
       self.logger.log(market_name, "PUMP DETECTED BUT ALREADY REACHED MAX BUY/SELLS")
     } else {
       if (self.pumps_bought[market_name] == undefined) {
         // get ticker info and make BUY order
         last_fill = data.Fills.first();
-        self.logger.log(market_name, "PUMP DETECTED => STARTING PUMP HANDLER WITH " + btc_amount + " BTC, LAST PRICE WAS " + last_fill.Rate);
+        self.logger.log(market_name, "POSSIBLE PUMP DETECTED -> LAST PRICE: " + last_fill.Rate);
         first_ask = last_fill.Rate;
         // rate = (first_ask * 1.05); // RATE (+) TO BUY ORDER
         rate = first_ask; // RATE (+) TO BUY ORDER
