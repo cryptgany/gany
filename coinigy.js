@@ -36,7 +36,7 @@ function Coinigy() {
     this.market_info[exchange_market] = e;
     this.market_data[exchange_market] = {};
 
-    ['TRADE', 'ORDER', 'TICKER'].forEach((operation) => {
+    ['TRADE', 'ORDER'].forEach((operation) => {
       subscribe = operation + "-" + exchange_market;
       this.market_channels.push(subscribe);
     });
@@ -51,7 +51,7 @@ function Coinigy() {
 // Will create a socket for each 250 elements (limitations)
 Coinigy.prototype.start = function() {
   length = Math.ceil(this.market_channels.length / 250);
-  console.log("Starting configuration")
+  // console.log("Starting configuration")
   // for each 250, create new socket
   for(var count = 0; count < length; count++) {
     this.create_socket(count);
@@ -60,35 +60,29 @@ Coinigy.prototype.start = function() {
 
 Coinigy.prototype.create_socket = function(id) {
   setTimeout(() => {
-
-    console.log("******************************************************************************")
-
-    console.log("Creating socket " + id);
+    // console.log("Creating socket " + id);
     var SCsocket = this.socketCluster.connect(this.options);
     this.sockets.push(SCsocket);
-    console.log("id: ", id);
+    // console.log("id: ", id);
 
     this.sockets[id].on('connect', (status) => {
-      console.log("Connected! socket id " + id);
+      // console.log("Connected! socket id " + id);
       this.sockets[id].on('error', (err) => {
-          console.log(err);
+          // console.log(err);
       });
 
       this.sockets[id].emit("auth", this.api_credentials, (err, token) => {
-        console.log("Authenticated " + id + ", doing API")
+        // console.log("Authenticated " + id + ", doing API")
         if (!err && token) {
 
           // SUBSCRIBING TO TRADES
-          ['TRADE', 'ORDER', 'TICKER'].forEach((operation) => {
-            this.market_channels.slice(id * 250, id + 1 * 250).forEach((channel) => {
-              if (this.market_data[channel] == undefined)
-                this.market_data[channel] = {};
-              this.market_data[channel][operation] = [];
-              this.sockets[id].subscribe(channel).watch(this.socket_callback);
-            });
+          this.market_channels.slice(id * 250, id + 1 * 250).forEach((channel) => {
+            if (this.market_data[channel] == undefined)
+              this.market_data[channel] = [];
+            this.sockets[id].subscribe(channel).watch(this.socket_callback);
           });
         } else {
-          console.log(err)
+          // console.log(err)
         }
       });
     });
@@ -96,10 +90,22 @@ Coinigy.prototype.create_socket = function(id) {
 
 }
 
-Coinigy.prototype.socket_callback = function(data) {
-  console.log("******************************************************************************")
-  console.log("RECEIVED! ", data);
-  // console.log(data.channel);
+Coinigy.prototype.socket_callback = function(body) {
+  if (body.channel != undefined) { // this is a TRADE
+    exchange = body.exchange;
+    market = body.label;
+    type = "trade";
+    channel = body.channel;
+    data = body
+  }
+  if (body.length == 20) {// orderbook
+    exchange = body[0].exchange;
+    market = body[0].label;
+    type = "order";
+    channel = "ORDER-" + exchange + "--" + market.replace(/\//, "--");
+    data = body;
+  }
+  console.log("Incoming info from channel " + channel);
   // this.market_data[mkt_id][operation].push(data);
 }
 
