@@ -32,10 +32,10 @@ Detektor.prototype.track_tickers_history = function() {
         this.tickers_history[exchange] = this.tickers_history[exchange] || {}
         this.tickers_history[exchange][market] = this.tickers_history[exchange][market] || []
         this.tickers_history[exchange][market].push(this.tickers[exchange][market])
-        setTimeout(() => { this.track_tickers_history }, 60 * 1000) // run every minute
       })
     })
   }
+  setTimeout(() => { this.track_tickers_history() }, 60 * 1000) // run every minute
 }
 
 // Detektor.prototype.analyze_market = function(data) {
