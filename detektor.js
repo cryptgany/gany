@@ -16,13 +16,16 @@ function Detektor(logger, pump_events, test_mode) {
   this.tickers_history = {}
 
   this.pump_events.on('marketupdate', (operation, exchange, market, data) => {
-    if (operation == 'TICKER') {
-      this.tickers[exchange] = this.tickers[exchange] || {}
-      this.tickers[exchange][market] = data;
+    if (market.match(/BTC/)) {
+      if (operation == 'TICKER') {
+        this.tickers[exchange] = this.tickers[exchange] || {}
+        this.tickers[exchange][market] = data;
+      }
     }
     // console.log(operation + " | Exchange: " + exchange + " | Market: " + market)
   })
   this.track_tickers_history()
+  this.track_volume_changes()
 }
 
 Detektor.prototype.track_tickers_history = function() {
@@ -38,17 +41,30 @@ Detektor.prototype.track_tickers_history = function() {
   setTimeout(() => { this.track_tickers_history() }, 60 * 1000) // run every minute
 }
 
-Detektor.prototype.volume_change = function(exchange, market, time) { // time is in minutes
-  if (this.tickers_history[exchange] && this.tickers_history[exchange][market]) {
-    tickers = this.tickers_history[exchange][market]
-    first = tickers[tickers.length - time] || tickers.first()
-    last = tickers.last()
-    console.log("First timestamp " + first.TimeStamp)
-    console.log("Last timestamp " + last.TimeStamp)
-    return last.BaseVolume / first.BaseVolume
-  } else {
-    return 0
-  }
+Detektor.prototype.get_ticker_history = function(exchange, market) {
+  if (this.tickers_history[exchange] && this.tickers_history[exchange][market])
+    return this.tickers_history[exchange][market]
+}
+
+Detektor.prototype.volume_change = function(tickers, time) { // time is in minutes
+  first = tickers[tickers.length - time] || tickers.first()
+  last = tickers.last()
+  return last.BaseVolume / first.BaseVolume
+}
+
+Detektor.prototype.track_volume_changes = function() { // checks exchanges and markets for volumes
+  Object.keys(this.tickers_history).forEach((exchange) => {
+    Object.keys(this.tickers_history[exchange]).forEach((market) => {
+      tickers = this.get_ticker_history(exchange, market)
+      if (tickers) {
+        volume = this.volume_change(tickers, 10)
+        if (volume > 1.001) {
+          this.logger.log("VOLUME ROSE UP ON 10 MIN: " + exchange + " " + market + " CHANGE: " + volume + " Last: " + tickers.last().Last)
+        }
+      }
+    })
+  })
+  setTimeout(() => { this.track_tickers_history() }, 60 * 1000) // run every minute
 }
 
 // Detektor.prototype.analyze_market = function(data) {
