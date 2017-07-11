@@ -58,13 +58,14 @@ Detektor.prototype.track_volume_changes = function() { // checks exchanges and m
       tickers = this.get_ticker_history(exchange, market)
       if (tickers) {
         volume = this.volume_change(tickers, 10)
-        if (volume > 1.001) {
-          this.logger.log("VOLUME ROSE UP ON 10 MIN: " + exchange + " " + market + " CHANGE: " + volume + " Last: " + tickers.last().Last)
+        if (volume > 1.25) {
+          last_ticker = tickers.last()
+          this.logger.log(exchange + "/" + market, "VOLUME CHANGE ON 10 MINS: " + volume.toFixed(4) + ". Bid: " + last_ticker.Bid + ", Ask: " + last_ticker.Ask + ", Last: " + last_ticker.Last)
         }
       }
     })
   })
-  setTimeout(() => { this.track_tickers_history() }, 60 * 1000) // run every minute
+  setTimeout(() => { this.track_volume_changes() }, 60 * 1000) // run every minute
 }
 
 // Detektor.prototype.analyze_market = function(data) {
