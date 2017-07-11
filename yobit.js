@@ -3,10 +3,10 @@ require('dotenv').config();
 const Yobit = require('yobit');
 
 function YobitClient(pump_events) {
-  this.client = new Yobit('', '');
-
+  this.client = new Yobit(process.env.YOBIT_KEY, process.env.YOBIT_SECRET);
   this.markets = [];
-  this.market_data = {};
+  this.market_data = [];
+  this.pump_events = pump_events;
 
   this.client.publicRequest('info', {}, (err, e) => {
     Object.keys(e.pairs).forEach((key) => {
@@ -14,45 +14,27 @@ function YobitClient(pump_events) {
         this.markets.push(key)
     })
   });
-https://yobit.net/api/3/depth/ltc_btc-nmc_btc
-  this.ticker_str = this.markets.slice(50, 100).join("-")
-  this.client.getTicker((err, e) => { this.market_data = e; }, ticker_str)
 
-this.market_data
+
+  setTimeout(() => { this._watch_tickers() }, 10 * 1000)
 }
 
 YobitClient.prototype.getmarkets = function(callback) {
   this.client.getmarketsummaries( callback );
 }
 
-YobitClient.prototype.start = function() {
-  setTimeout(() => {
-    // listen to market orders
-    var self = this;
-    self.client.websockets.subscribe(self.markets, function(data) {
-      if (data.M === 'updateExchangeState') {
-        data.A.forEach(function(data_for) {
-          // console.log("First", data_for);
-          self.pump_events.emit('marketupdate', 'TRADE', 'BTRX', data_for.MarketName, data_for);
-        });
-      }
-    });
-  }, 1000);
-  setTimeout(() => {
-    // Listen to markets updates
-    self = this;
-    self.client.websockets.listen((data) => {
-      if (data.M === 'updateSummaryState') {
-        // console.log("SECOND UPDATE", data.A);
-        data.A.forEach(function(data_for) {
-          data_for.Deltas.forEach(function(marketsDelta) {
-            // console.log('Ticker Update for '+ marketsDelta.MarketName, marketsDelta);
-            self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', marketsDelta.MarketName, marketsDelta);
-          });
-        });
-      }
-    });
-  }, 5000); // give time for first subscriber to subscribe
+YobitClient.prototype._watch_tickers = function() {
+  var self = this
+  cycles = Math.ceil(this.markets.length / 50)
+  for(i = 0; i < cycles; i++) {
+    ticker_str = this.markets.slice(i * 50, (i+1) * 50).join("-")
+    self.client.getTicker((err, e) => {
+      Object.keys(e).forEach((market) => {
+        self.pump_events.emit('market', 'TRADE', 'YOBT', market, e[market]);
+      })
+    }, ticker_str)
+  }
+  setTimeout(() => { this._watch_tickers() }, 10 * 1000)
 }
 
 // Implement standard functions
@@ -75,4 +57,4 @@ YobitClient.prototype.cancel_order = function(uuid, callback) {
   this.client.sendCustomRequest( url, callback, true );
 }
 
-module.exports = Bittrex;
+module.exports = YobitClient;
