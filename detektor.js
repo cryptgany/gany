@@ -38,6 +38,19 @@ Detektor.prototype.track_tickers_history = function() {
   setTimeout(() => { this.track_tickers_history() }, 60 * 1000) // run every minute
 }
 
+Detektor.prototype.volume_change = function(exchange, market, time) { // time is in minutes
+  if (this.tickers_history[exchange] && this.tickers_history[exchange][market]) {
+    tickers = this.tickers_history[exchange][market]
+    first = tickers[tickers.length - time] || tickers.first()
+    last = tickers.last()
+    console.log("First timestamp " + first.TimeStamp)
+    console.log("Last timestamp " + last.TimeStamp)
+    return last.BaseVolume / first.BaseVolume
+  } else {
+    return 0
+  }
+}
+
 // Detektor.prototype.analyze_market = function(data) {
 //   result = false;
 //   buy_at = 0;
