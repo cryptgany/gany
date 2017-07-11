@@ -65,12 +65,14 @@ Detektor.prototype.track_volume_changes = function() { // checks exchanges and m
           message = false
           for(time = 25; time > 1; time--) {
             if ((volume = this.volume_change(tickers, time)) > 1.25) {
+              first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
-              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time + " MINS: " + ((volume - 1) * 100).toFixed(2) + "%. Bid: " + last_ticker.Bid + ", Ask: " + last_ticker.Ask + ", Last: " + last_ticker.Last + ", Volume: " + last_ticker.BaseVolume]
+              market_url = "bittrex.com/Market/Index?MarketName=" + market
+              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.BaseVolume + " to " + last_ticker.BaseVolume + "). Bid: " + last_ticker.Bid + ", Ask: " + last_ticker.Ask + ", Last: " + last_ticker.Last + ". " + market_url]
             }
           }
           if (message) {
-            this.tickers_detected_blacklist[exchange+market] = 25 // blacklist for 10 mins
+            this.tickers_detected_blacklist[exchange+market] = 60 // blacklist for 1 hour
             this.logger.log(message[0], message[1])
           }
         }
