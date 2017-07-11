@@ -42,21 +42,37 @@ Bittrex.prototype.start = function() {
       }
     });
   }, 1000);
-  setTimeout(() => {
-    // Listen to markets updates
-    self = this;
-    self.client.websockets.listen((data) => {
-      if (data.M === 'updateSummaryState') {
-        // console.log("SECOND UPDATE", data.A);
-        data.A.forEach(function(data_for) {
-          data_for.Deltas.forEach(function(marketsDelta) {
-            // console.log('Ticker Update for '+ marketsDelta.MarketName, marketsDelta);
-            self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', marketsDelta.MarketName, marketsDelta);
-          });
-        });
-      }
-    });
-  }, 5000); // give time for first subscriber to subscribe
+  // setTimeout(() => {
+  //   // Listen to markets updates
+  //   self = this;
+  //   self.client.websockets.listen((data) => {
+  //     if (data.M === 'updateSummaryState') {
+  //       // console.log("SECOND UPDATE", data.A);
+  //       data.A.forEach(function(data_for) {
+  //         data_for.Deltas.forEach(function(marketsDelta) {
+  //           // console.log('Ticker Update for '+ marketsDelta.MarketName, marketsDelta);
+  //           self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', marketsDelta.MarketName, marketsDelta);
+  //         });
+  //       });
+  //     }
+  //   });
+  // }, 5000); // give time for first subscriber to subscribe
+  this._watch_tickers()
+}
+
+Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seconds
+  var self = this
+  self.client.getmarketsummaries((data) => {
+    if (data.success) {
+      tickers = data.result
+      tickers.forEach((data) => {
+        self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', data.MarketName, data);
+      });
+    } else {
+      console.log("Error getting BTRX tickers: " + data.message)
+    }
+  });
+  setTimeout(() => { this._watch_tickers() }, 10 * 1000)
 }
 
 // Implement standard functions

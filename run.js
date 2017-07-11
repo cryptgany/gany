@@ -11,7 +11,7 @@ require('./klient');
 // Initializers
 class PumpEvents extends EventEmitter {}
 var pump_events = new PumpEvents();
-var test_mode = true;
+var test_mode = false;
 var logger = new Logger(true, test_mode);
 var bittrex = new Bittrex(pump_events);
 

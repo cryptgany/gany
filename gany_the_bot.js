@@ -4,7 +4,7 @@ const TelegramBot = require('node-telegram-bot-api');
 
 function GanyTheBot() {
   this.chats = [];
-  // this.chats.push(parseInt(process.env.WARNINGS_GROUP)); // disable for testing
+  this.chats.push(parseInt(process.env.WARNINGS_GROUP)); // disable for testing
   this.chats.push(parseInt(process.env.PERSONAL_CHANNEL)); // by default subscribe to my personal account
   // this.chats.push(parseInt(process.env.OTHER_CHANNEL)); // by default subscribe to my personal account
   this.token = process.env.GANY_KEY;

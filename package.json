@@ -8,7 +8,8 @@
     "jsonfile": "^3.0.0",
     "node-datetime": "^1.0.1",
     "node-telegram-bot-api": "^0.27.1",
-    "node.bittrex.api": "^0.3.2"
+    "node.bittrex.api": "^0.3.2",
+    "yobit": "0.0.1"
   },
   "devDependencies": {},
   "scripts": {

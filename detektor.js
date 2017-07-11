@@ -15,6 +15,8 @@ function Detektor(logger, pump_events, test_mode) {
   this.tickers = {}
   this.tickers_history = {}
 
+  this.tickers_detected_blacklist = {}
+
   this.pump_events.on('marketupdate', (operation, exchange, market, data) => {
     if (market.match(/BTC/)) {
       if (operation == 'TICKER') {
@@ -55,12 +57,22 @@ Detektor.prototype.volume_change = function(tickers, time) { // time is in minut
 Detektor.prototype.track_volume_changes = function() { // checks exchanges and markets for volumes
   Object.keys(this.tickers_history).forEach((exchange) => {
     Object.keys(this.tickers_history[exchange]).forEach((market) => {
-      tickers = this.get_ticker_history(exchange, market)
-      if (tickers) {
-        volume = this.volume_change(tickers, 10)
-        if (volume > 1.25) {
-          last_ticker = tickers.last()
-          this.logger.log(exchange + "/" + market, "VOLUME CHANGE ON 10 MINS: " + volume.toFixed(4) + ". Bid: " + last_ticker.Bid + ", Ask: " + last_ticker.Ask + ", Last: " + last_ticker.Last)
+      if (this.tickers_detected_blacklist[exchange+market] && this.tickers_detected_blacklist[exchange+market] > 0) { // if blacklisted
+        this.tickers_detected_blacklist[exchange+market] -= 1
+      } else {
+        tickers = this.get_ticker_history(exchange, market)
+        if (tickers) {
+          message = false
+          for(time = 25; time > 1; time--) {
+            if ((volume = this.volume_change(tickers, time)) > 1.25) {
+              last_ticker = tickers.last()
+              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time + " MINS: " + ((volume - 1) * 100).toFixed(2) + "%. Bid: " + last_ticker.Bid + ", Ask: " + last_ticker.Ask + ", Last: " + last_ticker.Last + ", Volume: " + last_ticker.BaseVolume]
+            }
+          }
+          if (message) {
+            this.tickers_detected_blacklist[exchange+market] = 25 // blacklist for 10 mins
+            this.logger.log(message[0], message[1])
+          }
         }
       }
     })
