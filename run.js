@@ -18,4 +18,5 @@ var bittrex = new Bittrex(pump_events);
 var yobit = new Yobit(pump_events);
 
 // Start
+bittrex.watch()
 detektor = new Detektor(logger, pump_events, test_mode)

@@ -55,6 +55,10 @@ YobitClient.prototype._normalize_ticker_data = function(data) {
 }
 
 // Implement standard functions
+YobitClient.prototype.balance = function(currency, callback) {
+  this.client.getbalance({ 'currency': currency }, callback);
+}
+
 YobitClient.prototype.get_order = function(order_id, callback) {
   this.client.getorder({ uuid : orderId }, callback);
 }
