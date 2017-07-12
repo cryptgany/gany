@@ -51,7 +51,7 @@ Detektor.prototype.get_ticker_history = function(exchange, market) {
 Detektor.prototype.volume_change = function(tickers, time) { // time is in minutes
   first = tickers[tickers.length - time] || tickers.first()
   last = tickers.last()
-  return last.BaseVolume / first.BaseVolume
+  return last.volume / first.volume
 }
 
 Detektor.prototype.track_volume_changes = function() { // checks exchanges and markets for volumes
@@ -68,7 +68,7 @@ Detektor.prototype.track_volume_changes = function() { // checks exchanges and m
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
               market_url = "bittrex.com/Market/Index?MarketName=" + market
-              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.BaseVolume + " to " + last_ticker.BaseVolume + "). Bid: " + last_ticker.Bid + ", Ask: " + last_ticker.Ask + ", Last: " + last_ticker.Last + ". " + market_url]
+              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.volume + " to " + last_ticker.volume + "). Bid: " + last_ticker.bid + ", Ask: " + last_ticker.ask + ", Last: " + last_ticker.last + ". " + market_url]
             }
           }
           if (message) {

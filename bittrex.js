@@ -66,13 +66,25 @@ Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seco
     if (data.success) {
       tickers = data.result
       tickers.forEach((data) => {
-        self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', data.MarketName, data);
+        self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', data.MarketName, self._normalize_ticker_data(data));
       });
     } else {
       console.log("Error getting BTRX tickers: " + data.message)
     }
   });
   setTimeout(() => { this._watch_tickers() }, 10 * 1000)
+}
+
+Bittrex.prototype._normalize_ticker_data = function(data) {
+  return {
+    high: data.High,
+    low: data.Low,
+    volume: data.BaseVolume,
+    last: data.Last,
+    ask: data.Ask,
+    bid: data.Bid,
+    updated: data.TimeStamp
+  }
 }
 
 // Implement standard functions

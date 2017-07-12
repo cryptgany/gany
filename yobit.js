@@ -30,11 +30,24 @@ YobitClient.prototype._watch_tickers = function() {
     ticker_str = this.markets.slice(i * 50, (i+1) * 50).join("-")
     self.client.getTicker((err, e) => {
       Object.keys(e).forEach((market) => {
-        self.pump_events.emit('market', 'TRADE', 'YOBT', market, e[market]);
+        self.pump_events.emit('marketupdate', 'TICKER', 'YOBT', market.toUpperCase().replace(/\_/, '-'), self._normalize_ticker_data(e[market]));
       })
     }, ticker_str)
   }
   setTimeout(() => { this._watch_tickers() }, 10 * 1000)
+}
+
+YobitClient.prototype._normalize_ticker_data = function(data) {
+  return {
+    high: data.high,
+    low: data.low,
+    avg: data.avg,
+    volume: data.vol_cur,
+    last: data.last,
+    ask: data.buy,
+    bid: data.sell,
+    updated: data.updated
+  }
 }
 
 // Implement standard functions
