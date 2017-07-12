@@ -14,7 +14,7 @@ function Detektor(logger, pump_events, test_mode) {
 
   this.exchange_volume_change = {
     'BTRX': 1.25,
-    'YOBT': 5
+    'YOBT': 2.5
   }
   this.skip_volumes = 0.5 // skip currencies with lower than THIS volume
 
@@ -54,7 +54,7 @@ Detektor.prototype.track_tickers_history = function() {
       })
     })
   }
-  setTimeout(() => { this.track_tickers_history() }, 60 * 1000) // run every minute
+  setTimeout(() => { this.track_tickers_history() }, 15 * 1000) // run every minute
 }
 
 Detektor.prototype.get_ticker_history = function(exchange, market) {
@@ -77,16 +77,16 @@ Detektor.prototype.track_volume_changes = function() { // checks exchanges and m
         tickers = this.get_ticker_history(exchange, market)
         if (tickers) {
           message = false
-          for(time = 50; time > 1; time--) {
+          for(time = 100; time > 1; time--) {
             if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
               market_url = this.market_url(exchange, market)
-              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time / 2 + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.volume + " to " + last_ticker.volume + "). Bid: " + last_ticker.bid + ", Ask: " + last_ticker.ask + ", Last: " + last_ticker.last + ". " + market_url]
+              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time / 4 + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.volume + " to " + last_ticker.volume + "). Bid: " + last_ticker.bid + ", Ask: " + last_ticker.ask + ", Last: " + last_ticker.last + ". " + market_url]
             }
           }
           if (message) {
-            this.tickers_detected_blacklist[exchange+market] = 120  * 3 // blacklist for 3 hour
+            this.tickers_detected_blacklist[exchange+market] = 240  * 3 // blacklist for 3 hour, each "1" is 15 seconds
             this.logger.log(message[0], message[1])
           }
         }
