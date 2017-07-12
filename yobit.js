@@ -29,9 +29,13 @@ YobitClient.prototype._watch_tickers = function() {
   for(i = 0; i < cycles; i++) {
     ticker_str = this.markets.slice(i * 50, (i+1) * 50).join("-")
     self.client.getTicker((err, e) => {
-      Object.keys(e).forEach((market) => {
-        self.pump_events.emit('marketupdate', 'TICKER', 'YOBT', market.toUpperCase().replace(/\_/, '-'), self._normalize_ticker_data(e[market]));
-      })
+      if (e == undefined) {
+        console.log('Failed to retrieve yobit data: ', err)
+      } else {
+        Object.keys(e).forEach((market) => {
+          self.pump_events.emit('marketupdate', 'TICKER', 'YOBT', market.toUpperCase().replace(/\_/, '-'), self._normalize_ticker_data(e[market]));
+        })
+      }
     }, ticker_str)
   }
   setTimeout(() => { this._watch_tickers() }, 10 * 1000)

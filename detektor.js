@@ -11,6 +11,11 @@ function Detektor(logger, pump_events, test_mode) {
   this.test_mode = test_mode
   this.market_data = {}
 
+  this.exchange_volume_change = {
+    'BTRX': 1.25,
+    'YOBT': 5
+  }
+
   this.market_data
   this.tickers = {}
   this.tickers_history = {}
@@ -63,23 +68,23 @@ Detektor.prototype.track_volume_changes = function() { // checks exchanges and m
         tickers = this.get_ticker_history(exchange, market)
         if (tickers) {
           message = false
-          for(time = 25; time > 1; time--) {
-            if ((volume = this.volume_change(tickers, time)) > 1.25) {
+          for(time = 50; time > 1; time--) {
+            if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
               market_url = this.market_url(exchange, market)
-              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.volume + " to " + last_ticker.volume + "). Bid: " + last_ticker.bid + ", Ask: " + last_ticker.ask + ", Last: " + last_ticker.last + ". " + market_url]
+              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time / 2 + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.volume + " to " + last_ticker.volume + "). Bid: " + last_ticker.bid + ", Ask: " + last_ticker.ask + ", Last: " + last_ticker.last + ". " + market_url]
             }
           }
           if (message) {
-            this.tickers_detected_blacklist[exchange+market] = 60 // blacklist for 1 hour
+            this.tickers_detected_blacklist[exchange+market] = 120 // blacklist for 1 hour
             this.logger.log(message[0], message[1])
           }
         }
       }
     })
   })
-  setTimeout(() => { this.track_volume_changes() }, 60 * 1000) // run every minute
+  setTimeout(() => { this.track_volume_changes() }, 30 * 1000) // run every minute
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
