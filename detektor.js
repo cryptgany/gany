@@ -67,7 +67,7 @@ Detektor.prototype.track_volume_changes = function() { // checks exchanges and m
             if ((volume = this.volume_change(tickers, time)) > 1.25) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
-              market_url = "bittrex.com/Market/Index?MarketName=" + market
+              market_url = this.market_url(exchange, market)
               message = [exchange + "/" + market, "VOLUME CHANGE ON " + time + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.volume + " to " + last_ticker.volume + "). Bid: " + last_ticker.bid + ", Ask: " + last_ticker.ask + ", Last: " + last_ticker.last + ". " + market_url]
             }
           }
@@ -80,6 +80,16 @@ Detektor.prototype.track_volume_changes = function() { // checks exchanges and m
     })
   })
   setTimeout(() => { this.track_volume_changes() }, 60 * 1000) // run every minute
+}
+
+Detektor.prototype.market_url = function(exchange, market) {
+  if (exchange == 'BTRX') {
+    return "https://bittrex.com/Market/Index?MarketName=" + market
+  }
+  if (exchange == 'YOBT') {
+    cur = market.split("-")[0].toLowerCase(0)
+    return "http://yobit.net/en/trade/" + cur + "/BTC"
+  }
 }
 
 // Detektor.prototype.analyze_market = function(data) {

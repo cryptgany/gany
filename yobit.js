@@ -42,7 +42,7 @@ YobitClient.prototype._normalize_ticker_data = function(data) {
     high: data.high,
     low: data.low,
     avg: data.avg,
-    volume: data.vol_cur,
+    volume: data.vol,
     last: data.last,
     ask: data.buy,
     bid: data.sell,
