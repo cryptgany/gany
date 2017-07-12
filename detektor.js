@@ -10,6 +10,7 @@ function Detektor(logger, pump_events, test_mode) {
   this.pump_events = pump_events
   this.test_mode = test_mode
   this.market_data = {}
+  this.pumps_bought = {}
 
   this.exchange_volume_change = {
     'BTRX': 1.25,
@@ -85,7 +86,7 @@ Detektor.prototype.track_volume_changes = function() { // checks exchanges and m
             }
           }
           if (message) {
-            this.tickers_detected_blacklist[exchange+market] = 120 // blacklist for 1 hour
+            this.tickers_detected_blacklist[exchange+market] = 120  * 3 // blacklist for 3 hour
             this.logger.log(message[0], message[1])
           }
         }
@@ -106,6 +107,7 @@ Detektor.prototype.market_url = function(exchange, market) {
 }
 
 Detektor.prototype.analyze_market = function(data) {
+  return "";
   result = false;
   buy_at = 0;
   sell_at = 0;
@@ -122,7 +124,7 @@ Detektor.prototype.analyze_market = function(data) {
     //   result = true; buy_at = 1.01; sell_at = 1.08; btc_amount = 0.01;
     // }
     if ( (change > 1.05) && (buys.length > 50 || buy_amount > 5) ) {
-      result = true; buy_at = 1.06; sell_at = 1.5; btc_amount = 0.1;
+      result = true; buy_at = 1.06; sell_at = 1.4; btc_amount = 0.1;
     }
   }
   if (result) {
@@ -135,18 +137,17 @@ Detektor.prototype.analyze_market = function(data) {
         last_fill = data.Fills.first();
         self.logger.log("BTRX/" + market_name, "POSSIBLE PUMP DETECTED -> LAST PRICE: " + last_fill.Rate);
         first_ask = last_fill.Rate;
-        // rate = (first_ask * 1.05); // RATE (+) TO BUY ORDER
         rate = first_ask; // RATE (+) TO BUY ORDER
-        // self.pumps_bought[market_name] = true;
-        // if (self.test_mode) {
-        //   self.logger.log("BTRX/" + market_name, "Test values: Amount: " + btc_amount * 0.9975 / buy_at * rate + " | Buy price " + buy_at * rate + " | Sell price: " + sell_at * rate);
-        // } else {
-        //   var pump = new PumpHandler(self.pump_events, self.logger, market_name, btc_amount, rate, buy_at, sell_at); // COMMENT THIS LINE FOR REAL TESTING
-        //   pump.start();
-        //   self.pumps.push(pump); // later review
-        // }
-      } else {
-        self.logger.log("BTRX/" + market_name, "PUMP detected on but already started pump handler");
+        self.pumps_bought[market_name] = true;
+        if (self.test_mode) {
+          self.logger.log("BTRX/" + market_name, "Test values: Amount: " + btc_amount * 0.9975 / buy_at * rate + " | Buy price " + buy_at * rate + " | Sell price: " + sell_at * rate);
+        } else {
+          // var pump = new PumpHandler(self.pump_events, self.logger, market_name, btc_amount, rate, buy_at, sell_at); // COMMENT THIS LINE FOR REAL TESTING
+          // pump.start();
+          // self.pumps.push(pump); // later review
+        }
+      // } else {
+      //   self.logger.log("BTRX/" + market_name, "PUMP detected on but already started pump handler");
       }
       sells = data.Fills.filter(function(e) { return e.OrderType == 'SELL'; });
       sell_amount = sells.length == 0 ? 0 : sells.map(function(e) { return e.Quantity * e.Rate; }).reduce(function(sum, e) { return sum+e; });

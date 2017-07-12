@@ -23,17 +23,21 @@ YobitClient.prototype.watch = function() {
 YobitClient.prototype._watch_tickers = function() {
   var self = this
   cycles = Math.ceil(this.markets.length / 50)
+  cycle = 0
   for(i = 0; i < cycles; i++) {
-    ticker_str = this.markets.slice(i * 50, (i+1) * 50).join("-")
-    self.client.getTicker((err, e) => {
-      if (e == undefined) {
-        console.log('Failed to retrieve yobit data: ', err)
-      } else {
-        Object.keys(e).forEach((market) => {
-          self.pump_events.emit('marketupdate', 'TICKER', 'YOBT', market.toUpperCase().replace(/\_/, '-'), self._normalize_ticker_data(e[market]));
-        })
-      }
-    }, ticker_str)
+    setTimeout(() => {
+      cycle++;
+      ticker_str = this.markets.slice(cycle * 50, (cycle+1) * 50).join("-")
+      self.client.getTicker((err, e) => {
+        if (e == undefined) {
+          console.log('Failed to retrieve yobit data: ', err)
+        } else {
+          Object.keys(e).forEach((market) => {
+            self.pump_events.emit('marketupdate', 'TICKER', 'YOBT', market.toUpperCase().replace(/\_/, '-'), self._normalize_ticker_data(e[market]));
+          })
+        }
+      }, ticker_str)
+    }, 500 * cycle)
   }
   setTimeout(() => { this._watch_tickers() }, 10 * 1000)
 }
