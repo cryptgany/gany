@@ -15,6 +15,7 @@ function Detektor(logger, pump_events, test_mode) {
     'BTRX': 1.25,
     'YOBT': 5
   }
+  this.skip_volumes = 0.5 // skip currencies with lower than THIS volume
 
   this.market_data
   this.tickers = {}
@@ -24,7 +25,7 @@ function Detektor(logger, pump_events, test_mode) {
 
   this.pump_events.on('marketupdate', (operation, exchange, market, data) => {
     if (market.match(/BTC/)) {
-      if (operation == 'TICKER') {
+      if (operation == 'TICKER' && data.volume > this.skip_volumes) {
         this.tickers[exchange] = this.tickers[exchange] || {}
         this.tickers[exchange][market] = data;
       }
