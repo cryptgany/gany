@@ -31,7 +31,7 @@ GanyTheBot.prototype.start = function() {
 GanyTheBot.prototype.broadcast = function(text) {
   self = this;
   self.chats.forEach(function(chat_id) {
-    self.telegram_bot.sendMessage(chat_id, text).catch((error) => {
+    self.telegram_bot.sendMessage(chat_id, text, {parse_mode: "Markdown"}).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'
       console.log(error.response.body); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
     });

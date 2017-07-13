@@ -77,7 +77,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
               market_url = this.market_url(exchange, market)
-              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time / 6 + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.volume + " to " + last_ticker.volume + "). Bid: " + last_ticker.bid + ", Ask: " + last_ticker.ask + ", Last: " + last_ticker.last + ". " + market_url]
+              message = ["[" + exchange + "/" + market + "](" + market_url + ")", "Volume up *" + ((volume - 1) * 100).toFixed(2) + "%* in " + time / 6 + " minutes.\nVolume: " + first_ticker.volume.toFixed(8) + " to " + last_ticker.volume.toFixed(8) + "\nBid: " + first_ticker.bid.toFixed(8) + " to " + last_ticker.bid.toFixed(8) + "\nAsk: " + first_ticker.ask.toFixed(8) + " to " + last_ticker.ask.toFixed(8) + "\nLast: " + first_ticker.last.toFixed(8) + " to " + last_ticker.last.toFixed(8)]
             }
           }
           if (message) {
@@ -135,9 +135,9 @@ Detektor.prototype.analyze_market = function(data) {
         if (self.test_mode) {
           self.logger.log("BTRX/" + market_name, "Test values: Amount: " + btc_amount * 0.9975 / buy_at * rate + " | Buy price " + buy_at * rate + " | Sell price: " + sell_at * rate);
         } else {
-          // var pump = new PumpHandler(self.pump_events, self.logger, market_name, btc_amount, rate, buy_at, sell_at); // COMMENT THIS LINE FOR REAL TESTING
-          // pump.start();
-          // self.pumps.push(pump); // later review
+          var pump = new PumpHandler(self.pump_events, self.logger, market_name, btc_amount, rate, buy_at, sell_at); // COMMENT THIS LINE FOR REAL TESTING
+          pump.start();
+          self.pumps.push(pump); // later review
         }
       // } else {
       //   self.logger.log("BTRX/" + market_name, "PUMP detected on but already started pump handler");
