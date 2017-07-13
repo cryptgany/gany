@@ -3,6 +3,7 @@
 // REQUIRED LIBS
 const PumpHandler = require('./pump_handler.js');
 require('./protofunctions.js');
+var DateTime = require('node-datetime');
 
 // REAL CODING
 function Detektor(logger, pump_events, test_mode) {
@@ -17,7 +18,6 @@ function Detektor(logger, pump_events, test_mode) {
     'BTRX': 1.25,
     'YOBT': 2
   }
-  this.skip_volumes = 0.5 // skip currencies with lower than THIS volume
 
   this.market_data
   this.tickers = {}
@@ -28,9 +28,10 @@ function Detektor(logger, pump_events, test_mode) {
 
   this.pump_events.on('marketupdate', (operation, exchange, market, data) => {
     if (market.match(/BTC/)) {
-      if (operation == 'TICKER' && data.volume > this.skip_volumes) {
-        this.tickers[exchange] = this.tickers[exchange] || {}
-        this.tickers[exchange][market] = data;
+      if (operation == 'TICKER') {
+        this.update_ticker(exchange, market, data)
+        this.update_ticker_history(exchange, market, data)
+        this.analyze_ticker(exchange, market, data)
       }
       if (operation == 'TRADE' && exchange == 'BTRX') {
         this.trades[exchange] = this.trades[exchange] || {}
@@ -39,29 +40,22 @@ function Detektor(logger, pump_events, test_mode) {
         this.analyze_market(data)
       }
     }
-    // console.log(operation + " | Exchange: " + exchange + " | Market: " + market)
   })
-  this.track_tickers_history()
-  this.track_volume_changes()
 }
 
-Detektor.prototype.track_tickers_history = function() {
-  if (this.tickers != {}) {
-    Object.keys(this.tickers).forEach((exchange) => {
-      Object.keys(this.tickers[exchange]).forEach((market) => {
-        this.tickers_history[exchange] = this.tickers_history[exchange] || {}
-        this.tickers_history[exchange][market] = this.tickers_history[exchange][market] || []
-        this.tickers_history[exchange][market].push(this.tickers[exchange][market])
-      })
-    })
-  }
-  this.track_volume_changes()
-  setTimeout(() => { this.track_tickers_history() }, 15 * 1000) // run every minute
+Detektor.prototype.update_ticker = function(exchange, market, data) {
+  this.tickers[exchange] = this.tickers[exchange] || {}
+  this.tickers[exchange][market] = data
+}
+
+Detektor.prototype.update_ticker_history = function(exchange, market, data) {
+  this.tickers_history[exchange] = this.tickers_history[exchange] || {}
+  this.tickers_history[exchange][market] = this.tickers_history[exchange][market] || []
+  this.tickers_history[exchange][market].push(data)
 }
 
 Detektor.prototype.get_ticker_history = function(exchange, market) {
-  if (this.tickers_history[exchange] && this.tickers_history[exchange][market])
-    return this.tickers_history[exchange][market]
+  return this.tickers_history[exchange][market]
 }
 
 Detektor.prototype.volume_change = function(tickers, time) { // time is in minutes
@@ -70,31 +64,29 @@ Detektor.prototype.volume_change = function(tickers, time) { // time is in minut
   return last.volume / first.volume
 }
 
-Detektor.prototype.track_volume_changes = function() { // checks exchanges and markets for volumes
-  Object.keys(this.tickers_history).forEach((exchange) => {
-    Object.keys(this.tickers_history[exchange]).forEach((market) => {
-      if (this.tickers_detected_blacklist[exchange+market] && this.tickers_detected_blacklist[exchange+market] > 0) { // if blacklisted
+Detektor.prototype.analyze_ticker = function(exchange, market, data) {
+  setTimeout( () => {
+    if (this.tickers_detected_blacklist[exchange+market] && this.tickers_detected_blacklist[exchange+market] > 0) { // if blacklisted
         this.tickers_detected_blacklist[exchange+market] -= 1
       } else {
-        tickers = this.get_ticker_history(exchange, market)
-        if (tickers) {
+        if (tickers = this.get_ticker_history(exchange, market)) {
           message = false
-          for(time = 100; time > 1; time--) {
+          max_time = tickers.length <= 250 ? tickers.length : 250
+          for(time = max_time; time > 1; time--) {
             if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
               market_url = this.market_url(exchange, market)
-              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time / 4 + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.volume + " to " + last_ticker.volume + "). Bid: " + last_ticker.bid + ", Ask: " + last_ticker.ask + ", Last: " + last_ticker.last + ". " + market_url]
+              message = [exchange + "/" + market, "VOLUME CHANGE ON " + time / 6 + " MINS: " + ((volume - 1) * 100).toFixed(2) + "% (" + first_ticker.volume + " to " + last_ticker.volume + "). Bid: " + last_ticker.bid + ", Ask: " + last_ticker.ask + ", Last: " + last_ticker.last + ". " + market_url]
             }
           }
           if (message) {
-            this.tickers_detected_blacklist[exchange+market] = 240  * 3 // blacklist for 3 hour, each "1" is 15 seconds
+            this.tickers_detected_blacklist[exchange+market] = 360 * 3 // blacklist for 3 hour, each "1" is 10 seconds
             this.logger.log(message[0], message[1])
           }
         }
       }
-    })
-  })
+  }, 0) // run async
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
