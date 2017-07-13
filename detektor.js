@@ -123,29 +123,29 @@ Detektor.prototype.analyze_market = function(data) {
   if (result) {
     self.count += 1;
     if (self.count > 100) {
-      self.logger.log("BTRX/" + market_name, "PUMP DETECTED BUT ALREADY REACHED MAX BUY/SELLS")
+      self.logger.log("BTRX/" + market_name, "PUMP DETECTED BUT ALREADY REACHED MAX BUY/SELLS", true)
     } else {
       if (self.pumps_bought[market_name] == undefined) {
         // get ticker info and make BUY order
         last_fill = data.Fills.first();
-        self.logger.log("BTRX/" + market_name, "POSSIBLE PUMP DETECTED -> LAST PRICE: " + last_fill.Rate);
+        self.logger.log("BTRX/" + market_name, "POSSIBLE PUMP DETECTED -> LAST PRICE: " + last_fill.Rate, true);
         first_ask = last_fill.Rate;
         rate = first_ask; // RATE (+) TO BUY ORDER
         self.pumps_bought[market_name] = true;
         if (self.test_mode) {
-          self.logger.log("BTRX/" + market_name, "Test values: Amount: " + btc_amount * 0.9975 / buy_at * rate + " | Buy price " + buy_at * rate + " | Sell price: " + sell_at * rate);
+          self.logger.log("BTRX/" + market_name, "Test values: Amount: " + btc_amount * 0.9975 / buy_at * rate + " | Buy price " + buy_at * rate + " | Sell price: " + sell_at * rate, true);
         } else {
           var pump = new PumpHandler(self.pump_events, self.logger, market_name, btc_amount, rate, buy_at, sell_at); // COMMENT THIS LINE FOR REAL TESTING
           pump.start();
           self.pumps.push(pump); // later review
         }
-      // } else {
-      //   self.logger.log("BTRX/" + market_name, "PUMP detected on but already started pump handler");
+      } else {
+        self.logger.log("BTRX/" + market_name, "PUMP detected on but already started pump handler", true);
       }
       sells = data.Fills.filter(function(e) { return e.OrderType == 'SELL'; });
       sell_amount = sells.length == 0 ? 0 : sells.map(function(e) { return e.Quantity * e.Rate; }).reduce(function(sum, e) { return sum+e; });
       winner = buys > sells ? " WINNER: buys" : " WINNER: sells";
-      self.logger.log("BTRX/" + market_name, "[CHANGE: " + change + "]" + "[OPEN " + first_fill.TimeStamp + " " + first_fill.Rate + "] [CLOSE " + last_fill.TimeStamp + " " + last_fill.Rate + "] buy amount: " + buys.length + " (" + buy_amount.toFixed(4) + " BTC), sell amount: " + sells.length + "(" + sell_amount.toFixed(4) + " BTC)" + winner);
+      self.logger.log("BTRX/" + market_name, "[CHANGE: " + change + "]" + "[OPEN " + first_fill.TimeStamp + " " + first_fill.Rate + "] [CLOSE " + last_fill.TimeStamp + " " + last_fill.Rate + "] buy amount: " + buys.length + " (" + buy_amount.toFixed(4) + " BTC), sell amount: " + sells.length + "(" + sell_amount.toFixed(4) + " BTC)" + winner, true);
     }
   }
 }

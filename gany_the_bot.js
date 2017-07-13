@@ -4,9 +4,10 @@ const TelegramBot = require('node-telegram-bot-api');
 
 function GanyTheBot() {
   this.chats = [];
+  this.vip_chats = [];
   this.chats.push(parseInt(process.env.WARNINGS_GROUP)); // disable for testing
-  this.chats.push(parseInt(process.env.PERSONAL_CHANNEL)); // by default subscribe to my personal account
-  this.chats.push(parseInt(process.env.OTHER_CHANNEL)); // by default subscribe to my personal account
+  this.vip_chats.push(parseInt(process.env.PERSONAL_CHANNEL)); // by default subscribe to my personal account
+  this.vip_chats.push(parseInt(process.env.OTHER_CHANNEL)); // by default subscribe to my personal account
   this.token = process.env.GANY_KEY;
 
   this.telegram_bot = new TelegramBot(this.token, {polling: true});
@@ -28,9 +29,10 @@ GanyTheBot.prototype.start = function() {
   });
 }
 
-GanyTheBot.prototype.broadcast = function(text) {
+GanyTheBot.prototype.broadcast = function(text, vip_only = false) {
   self = this;
-  self.chats.forEach(function(chat_id) {
+  chats_for_broadcast = vip_only ? self.vip_chats : self.chats;
+  chats_for_broadcast.forEach(function(chat_id) {
     self.telegram_bot.sendMessage(chat_id, text, {parse_mode: "Markdown"}).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'
       console.log(error.response.body); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }

@@ -17,13 +17,13 @@ function Logger(bot_enabled = true, test_mode = false) {
   }
 }
 
-Logger.prototype.log = function(name, str) {
+Logger.prototype.log = function(name, str, vip_only = false) {
   var time = DateTime.create()._now;
   if (this.bot_enabled) {
     if (this.test_mode) {
-      this.gany_the_bot.broadcast(name + " [TEST]: " + str);
+      this.gany_the_bot.broadcast(name + " [TEST]: " + str, vip_only);
     } else {
-      this.gany_the_bot.broadcast(name + ": " + str);
+      this.gany_the_bot.broadcast(name + ": " + str, vip_only);
     }
   }
   console.log("[" + time + "] [" + name + "] " + str);
