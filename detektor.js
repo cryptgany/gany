@@ -77,7 +77,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
               market_url = this.market_url(exchange, market)
-              message = ["[" + exchange + "/" + market + "](" + market_url + ")", "Volume up *" + ((volume - 1) * 100).toFixed(2) + "%* in " + time / 6 + " minutes.\nVolume: " + first_ticker.volume.toFixed(8) + " to " + last_ticker.volume.toFixed(8) + "\nBid: " + first_ticker.bid.toFixed(8) + " to " + last_ticker.bid.toFixed(8) + "\nAsk: " + first_ticker.ask.toFixed(8) + " to " + last_ticker.ask.toFixed(8) + "\nLast: " + first_ticker.last.toFixed(8) + " to " + last_ticker.last.toFixed(8)]
+              message = ["[" + exchange + "/" + market + "](" + market_url + ")", "Volume up *" + ((volume - 1) * 100).toFixed(2) + "%* in " + time / 6 + " minutes.\nVolume: " + first_ticker.volume.toFixed(8) + " to " + last_ticker.volume.toFixed(8) + "\nBid: " + first_ticker.bid.toFixed(8) + " to " + last_ticker.bid.toFixed(8) + "\nAsk: " + first_ticker.ask.toFixed(8) + " to " + last_ticker.ask.toFixed(8) + "\nLast: " + first_ticker.last.toFixed(8) + " to " + last_ticker.last.toFixed(8) + "\n24h Low: " + last_ticker.low.toFixed(8) + ". 24h High: " + last_ticker.high.toFixed(8)]
             }
           }
           if (message) {
