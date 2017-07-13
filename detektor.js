@@ -11,6 +11,7 @@ function Detektor(logger, pump_events, test_mode) {
   this.test_mode = test_mode
   this.market_data = {}
   this.pumps_bought = {}
+  this.autotrader_enabled = false
 
   this.exchange_volume_change = {
     'BTRX': 1.25,
@@ -107,7 +108,7 @@ Detektor.prototype.market_url = function(exchange, market) {
 }
 
 Detektor.prototype.analyze_market = function(data) {
-  return "";
+  if (!this.autotrader_enabled) return '';
   result = false;
   buy_at = 0;
   sell_at = 0;
