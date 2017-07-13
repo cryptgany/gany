@@ -16,7 +16,7 @@ function Detektor(logger, pump_events, test_mode) {
 
   this.exchange_volume_change = {
     'BTRX': 1.25,
-    'YOBT': 2
+    'YOBT': 1.6
   }
 
   this.market_data
@@ -71,13 +71,13 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
       } else {
         if (tickers = this.get_ticker_history(exchange, market)) {
           message = false
-          max_time = tickers.length <= 250 ? tickers.length : 250
+          max_time = tickers.length <= 150 ? tickers.length : 150
           for(time = max_time; time > 1; time--) {
             if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
               market_url = this.market_url(exchange, market)
-              message = ["[" + exchange + "/" + market + "](" + market_url + ")", "Volume up *" + ((volume - 1) * 100).toFixed(2) + "%* in " + time / 6 + " minutes.\nVolume: " + first_ticker.volume.toFixed(8) + " to " + last_ticker.volume.toFixed(8) + "\nBid: " + first_ticker.bid.toFixed(8) + " to " + last_ticker.bid.toFixed(8) + "\nAsk: " + first_ticker.ask.toFixed(8) + " to " + last_ticker.ask.toFixed(8) + "\nLast: " + first_ticker.last.toFixed(8) + " to " + last_ticker.last.toFixed(8) + "\n24h Low: " + last_ticker.low.toFixed(8) + ". 24h High: " + last_ticker.high.toFixed(8)]
+              message = ["[" + exchange + "/" + market + "](" + market_url + ")", "Volume up *" + ((volume - 1) * 100).toFixed(2) + "%* in " + this._seconds_to_minutes(time * 10) + " minutes.\nVolume: " + first_ticker.volume.toFixed(8) + " to " + last_ticker.volume.toFixed(8) + "\nBid: " + first_ticker.bid.toFixed(8) + " to " + last_ticker.bid.toFixed(8) + "\nAsk: " + first_ticker.ask.toFixed(8) + " to " + last_ticker.ask.toFixed(8) + "\nLast: " + first_ticker.last.toFixed(8) + " to " + last_ticker.last.toFixed(8) + "\n24h Low: " + last_ticker.low.toFixed(8) + ". 24h High: " + last_ticker.high.toFixed(8)]
             }
           }
           if (message) {
@@ -87,6 +87,12 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
         }
       }
   }, 0) // run async
+}
+
+Detektor.prototype._seconds_to_minutes = function(seconds) {
+  var minutes = Math.floor(seconds / 60);
+  var seconds = seconds - minutes * 60;
+  return minutes + ":" + ("0" + seconds).slice (-2)
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
