@@ -2,21 +2,24 @@ require('dotenv').config();
 
 const Yobit = require('yobit');
 
-function YobitClient(pump_events) {
+function YobitClient(pump_events, skip_volumes = 0.5) {
   this.client = new Yobit(process.env.YOBIT_KEY, process.env.YOBIT_SECRET);
-  this.markets = [];
+  this.all_markets = [];
+  this.markets = []; // after selecting only good volume markets
   this.market_data = [];
   this.pump_events = pump_events;
+  this.skip_volumes = 0.5 // skip markets with lower than this volume
 }
 
 YobitClient.prototype.watch = function() {
   this.get_markets((err, e) => {
     Object.keys(e.pairs).forEach((key) => {
       if (e.pairs[key].hidden == 0 && key.endsWith('btc'))
-        this.markets.push(key)
+        this.all_markets.push(key)
     })
   });
 
+  setTimeout(() => { this._select_good_volume_markets() }, 5 * 1000)
   setTimeout(() => { this._watch_tickers() }, 10 * 1000)
 }
 
@@ -26,8 +29,7 @@ YobitClient.prototype._watch_tickers = function() {
   cycle = 0
   for(i = 0; i < cycles; i++) {
     setTimeout(() => {
-      cycle++;
-      ticker_str = this.markets.slice(cycle * 50, (cycle+1) * 50).join("-")
+      ticker_str = self.markets.slice(cycle * 50, (cycle+1) * 50).join("-")
       self.client.getTicker((err, e) => {
         if (e == undefined) {
           console.log('Failed to retrieve yobit data: ', err)
@@ -37,9 +39,34 @@ YobitClient.prototype._watch_tickers = function() {
           })
         }
       }, ticker_str)
-    }, 500 * cycle)
+      cycle++;
+    }, 500 * i)
   }
   setTimeout(() => { this._watch_tickers() }, 10 * 1000)
+}
+
+YobitClient.prototype._select_good_volume_markets = function() {
+  var self = this
+  this.markets = []
+  cycles = Math.ceil(this.all_markets.length / 50)
+  cycle = 0
+  for(i = 0; i < cycles; i++) {
+    setTimeout(() => {
+      cycle++;
+      ticker_str = self.all_markets.slice(cycle * 50, (cycle+1) * 50).join("-")
+      self.client.getTicker((err, e) => {
+        if (e == undefined) {
+          console.log('Failed to retrieve yobit data: ', err)
+        } else {
+          Object.keys(e).forEach((market) => {
+            if (e[market].vol >= self.skip_volumes)
+              self.markets.push(market)
+          })
+        }
+      }, ticker_str)
+    }, 500 * cycle)
+  }
+  setTimeout(() => { this._select_good_volume_markets() }, 60 * 60 * 1000) // update markets on track every hour
 }
 
 // Implement standard functions
