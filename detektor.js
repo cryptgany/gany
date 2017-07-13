@@ -15,7 +15,7 @@ function Detektor(logger, pump_events, test_mode) {
 
   this.exchange_volume_change = {
     'BTRX': 1.25,
-    'YOBT': 2.5
+    'YOBT': 2
   }
   this.skip_volumes = 0.5 // skip currencies with lower than THIS volume
 
@@ -55,6 +55,7 @@ Detektor.prototype.track_tickers_history = function() {
       })
     })
   }
+  this.track_volume_changes()
   setTimeout(() => { this.track_tickers_history() }, 15 * 1000) // run every minute
 }
 
@@ -94,7 +95,6 @@ Detektor.prototype.track_volume_changes = function() { // checks exchanges and m
       }
     })
   })
-  setTimeout(() => { this.track_volume_changes() }, 30 * 1000) // run every minute
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
