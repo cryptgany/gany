@@ -52,7 +52,6 @@ YobitClient.prototype._select_good_volume_markets = function() {
   cycle = 0
   for(i = 0; i < cycles; i++) {
     setTimeout(() => {
-      cycle++;
       ticker_str = self.all_markets.slice(cycle * 50, (cycle+1) * 50).join("-")
       self.client.getTicker((err, e) => {
         if (e == undefined) {
@@ -64,6 +63,7 @@ YobitClient.prototype._select_good_volume_markets = function() {
           })
         }
       }, ticker_str)
+      cycle++;
     }, 500 * cycle)
   }
   setTimeout(() => { this._select_good_volume_markets() }, 60 * 60 * 1000) // update markets on track every hour
