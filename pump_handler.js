@@ -29,15 +29,15 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
 
 PumpHandler.prototype.start = function() {
   console.log("CALL TO ", this.market, "start")
-  this.logger.log(this.market, "Starting pnd! base rate: " + this.base_rate, true);
+  this.logger.log(this.market, "Starting pump. Base rate: " + this.base_rate, true);
 
   // start buy process
-  this.logger.log(this.market, "Placing buy order... ", true);
+  console.log(this.market, "Placing buy order... ", true);
 
   this.client.buy_order(this.market, this.quantity, this.buy_rate, (data) => {
     this.buy_order_id = data.result.id;
     // wait order completion
-    this.logger.log(this.market, "Waiting for BUY order to complete... rate: " + this.buy_rate, true);
+    console.log(this.market, "Waiting for BUY order to complete... rate: " + this.buy_rate, true);
     this.cancel_order_if_not_complete(data.result.id, 15*1000)
     this.waitForComplete(data.result.id, (order) => { this.notify_buy_complete_and_sell(order) });
   });
@@ -45,7 +45,7 @@ PumpHandler.prototype.start = function() {
 
 PumpHandler.prototype.notify_buy_complete_and_sell = function(order) {
   console.log("CALL TO ", this.market, "notify_buy_complete_and_sell")
-  this.logger.log(this.market, "BUY ORDER COMPLETE! ID = " + order.id, true);
+  console.log(this.market, "BUY ORDER COMPLETE! ID = " + order.id, true);
   this.buy_order = order;
   this.buy_order_completed = true;
   this.sell_on_peak();
@@ -72,7 +72,7 @@ PumpHandler.prototype.cancel_order_if_not_complete = function(order_id, time) {
       if (!this.buy_order_completed) {
         this.pump_ended = true
         this.canceled_orders.push(order_id)
-        this.logger.log(this.market, "Could not buy, pump canceled.", true);
+        console.log(this.market, "Could not buy, pump canceled.", true);
       }
     }
     if (this.sell_order_id == order_id) {
@@ -80,7 +80,7 @@ PumpHandler.prototype.cancel_order_if_not_complete = function(order_id, time) {
       if (!this.sell_order_completed){
         this.canceled_orders.push(order_id)
         this.cancel_order_and_emit(order_id, () => {
-          this.logger.log(this.market, "Could not sell, order canceled, trying to sell at current price", true);
+          console.log(this.market, "Could not sell, order canceled, trying to sell at current price", true);
           this.sell_rate = this.detektor.tickers[this.exchange][this.market].bid * 0.99 // sell at whatever person is buying
           this.sell_on_peak();
         })
@@ -96,7 +96,7 @@ PumpHandler.prototype.cancel_order_and_emit = function(order_id, callback) {
     if (result.success) { // order cancelled
       callback()
     } else {
-      this.logger.log(this.market,"Error trying to cancel order " + order_id)
+      console.log(this.market,"Error trying to cancel order " + order_id)
     }
   });
 }
@@ -104,11 +104,11 @@ PumpHandler.prototype.cancel_order_and_emit = function(order_id, callback) {
 PumpHandler.prototype.sell_on_peak = function() {
   console.log("CALL TO ", this.market, "sell_on_peak")
   // TO DO: IMPLEMENT SELL PEAK DETECTION STRATEGY
-  this.logger.log(this.market, "Placing sell order...", true)
+  console.log(this.market, "Placing sell order...", true)
   this.client.sell_order(this.market, this.quantity, this.sell_rate, (data) => {
     this.sell_order_id = data.result.id;
     // wait order completion
-    this.logger.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate, true);
+    console.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate, true);
     this.cancel_order_if_not_complete(data.result.id, 30 * 1000) // wait 5 minutes
     this.waitForComplete(data.result.id, (order) => { this.notify_complete_and_print_result(order) });
   });
@@ -117,7 +117,7 @@ PumpHandler.prototype.sell_on_peak = function() {
 PumpHandler.prototype.notify_complete_and_print_result = function(order) {
   console.log("CALL TO ", this.market, "notify_complete_and_print_result")
   this.pump_ended = true
-  this.logger.log(this.market, "SELL ORDER COMPLETED ID = " + order.id, true);
+  console.log(this.market, "SELL ORDER COMPLETED ID = " + order.id, true);
   this.sell_order = order;
   this.sell_order_completed = true;
   this.print_result();
@@ -127,10 +127,11 @@ PumpHandler.prototype.print_result = function() {
   console.log("CALL TO ", this.market, "print_result")
   var buy_price = this.buy_order.price_per_unit;
   var sell_price = this.sell_order.price;
+  console.log(this.sell_order)
   var buy_cost = this.buy_order.quantity * buy_price * 1.0025; // 0.0025% fee
   var sell_return = this.sell_order.quantity * sell_price * 0.9975; // 0.0025% fee
   var profit = sell_return - buy_cost;
-  this.logger.log(this.market, "PUMP COMPLETE! [ BUY: " + buy_price + " ]|[ SELL: " + sell_price + " ]|[ RESULT: " + profit + " ]", true);
+  this.logger.log(this.market, "PUMP COMPLETE! [ BUY: " + buy_price.toFixed(8) + " ]|[ SELL: " + sell_price.toFixed(8) + " ]|[ RESULT: " + profit.toFixed(8) + " ]", true);
 }
 
 module.exports = PumpHandler;
