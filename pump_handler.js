@@ -15,6 +15,9 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
   this.canceled_orders = []
 
   this.pump_ended = false
+  this.sold_on_peak = false
+  this.downtrend = 0
+  this.last_price = 0
 
   this.sell_price_percentage = sell_at; // 2 by now
   this.sell_rate = this.base_rate * this.sell_price_percentage;
@@ -28,6 +31,8 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
 
   this.strategy = strategy // 0: smart, 1: fixed %
   this.minumum_sells_to_consider_sellout = 2 // for 20 seconds, bids falling
+
+  this.event_context = undefined
 
   this.verbose = true
 }
@@ -91,6 +96,12 @@ PumpHandler.prototype.cancel_order_if_not_complete = function(order_id, time) {
         })
       }
     }
+    if (order_id == 'new') { // could not find good peak, sell at current price
+      if(this.verbose) { console.log(this.market, 'Could not sell at peak, selling current price and receive loss') }
+      this.sell_rate = this.detektor.tickers[this.exchange][this.market].bid * 0.98
+      this.event_handler.removeListener('marketupdate', (operation, exchange, market, data) => { this.analyze_ticker(operation,exchange,market,data) }, this.event_context)
+      this.sell_on_peak(1)
+    }
   }, time)
 }
 
@@ -110,32 +121,9 @@ PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_pri
   if (this.verbose) console.log("CALL TO ", this.market, "sell_on_peak", "strategy", strategy,"with price " + last_price, "and downtrend = " + downtrend)
   // TO DO: IMPLEMENT SELL PEAK DETECTION STRATEGY
   if (strategy == 0) { // peak detector
-    sold_on_peak = false
-    this.event_handler.on('marketupdate', (operation, exchange, market, data) => {
-      if(operation=="TICKER" && exchange==this.exchange && market==this.market)
-        console.log("event alive:", exchange,market)
-      if (!this.pump_ended && !sold_on_peak && operation == 'TICKER' && exchange == this.exchange && market == this.market) {
-        if(this.verbose) console.log("analyzing", this.market, "downtrend", downtrend, "last", last_price)
-        if (data.ask < last_price) {
-          downtrend++
-          if (downtrend >= this.minumum_sells_to_consider_sellout) { // reached
-            if (this.verbose) console.log("downtrend detected on price " + data.ask, "vs " + last_price, "(started on " + this.base_rate + ")")
-            if (data.ask / this.base_rate > 1.05) {// and is bigger than 5%
-              if (this.verbose) console.log("and price is bigger than 5%, selling")
-              this.sell_rate = data.ask * 0.98
-              sold_on_peak = true // stop cycle
-              this.event_handler.removeListener('marketupdate', function() {}, this)
-              this.sell_on_peak(1)
-            } else {  } // check next cycle
-          } else {  } // check next cycle
-        } else {
-          downtrend = 0 // reset to 0
-          last_price = data.ask
-          // this.sell_on_peak(0, data.ask, downtrend) // check next cycle
-        }
-        last_price = data.ask // update last price
-      }
-    }, this)
+    this.sold_on_peak = false
+    this.cancel_order_if_not_complete('new', 15 * 60 * 1000)
+    this.event_context = this.event_handler.on('marketupdate', (operation, exchange, market, data) => { this.analyze_ticker(operation,exchange,market,data) })
   }
   if (strategy == 1) { // fixed price
     if (this.verbose) console.log(this.market, "Placing sell order...", true)
@@ -143,9 +131,35 @@ PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_pri
       this.sell_order_id = data.result.id;
       // wait order completion
       if (this.verbose) console.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate, true);
-      this.cancel_order_if_not_complete(data.result.id, 60 * 60 * 1000) // wait 5 minutes
+      this.cancel_order_if_not_complete(data.result.id, 30 * 1000) // wait 5 minutes
       this.waitForComplete(data.result.id, (order) => { this.notify_complete_and_print_result(order) });
     });
+  }
+}
+
+PumpHandler.prototype.analyze_ticker = function(operation, exchange, market, data) {
+  if(operation=="TICKER" && exchange==this.exchange && market==this.market)
+    console.log("event alive:", exchange,market)
+  if (!this.pump_ended && !this.sold_on_peak && operation == 'TICKER' && exchange == this.exchange && market == this.market) {
+    if(this.verbose) console.log("analyzing", this.market, "downtrend", this.downtrend, "last", this.last_price)
+    if (data.ask < this.last_price) {
+      this.downtrend++
+      if (this.downtrend >= this.minumum_sells_to_consider_sellout) { // reached
+        if (this.verbose) console.log("downtrend detected on price " + data.ask, "vs " + this.last_price, "(started on " + this.base_rate + ")")
+        if (data.ask / this.base_rate > 1.05) {// and is bigger than 5%
+          if (this.verbose) console.log("and price is bigger than 5%, selling")
+          this.sell_rate = data.ask * 0.98
+          this.sold_on_peak = true // stop cycle
+          this.event_handler.removeListener('marketupdate', (operation, exchange, market, data) => { this.analyze_ticker(operation,exchange,market,data) }, this.event_context)
+          this.sell_on_peak(1)
+        } else {  } // check next cycle
+      } else {  } // check next cycle
+    } else {
+      this.downtrend = 0 // reset to 0
+      this.last_price = data.ask
+      // this.sell_on_peak(0, data.ask, downtrend) // check next cycle
+    }
+    this.last_price = data.ask // update last price
   }
 }
 
