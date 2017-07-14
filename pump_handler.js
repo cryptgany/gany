@@ -12,6 +12,7 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
   this.buy_rate = this.base_rate * buy_at; // * 1.5;
   this.quantity = this.btc_amount / this.buy_rate;
   this.detektor = detektor
+  this.canceled_orders = []
 
   this.pump_ended = false
 
@@ -53,6 +54,7 @@ PumpHandler.prototype.notify_buy_complete_and_sell = function(order) {
 PumpHandler.prototype.waitForComplete = function(order_id, callback) {
   console.log("CALL TO ", this.market, "waitForComplete")
   if (this.pump_ended) return false; // do not track orders if pump canceled
+  if (this.canceled_orders.includes(order_id)) return false;
   this.client.get_order(order_id, (order) => {
     if (order.result.closed) { // order completed
       callback(order.result)
@@ -69,12 +71,14 @@ PumpHandler.prototype.cancel_order_if_not_complete = function(order_id, time) {
       // is the buy order but could not complete, pump canceled
       if (!this.buy_order_completed) {
         this.pump_ended = true
+        this.canceled_orders.push(order_id)
         this.logger.log(this.market, "Could not buy, pump canceled.", true);
       }
     }
     if (this.sell_order_id == order_id) {
       // sell order not completed
       if (!this.sell_order_completed){
+        this.canceled_orders.push(order_id)
         this.cancel_order_and_emit(order_id, () => {
           this.logger.log(this.market, "Could not sell, order canceled, trying to sell at current price", true);
           this.sell_rate = this.detektor.tickers[this.exchange][this.market].bid * 0.99 // sell at whatever person is buying

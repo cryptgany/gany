@@ -13,7 +13,7 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
   this.market_data = {}
   this.pumps_bought = {}
   this.trade_autotrader_enabled = false // based on TRADE info
-  this.ticker_autotrader_enabled = false // based on TICKER info
+  this.ticker_autotrader_enabled = true // based on TICKER info
   this.pumps = []
 
   this.exchange_volume_change = {
@@ -85,7 +85,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             }
           }
           if (message) {
-            if (this.ticker_autotrader_enabled && this.exchange == 'BTRX') { // if enabled
+            if (this.ticker_autotrader_enabled && exchange == 'BTRX') { // if enabled
               console.log("STATHIEJHOIEHRJIO")
               var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this)
               pump.start();
