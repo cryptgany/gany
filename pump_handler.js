@@ -109,7 +109,7 @@ PumpHandler.prototype.sell_on_peak = function() {
     this.sell_order_id = data.result.id;
     // wait order completion
     console.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate, true);
-    this.cancel_order_if_not_complete(data.result.id, 30 * 1000) // wait 5 minutes
+    this.cancel_order_if_not_complete(data.result.id, 60 * 60 * 1000) // wait 5 minutes
     this.waitForComplete(data.result.id, (order) => { this.notify_complete_and_print_result(order) });
   });
 }
@@ -126,8 +126,7 @@ PumpHandler.prototype.notify_complete_and_print_result = function(order) {
 PumpHandler.prototype.print_result = function() {
   console.log("CALL TO ", this.market, "print_result")
   var buy_price = this.buy_order.price_per_unit;
-  var sell_price = this.sell_order.price;
-  console.log(this.sell_order)
+  var sell_price = this.sell_order.price_per_unit;
   var buy_cost = this.buy_order.quantity * buy_price * 1.0025; // 0.0025% fee
   var sell_return = this.sell_order.quantity * sell_price * 0.9975; // 0.0025% fee
   var profit = sell_return - buy_cost;
