@@ -13,11 +13,11 @@ require('./klient');
 class PumpEvents extends EventEmitter {}
 var pump_events = new PumpEvents();
 var test_mode = false;
-var logger = new Logger(true, test_mode);
+var logger = new Logger(false, test_mode);
 var bittrex = new Bittrex(pump_events);
 var yobit = new Yobit(pump_events);
 
 // Start
 bittrex.watch()
 yobit.watch()
-detektor = new Detektor(logger, pump_events, test_mode)
+detektor = new Detektor(logger, pump_events, test_mode, {BTRX: bittrex, YOBT: yobit})

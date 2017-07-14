@@ -1,14 +1,15 @@
 // Should place order
 // Should keep track of order
 // Should make sell order after buying
-require('./klient');
-
-function PumpHandler(eventHandler, logger, market, btc_amount, base_rate, buy_at, sell_at) {
+function PumpHandler(event_handler, logger, client, exchange, market, btc_amount, base_rate, buy_at, sell_at) {
+  this.event_handler = event_handler;
+  this.logger = logger;
+  this.client = client
+  this.exchange = exchange;
   this.market = market;
   this.btc_amount = btc_amount * 0.9975; // ensure we don't use more than expected BTC amount (fees)
   this.base_rate = base_rate;
   this.buy_rate = this.base_rate * buy_at; // * 1.5;
-  this.eventHandler = eventHandler;
   this.quantity = this.btc_amount / this.buy_rate;
 
   this.sell_price_percentage = sell_at; // 2 by now
@@ -20,59 +21,56 @@ function PumpHandler(eventHandler, logger, market, btc_amount, base_rate, buy_at
   this.sell_order = undefined;
   this.sell_order_completed = false;
   this.sell_order_id = undefined;
-  this.logger = logger;
 }
 
 PumpHandler.prototype.start = function() {
-  var self = this; // for callbacks
-  self.logger.log(this.market, "Starting pnd! base rate: " + this.base_rate, true);
+  this.logger.log(this.market, "Starting pnd! base rate: " + this.base_rate, true);
 
   // configure events
-  self.eventHandler.on('ordercomplete', function(order) {
-    if (self.buy_order_id == order.OrderUuid) {// is a buy order
-      self.logger.log(self.market, "BUY ORDER COMPLETE! ID = " + order.OrderUuid, true);
-      self.buy_order = order;
-      self.buy_order_completed = true;
-      self.sell_on_peak();
+  this.event_handler.on('ordercomplete', (order) => {
+    if (this.buy_order_id == order.id) {// is a buy order
+      this.logger.log(this.market, "BUY ORDER COMPLETE! ID = " + order.id, true);
+      this.buy_order = order;
+      this.buy_order_completed = true;
+      this.sell_on_peak();
     }
-    if (self.sell_order_id == order.OrderUuid) {// is a sell order
-      self.logger.log(self.market, "SELL ORDER COMPLETED ID = " + order.OrderUuid, true);
-      self.sell_order = order;
-      self.sell_order_completed = true;
-      self.print_result();
+    if (this.sell_order_id == order.id) {// is a sell order
+      this.logger.log(this.market, "SELL ORDER COMPLETED ID = " + order.id, true);
+      this.sell_order = order;
+      this.sell_order_completed = true;
+      this.print_result();
     }
   });
 
   // start buy process
-  self.logger.log(self.market, "Placing buy order... ", true);
-  Klient.buyOrder(self.market, self.quantity, self.buy_rate, function(data) {
-    self.buy_order_id = data.result.uuid;
+  this.logger.log(this.market, "Placing buy order... ", true);
+
+  this.client.buy_order(this.market, this.quantity, this.buy_rate, (data) => {
+    this.buy_order_id = data.result.id;
     // wait order completion
-    self.logger.log(self.market, "Waiting for BUY order to complete... rate: " + self.buy_rate + ", order_id: " + data.result.uuid, true);
-    self.waitForComplete(data.result.uuid);
+    this.logger.log(this.market, "Waiting for BUY order to complete... rate: " + this.buy_rate + ", order_id: " + data.result.id, true);
+    this.waitForComplete(data.result.id);
   });
 }
 
 PumpHandler.prototype.waitForComplete = function(order_id) {
-  var self = this;
-  Klient.getOrder(order_id, function(order) {
-    if (order.result.Closed) { // order completed
-      self.eventHandler.emit('ordercomplete', order.result);
+  this.client.get_order(order_id, (order) => {
+    if (order.result.closed) { // order completed
+      this.event_handler.emit('ordercomplete', order.result);
     } else {
-      setTimeout(function(){ self.waitForComplete(order_id) }, 500);
+      setTimeout(() => { this.waitForComplete(order_id) }, 500);
     }
   });
 }
 
 PumpHandler.prototype.sell_on_peak = function() {
   // TO DO: IMPLEMENT SELL PEAK DETECTION STRATEGY
-  var self = this;
-  self.logger.log(this.market, "Placing sell order...", true)
-  Klient.sellOrder(this.market, this.quantity, this.sell_rate, function(data) {
-    self.sell_order_id = data.result.uuid;
+  this.logger.log(this.market, "Placing sell order...", true)
+  this.client.sell_order(this.market, this.quantity, this.sell_rate, (data) => {
+    this.sell_order_id = data.result.id;
     // wait order completion
-    self.logger.log(self.market, "Waiting for SELL order to complete... rate: " + self.sell_rate + ", order_id: " + data.result.uuid, true);
-    self.waitForComplete(data.result.uuid);
+    this.logger.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate + ", order_id: " + data.result.id, true);
+    this.waitForComplete(data.result.id);
   });
 }
 

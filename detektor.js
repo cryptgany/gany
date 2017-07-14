@@ -6,18 +6,21 @@ require('./protofunctions.js');
 var DateTime = require('node-datetime');
 
 // REAL CODING
-function Detektor(logger, pump_events, test_mode) {
+function Detektor(logger, pump_events, test_mode, api_clients) {
   this.logger = logger
   this.pump_events = pump_events
   this.test_mode = test_mode
   this.market_data = {}
   this.pumps_bought = {}
   this.autotrader_enabled = false
+  this.pumps = []
 
   this.exchange_volume_change = {
-    'BTRX': 1.25,
+    'BTRX': 1.1, // 1.25
     'YOBT': 1.6
   }
+
+  this.api_clients = api_clients
 
   this.market_data
   this.tickers = {}
@@ -81,6 +84,9 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             }
           }
           if (message) {
+            var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.01, last_ticker.ask, 1.01, 1.05)
+            pump.start();
+            this.pumps.push(pump);
             this.tickers_detected_blacklist[exchange+market] = 360 * 3 // blacklist for 3 hour, each "1" is 10 seconds
             this.logger.log(message[0], message[1])
           }
