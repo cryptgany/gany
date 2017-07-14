@@ -26,6 +26,9 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
   this.sell_order_completed = false;
   this.sell_order_id = undefined;
 
+  this.strategy = 0 // 0: smart, 1: fixed %
+  this.minumum_sells_to_consider_sellout = 3 // for 20 seconds, bids falling
+
   this.verbose = false
 }
 
@@ -103,17 +106,40 @@ PumpHandler.prototype.cancel_order_and_emit = function(order_id, callback) {
   });
 }
 
-PumpHandler.prototype.sell_on_peak = function() {
-  if (this.verbose) console.log("CALL TO ", this.market, "sell_on_peak")
+PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_price = this.base_rate, downtrend = 0) { // sell based on strategies
+  if (this.verbose) console.log("CALL TO ", this.market, "sell_on_peak", "with price " + last_price, "and downtrend = " + downtrend)
   // TO DO: IMPLEMENT SELL PEAK DETECTION STRATEGY
-  if (this.verbose) console.log(this.market, "Placing sell order...", true)
-  this.client.sell_order(this.market, this.quantity, this.sell_rate, (data) => {
-    this.sell_order_id = data.result.id;
-    // wait order completion
-    if (this.verbose) console.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate, true);
-    this.cancel_order_if_not_complete(data.result.id, 60 * 60 * 1000) // wait 5 minutes
-    this.waitForComplete(data.result.id, (order) => { this.notify_complete_and_print_result(order) });
-  });
+  if (strategy == 0) { // peak detector
+    this.pump_events.once('marketupdate', (operation, exchange, market, data) => {
+      if (operation == 'TICKER' && exchange == this.exchange && market == this.market) {
+        if (data.ask < last_price) {
+          downtrend++
+          if (downtrend >= this.minumum_sells_to_consider_sellout) { // reached
+            if (this.verbose) console.log("downtrend detected on price " + data.ask, "vs " + last_price, "(started on " + this.base_rate + ")")
+            if (data.ask / last_price > 1.05) {// and is bigger than 5%
+              if (this.verbose) console.log("and price is bigger than 5%, selling")
+              this.sell_rate = data.ask * 0.98
+              this.sell_on_peak(1)
+            } else { this.sell_on_peak(0, data.ask, downtrend) } // check next cycle
+          } else { this.sell_on_peak(0, data.ask, downtrend) } // check next cycle
+        } else {
+          downtrend = 0 // reset to 0
+          this.sell_on_peak(0, data.ask, downtrend) // check next cycle
+        }
+        last_price = data.ask // update last price
+      }
+    })
+  }
+  if (strategy == 1) { { // fixed price
+    if (this.verbose) console.log(this.market, "Placing sell order...", true)
+    this.client.sell_order(this.market, this.quantity, this.sell_rate, (data) => {
+      this.sell_order_id = data.result.id;
+      // wait order completion
+      if (this.verbose) console.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate, true);
+      this.cancel_order_if_not_complete(data.result.id, 60 * 60 * 1000) // wait 5 minutes
+      this.waitForComplete(data.result.id, (order) => { this.notify_complete_and_print_result(order) });
+    });
+  }
 }
 
 PumpHandler.prototype.notify_complete_and_print_result = function(order) {
