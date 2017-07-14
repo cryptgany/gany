@@ -139,9 +139,8 @@ Bittrex.prototype._parse_order = function(e) {
     quantity: e.Quantity,
     quantity_remaining: e.QuantityRemaining,
     price: e.Limit,
-    commission: e.CommissionPaid,
-    Price: e.Price,
     price_per_unit: e.PricePerUnit,
+    commission: e.CommissionPaid,
     opened: e.Opened,
     closed: e.Closed
   }

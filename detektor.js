@@ -12,11 +12,12 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
   this.test_mode = test_mode
   this.market_data = {}
   this.pumps_bought = {}
-  this.autotrader_enabled = false
+  this.trade_autotrader_enabled = false // based on TRADE info
+  this.ticker_autotrader_enabled = true // based on TICKER info
   this.pumps = []
 
   this.exchange_volume_change = {
-    'BTRX': 1.1, // 1.25
+    'BTRX': 1.05, // 1.25
     'YOBT': 1.6
   }
 
@@ -84,9 +85,11 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             }
           }
           if (message) {
-            var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.01, last_ticker.ask, 1.01, 1.05)
-            pump.start();
-            this.pumps.push(pump);
+            if (this.ticker_autotrader_enabled) { // if enabled
+              var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this)
+              pump.start();
+              this.pumps.push(pump);
+            }
             this.tickers_detected_blacklist[exchange+market] = 360 * 3 // blacklist for 3 hour, each "1" is 10 seconds
             this.logger.log(message[0], message[1])
           }
@@ -112,7 +115,7 @@ Detektor.prototype.market_url = function(exchange, market) {
 }
 
 Detektor.prototype.analyze_market = function(data) {
-  if (!this.autotrader_enabled) return '';
+  if (!this.trade_autotrader_enabled) return '';
   result = false;
   buy_at = 0;
   sell_at = 0;
