@@ -124,6 +124,7 @@ PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_pri
               if (this.verbose) console.log("and price is bigger than 5%, selling")
               this.sell_rate = data.ask * 0.98
               sold_on_peak = true // stop cycle
+              this.event_handler.removeListener('marketupdate', function() {}, this)
               this.sell_on_peak(1)
             } else {  } // check next cycle
           } else {  } // check next cycle
@@ -134,7 +135,7 @@ PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_pri
         }
         last_price = data.ask // update last price
       }
-    })
+    }, this)
   }
   if (strategy == 1) { // fixed price
     if (this.verbose) console.log(this.market, "Placing sell order...", true)
