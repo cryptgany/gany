@@ -86,7 +86,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
           }
           if (message) {
             if (this.ticker_autotrader_enabled && exchange == 'BTRX') { // if enabled
-              var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this)
+              var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this, 0)
               pump.start();
               this.pumps.push(pump);
             }
@@ -150,7 +150,7 @@ Detektor.prototype.analyze_market = function(data) {
         if (self.test_mode) {
           self.logger.log("BTRX/" + market_name, "Test values: Amount: " + btc_amount * 0.9975 / buy_at * rate + " | Buy price " + buy_at * rate + " | Sell price: " + sell_at * rate, true);
         } else {
-          var pump = new PumpHandler(self.pump_events, self.logger, self.api_clients[exchange], 'BTRX', market_name, btc_amount, rate, buy_at, sell_at, self); // COMMENT THIS LINE FOR REAL TESTING
+          var pump = new PumpHandler(self.pump_events, self.logger, self.api_clients[exchange], 'BTRX', market_name, btc_amount, rate, buy_at, sell_at, self, 1); // COMMENT THIS LINE FOR REAL TESTING
           pump.start();
           self.pumps.push(pump); // later review
         }

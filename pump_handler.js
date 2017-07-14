@@ -1,7 +1,7 @@
 // Should place order
 // Should keep track of order
 // Should make sell order after buying
-function PumpHandler(event_handler, logger, client, exchange, market, btc_amount, base_rate, buy_at, sell_at, detektor) {
+function PumpHandler(event_handler, logger, client, exchange, market, btc_amount, base_rate, buy_at, sell_at, detektor, strategy = 0) {
   this.event_handler = event_handler;
   this.logger = logger;
   this.client = client
@@ -26,10 +26,10 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
   this.sell_order_completed = false;
   this.sell_order_id = undefined;
 
-  this.strategy = 0 // 0: smart, 1: fixed %
-  this.minumum_sells_to_consider_sellout = 3 // for 20 seconds, bids falling
+  this.strategy = strategy // 0: smart, 1: fixed %
+  this.minumum_sells_to_consider_sellout = 2 // for 20 seconds, bids falling
 
-  this.verbose = false
+  this.verbose = true
 }
 
 PumpHandler.prototype.start = function() {
@@ -87,7 +87,7 @@ PumpHandler.prototype.cancel_order_if_not_complete = function(order_id, time) {
         this.cancel_order_and_emit(order_id, () => {
           if (this.verbose) console.log(this.market, "Could not sell, order canceled, trying to sell at current price", true);
           this.sell_rate = this.detektor.tickers[this.exchange][this.market].bid * 0.99 // sell at whatever person is buying
-          this.sell_on_peak();
+          this.sell_on_peak(1);
         })
       }
     }
@@ -107,30 +107,36 @@ PumpHandler.prototype.cancel_order_and_emit = function(order_id, callback) {
 }
 
 PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_price = this.base_rate, downtrend = 0) { // sell based on strategies
-  if (this.verbose) console.log("CALL TO ", this.market, "sell_on_peak", "with price " + last_price, "and downtrend = " + downtrend)
+  if (this.verbose) console.log("CALL TO ", this.market, "sell_on_peak", "strategy", strategy,"with price " + last_price, "and downtrend = " + downtrend)
   // TO DO: IMPLEMENT SELL PEAK DETECTION STRATEGY
   if (strategy == 0) { // peak detector
-    this.pump_events.once('marketupdate', (operation, exchange, market, data) => {
-      if (operation == 'TICKER' && exchange == this.exchange && market == this.market) {
+    sold_on_peak = false
+    this.event_handler.on('marketupdate', (operation, exchange, market, data) => {
+      if(operation=="TICKER" && exchange==this.exchange && market==this.market)
+        console.log("event alive:", exchange,market)
+      if (!this.pump_ended && !sold_on_peak && operation == 'TICKER' && exchange == this.exchange && market == this.market) {
+        if(this.verbose) console.log("analyzing", this.market, "downtrend", downtrend, "last", last_price)
         if (data.ask < last_price) {
           downtrend++
           if (downtrend >= this.minumum_sells_to_consider_sellout) { // reached
             if (this.verbose) console.log("downtrend detected on price " + data.ask, "vs " + last_price, "(started on " + this.base_rate + ")")
-            if (data.ask / last_price > 1.05) {// and is bigger than 5%
+            if (data.ask / this.base_rate > 1.05) {// and is bigger than 5%
               if (this.verbose) console.log("and price is bigger than 5%, selling")
               this.sell_rate = data.ask * 0.98
+              sold_on_peak = true // stop cycle
               this.sell_on_peak(1)
-            } else { this.sell_on_peak(0, data.ask, downtrend) } // check next cycle
-          } else { this.sell_on_peak(0, data.ask, downtrend) } // check next cycle
+            } else {  } // check next cycle
+          } else {  } // check next cycle
         } else {
           downtrend = 0 // reset to 0
-          this.sell_on_peak(0, data.ask, downtrend) // check next cycle
+          last_price = data.ask
+          // this.sell_on_peak(0, data.ask, downtrend) // check next cycle
         }
         last_price = data.ask // update last price
       }
     })
   }
-  if (strategy == 1) { { // fixed price
+  if (strategy == 1) { // fixed price
     if (this.verbose) console.log(this.market, "Placing sell order...", true)
     this.client.sell_order(this.market, this.quantity, this.sell_rate, (data) => {
       this.sell_order_id = data.result.id;
