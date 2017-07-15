@@ -36,7 +36,8 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
     time_for_peak_detection: 60 * 12, // minutes, give this time for trying to reach peak price
     time_for_fixed_sell_detection: 0.15, // when doing fixed sells at certain price, wait if they do not complete
     percentage_for_selling_on_downtrend: 1.05, // if on downtrend, sell if bigger than this price
-    minumum_sells_to_consider_downtrend: 2 // each unit is 10 seconds
+    minumum_sells_to_consider_downtrend: 2, // each unit is 10 seconds
+    expected_percentage_to_sell: 1.5 // if reached this percentage, sell
   }
 
   this.verbose = verbose
@@ -164,6 +165,12 @@ PumpHandler.prototype.analyze_ticker = function(operation, exchange, market, dat
     } else {
       this.downtrend = 0 // reset to 0
       this.last_price = data.ask
+      if ((data.ask / this.base_rate) > this.smart_strategy.expected_percentage_to_sell) {
+        this.sell_rate = data.ask * 0.98
+        this.sold_on_peak = true // stop cycle
+        this.event_handler.removeListener('marketupdate', this.ticker_event_handler_method)
+        this.sell_on_peak(1)
+      }
       // this.sell_on_peak(0, data.ask, downtrend) // check next cycle
     }
     this.last_price = data.ask // update last price

@@ -196,11 +196,15 @@ Detektor.prototype.process_telegram_request = function(msg, responder) {
       responder(profit + " in profits so far.")
     }
     if (command == '/detektor open orders') {
-      count = this.pumps.filter((pump) => { return pump.pump_ended }).length
+      count = this.pumps.filter((pump) => { return !pump.pump_ended }).length
       responder(count + " opened orders at the moment.")
     }
+    if (command == '/detektor closed orders') {
+      count = this.pumps.filter((pump) => { return pump.pump_ended }).length
+      responder(count + " closed orders at the moment.")
+    }
     if (command == '/detektor commands') {
-      responder("Commands are:\nset autotrader false\nset autotrader true\nsee profit\nopen orders\ncommands")
+      responder("Commands are:\nset autotrader false\nset autotrader true\nsee profit\nopen orders\nclosed orders\ncommands")
     }
   }
 }
