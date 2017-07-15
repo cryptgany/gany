@@ -1,7 +1,7 @@
 // Should place order
 // Should keep track of order
 // Should make sell order after buying
-function PumpHandler(event_handler, logger, client, exchange, market, btc_amount, base_rate, buy_at, sell_at, detektor, strategy = 0) {
+function PumpHandler(event_handler, logger, client, exchange, market, btc_amount, base_rate, buy_at, sell_at, detektor, strategy = 0, verbose = false) {
   this.event_handler = event_handler;
   this.logger = logger;
   this.client = client
@@ -32,9 +32,8 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
   this.strategy = strategy // 0: smart, 1: fixed %
   this.minumum_sells_to_consider_sellout = 2 // for 20 seconds, bids falling
 
-  this.event_context = undefined
-
-  this.verbose = true
+  this.verbose = verbose
+  this.ticker_event_handler_method = this.analyze_ticker.bind(this)
 }
 
 PumpHandler.prototype.start = function() {
@@ -99,7 +98,7 @@ PumpHandler.prototype.cancel_order_if_not_complete = function(order_id, time) {
     if (order_id == 'new') { // could not find good peak, sell at current price
       if(this.verbose) { console.log(this.market, 'Could not sell at peak, selling current price and receive loss') }
       this.sell_rate = this.detektor.tickers[this.exchange][this.market].bid * 0.98
-      this.event_handler.removeListener('marketupdate', (operation, exchange, market, data) => { this.analyze_ticker(operation,exchange,market,data) }, this.event_context)
+      this.event_handler.removeListener('marketupdate', this.ticker_event_handler_method)
       this.sell_on_peak(1)
     }
   }, time)
@@ -122,8 +121,9 @@ PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_pri
   // TO DO: IMPLEMENT SELL PEAK DETECTION STRATEGY
   if (strategy == 0) { // peak detector
     this.sold_on_peak = false
-    this.cancel_order_if_not_complete('new', 15 * 60 * 1000)
-    this.event_context = this.event_handler.on('marketupdate', (operation, exchange, market, data) => { this.analyze_ticker(operation,exchange,market,data) })
+    this.cancel_order_if_not_complete('new', 15 * 60 * 1000)// this should be like 1 hour
+    this.last_price = last_price
+    this.event_handler.on('marketupdate', this.ticker_event_handler_method)
   }
   if (strategy == 1) { // fixed price
     if (this.verbose) console.log(this.market, "Placing sell order...", true)
@@ -138,7 +138,7 @@ PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_pri
 }
 
 PumpHandler.prototype.analyze_ticker = function(operation, exchange, market, data) {
-  if(operation=="TICKER" && exchange==this.exchange && market==this.market)
+  if(this.verbose && operation=="TICKER" && exchange==this.exchange && market==this.market)
     console.log("event alive:", exchange,market)
   if (!this.pump_ended && !this.sold_on_peak && operation == 'TICKER' && exchange == this.exchange && market == this.market) {
     if(this.verbose) console.log("analyzing", this.market, "downtrend", this.downtrend, "last", this.last_price)
@@ -150,7 +150,7 @@ PumpHandler.prototype.analyze_ticker = function(operation, exchange, market, dat
           if (this.verbose) console.log("and price is bigger than 5%, selling")
           this.sell_rate = data.ask * 0.98
           this.sold_on_peak = true // stop cycle
-          this.event_handler.removeListener('marketupdate', (operation, exchange, market, data) => { this.analyze_ticker(operation,exchange,market,data) }, this.event_context)
+          this.event_handler.removeListener('marketupdate', this.ticker_event_handler_method)
           this.sell_on_peak(1)
         } else {  } // check next cycle
       } else {  } // check next cycle
@@ -173,7 +173,7 @@ PumpHandler.prototype.notify_complete_and_print_result = function(order) {
 }
 
 PumpHandler.prototype.print_result = function() {
-  console.log("CALL TO ", this.market, "print_result")
+  if(this.verbose) console.log("CALL TO ", this.market, "print_result")
   var buy_price = this.buy_order.price_per_unit;
   var sell_price = this.sell_order.price_per_unit;
   var buy_cost = this.buy_order.quantity * buy_price * 1.0025; // 0.0025% fee

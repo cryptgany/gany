@@ -10,11 +10,13 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
   this.logger = logger
   this.pump_events = pump_events
   this.test_mode = test_mode
+  this.verbose = false
   this.market_data = {}
   this.pumps_bought = {}
   this.trade_autotrader_enabled = false // based on TRADE info
   this.ticker_autotrader_enabled = true // based on TICKER info
   this.pumps = []
+  this.max_tickers_history = 360 // length (each unit is 10 seconds)
 
   this.exchange_volume_change = {
     'BTRX': 1.25, // 1.25
@@ -75,7 +77,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
       } else {
         if (tickers = this.get_ticker_history(exchange, market)) {
           message = false
-          max_time = tickers.length <= 150 ? tickers.length : 150
+          max_time = tickers.length <= 270 ? tickers.length : 270
           for(time = max_time; time > 1; time--) {
             if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
@@ -86,7 +88,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
           }
           if (message) {
             if (this.ticker_autotrader_enabled && exchange == 'BTRX') { // if enabled
-              var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this, 0)
+              var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this, 0, this.verbose)
               pump.start();
               this.pumps.push(pump);
             }
@@ -96,6 +98,18 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
         }
       }
   }, 0) // run async
+}
+
+Detektor.prototype.keep_tickers_limited = function() { // will limit tickers history to not fill memory up
+  Object.keys(this.tickers_history).forEach((exchange) => {
+    Object.keys(this.tickers_history[exchange]).forEach((market) => {
+      if (this.tickers_history[exchange][market].length > this.max_tickers_history) {
+        tickers = this.tickers_history[exchange][market]
+        this.tickers_history[exchange][market] = tickers.slice(tickers.length - this.max_tickers_history, tickers.length)
+      }
+    })
+  })
+  setTimeout(() => { this.keep_tickers_limited() }, 30 * 60 * 1000) // clean every 30 minutes
 }
 
 Detektor.prototype._seconds_to_minutes = function(seconds) {
@@ -150,7 +164,7 @@ Detektor.prototype.analyze_market = function(data) {
         if (self.test_mode) {
           self.logger.log("BTRX/" + market_name, "Test values: Amount: " + btc_amount * 0.9975 / buy_at * rate + " | Buy price " + buy_at * rate + " | Sell price: " + sell_at * rate, true);
         } else {
-          var pump = new PumpHandler(self.pump_events, self.logger, self.api_clients[exchange], 'BTRX', market_name, btc_amount, rate, buy_at, sell_at, self, 1); // COMMENT THIS LINE FOR REAL TESTING
+          var pump = new PumpHandler(self.pump_events, self.logger, self.api_clients[exchange], 'BTRX', market_name, btc_amount, rate, buy_at, sell_at, self, 1, this.verbose); // COMMENT THIS LINE FOR REAL TESTING
           pump.start();
           self.pumps.push(pump); // later review
         }
