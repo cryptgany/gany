@@ -47,6 +47,7 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
       }
     }
   })
+  setTimeout(() => { this.keep_tickers_limited() }, 5000)
 }
 
 Detektor.prototype.update_ticker = function(exchange, market, data) {
@@ -101,6 +102,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
 }
 
 Detektor.prototype.keep_tickers_limited = function() { // will limit tickers history to not fill memory up
+  console.log("RUNNING TICKERS CLEANER...")
   Object.keys(this.tickers_history).forEach((exchange) => {
     Object.keys(this.tickers_history[exchange]).forEach((market) => {
       if (this.tickers_history[exchange][market].length > this.max_tickers_history) {
