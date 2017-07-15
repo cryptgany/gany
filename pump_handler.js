@@ -19,7 +19,7 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
   this.downtrend = 0
   this.last_price = 0
 
-  this.sell_price_percentage = sell_at; // 2 by now
+  this.sell_price_percentage = sell_at; // used for fixed price sells
   this.sell_rate = this.base_rate * this.sell_price_percentage;
 
   this.buy_order = undefined;
@@ -30,7 +30,13 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
   this.sell_order_id = undefined;
 
   this.strategy = strategy // 0: smart, 1: fixed %
-  this.minumum_sells_to_consider_sellout = 2 // for 20 seconds, bids falling
+
+  this.smart_strategy = { // params for strategy 0
+    time_for_peak_detection: 60, // minutes, give this time for trying to reach peak price
+    time_for_fixed_sell_detection: 0.15, // when doing fixed sells at certain price, wait if they do not complete
+    percentage_for_selling_on_downtrend: 1.05, // if on downtrend, sell if bigger than this price
+    minumum_sells_to_consider_downtrend: 2 // each unit is 10 seconds
+  }
 
   this.verbose = verbose
   this.ticker_event_handler_method = this.analyze_ticker.bind(this)
@@ -38,15 +44,15 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
 
 PumpHandler.prototype.start = function() {
   if (this.verbose) console.log("CALL TO ", this.market, "start")
-  this.logger.log(this.market, "Starting pump. Base rate: " + this.base_rate, true);
+  this.logger.log(this.exchange + "/" + this.market, "Starting pump. Base rate: " + this.base_rate, true);
 
   // start buy process
-  if (this.verbose) console.log(this.market, "Placing buy order... ", true);
+  if (this.verbose) console.log(this.market, "Placing buy order... ");
 
   this.client.buy_order(this.market, this.quantity, this.buy_rate, (data) => {
     this.buy_order_id = data.result.id;
     // wait order completion
-    if (this.verbose) console.log(this.market, "Waiting for BUY order to complete... rate: " + this.buy_rate, true);
+    if (this.verbose) console.log(this.market, "Waiting for BUY order to complete... rate: " + this.buy_rate);
     this.cancel_order_if_not_complete(data.result.id, 15*1000)
     this.waitForComplete(data.result.id, (order) => { this.notify_buy_complete_and_sell(order) });
   });
@@ -54,7 +60,7 @@ PumpHandler.prototype.start = function() {
 
 PumpHandler.prototype.notify_buy_complete_and_sell = function(order) {
   if (this.verbose) console.log("CALL TO ", this.market, "notify_buy_complete_and_sell")
-  if (this.verbose) console.log(this.market, "BUY ORDER COMPLETE! ID = " + order.id, true);
+  if (this.verbose) console.log(this.market, "BUY ORDER COMPLETE! ID = " + order.id);
   this.buy_order = order;
   this.buy_order_completed = true;
   this.sell_on_peak();
@@ -81,7 +87,7 @@ PumpHandler.prototype.cancel_order_if_not_complete = function(order_id, time) {
       if (!this.buy_order_completed) {
         this.pump_ended = true
         this.canceled_orders.push(order_id)
-        if (this.verbose) console.log(this.market, "Could not buy, pump canceled.", true);
+        if (this.verbose) console.log(this.market, "Could not buy, pump canceled.");
       }
     }
     if (this.sell_order_id == order_id) {
@@ -89,8 +95,8 @@ PumpHandler.prototype.cancel_order_if_not_complete = function(order_id, time) {
       if (!this.sell_order_completed){
         this.canceled_orders.push(order_id)
         this.cancel_order_and_emit(order_id, () => {
-          if (this.verbose) console.log(this.market, "Could not sell, order canceled, trying to sell at current price", true);
-          this.sell_rate = this.detektor.tickers[this.exchange][this.market].bid * 0.99 // sell at whatever person is buying
+          if (this.verbose) console.log(this.market, "Could not sell, order canceled, trying to sell at current price");
+          this.sell_rate = this.detektor.tickers[this.exchange][this.market].bid * 0.98 // sell at whatever person is buying
           this.sell_on_peak(1);
         })
       }
@@ -121,17 +127,17 @@ PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_pri
   // TO DO: IMPLEMENT SELL PEAK DETECTION STRATEGY
   if (strategy == 0) { // peak detector
     this.sold_on_peak = false
-    this.cancel_order_if_not_complete('new', 15 * 60 * 1000)// this should be like 1 hour
+    this.cancel_order_if_not_complete('new', this.smart_strategy.time_for_peak_detection * 60 * 1000)// this should be like 1 hour
     this.last_price = last_price
     this.event_handler.on('marketupdate', this.ticker_event_handler_method)
   }
   if (strategy == 1) { // fixed price
-    if (this.verbose) console.log(this.market, "Placing sell order...", true)
+    if (this.verbose) console.log(this.market, "Placing sell order...")
     this.client.sell_order(this.market, this.quantity, this.sell_rate, (data) => {
       this.sell_order_id = data.result.id;
       // wait order completion
-      if (this.verbose) console.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate, true);
-      this.cancel_order_if_not_complete(data.result.id, 30 * 1000) // wait 5 minutes
+      if (this.verbose) console.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate);
+      this.cancel_order_if_not_complete(data.result.id, this.smart_strategy.time_for_fixed_sell_detection * 1000) // wait 5 minutes
       this.waitForComplete(data.result.id, (order) => { this.notify_complete_and_print_result(order) });
     });
   }
@@ -144,9 +150,9 @@ PumpHandler.prototype.analyze_ticker = function(operation, exchange, market, dat
     if(this.verbose) console.log("analyzing", this.market, "downtrend", this.downtrend, "last", this.last_price)
     if (data.ask < this.last_price) {
       this.downtrend++
-      if (this.downtrend >= this.minumum_sells_to_consider_sellout) { // reached
+      if (this.downtrend >= this.smart_strategy.minumum_sells_to_consider_downtrend) { // reached
         if (this.verbose) console.log("downtrend detected on price " + data.ask, "vs " + this.last_price, "(started on " + this.base_rate + ")")
-        if (data.ask / this.base_rate > 1.05) {// and is bigger than 5%
+        if (data.ask / this.base_rate > this.smart_strategy.percentage_for_selling_on_downtrend) {// and is bigger than 5%
           if (this.verbose) console.log("and price is bigger than 5%, selling")
           this.sell_rate = data.ask * 0.98
           this.sold_on_peak = true // stop cycle
@@ -166,7 +172,7 @@ PumpHandler.prototype.analyze_ticker = function(operation, exchange, market, dat
 PumpHandler.prototype.notify_complete_and_print_result = function(order) {
   if (this.verbose) console.log("CALL TO ", this.market, "notify_complete_and_print_result")
   this.pump_ended = true
-  if (this.verbose) console.log(this.market, "SELL ORDER COMPLETED ID = " + order.id, true);
+  if (this.verbose) console.log(this.market, "SELL ORDER COMPLETED ID = " + order.id);
   this.sell_order = order;
   this.sell_order_completed = true;
   this.print_result();
@@ -179,7 +185,7 @@ PumpHandler.prototype.print_result = function() {
   var buy_cost = this.buy_order.quantity * buy_price * 1.0025; // 0.0025% fee
   var sell_return = this.sell_order.quantity * sell_price * 0.9975; // 0.0025% fee
   var profit = sell_return - buy_cost;
-  this.logger.log(this.market, "PUMP COMPLETE! [ BUY: " + buy_price.toFixed(8) + " ]|[ SELL: " + sell_price.toFixed(8) + " ]|[ RESULT: " + profit.toFixed(8) + " ]", true);
+  this.logger.log(this.exchange + "/" + this.market, "Pump complete! [ BUY: " + buy_price.toFixed(8) + " ]|[ SELL: " + sell_price.toFixed(8) + " ]|[ RESULT: " + profit.toFixed(8) + " ]", true);
 }
 
 module.exports = PumpHandler;
