@@ -17,6 +17,12 @@ function Logger(bot_enabled = true, test_mode = false) {
   }
 }
 
+Logger.prototype.listen = function(callback) {
+  if (this.bot_enabled) {
+    this.gany_the_bot.listen(callback)
+  }
+}
+
 Logger.prototype.log = function(name, str, vip_only = false) {
   var time = DateTime.create()._now;
   if (this.bot_enabled) {

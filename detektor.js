@@ -47,6 +47,7 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
       }
     }
   })
+  this.logger.listen(this.process_telegram_request.bind(this)) // for telegram
   setTimeout(() => { this.keep_tickers_limited() }, 5000)
 }
 
@@ -177,6 +178,29 @@ Detektor.prototype.analyze_market = function(data) {
       sell_amount = sells.length == 0 ? 0 : sells.map(function(e) { return e.Quantity * e.Rate; }).reduce(function(sum, e) { return sum+e; });
       winner = buys > sells ? " WINNER: buys" : " WINNER: sells";
       self.logger.log("BTRX/" + market_name, "[CHANGE: " + change + "]" + "[OPEN " + first_fill.TimeStamp + " " + first_fill.Rate + "] [CLOSE " + last_fill.TimeStamp + " " + last_fill.Rate + "] buy amount: " + buys.length + " (" + buy_amount.toFixed(4) + " BTC), sell amount: " + sells.length + "(" + sell_amount.toFixed(4) + " BTC)" + winner, true);
+    }
+  }
+}
+
+Detektor.prototype.process_telegram_request = function(msg, responder) {
+  command = msg.text
+  if (command.includes('/detektor')) {
+    if (command == '/detektor set autotrader false') { this.ticker_autotrader_enabled = false; responder("Autotrader disabled.") }
+    if (command == '/detektor set autotrader true') { this.ticker_autotrader_enabled = true; responder("Autotrader enabled.") }
+    if (command == '/detektor see profit') {
+      if (this.pumps.length > 0) {
+        profit = this.pumps.map((pmp) => { return pmp.profit }).sum()
+      } else {
+        profit = 0
+      }
+      responder(profit + " in profits so far.")
+    }
+    if (command == '/detektor open orders') {
+      count = this.pumps.filter((pump) => { return pump.pump_ended }).length
+      responder(count + " opened orders at the moment.")
+    }
+    if (command == '/detektor commands') {
+      responder("Commands are:\nset autotrader false\nset autotrader true\nsee profit\nopen orders\ncommands")
     }
   }
 }

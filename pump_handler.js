@@ -18,6 +18,7 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
   this.sold_on_peak = false
   this.downtrend = 0
   this.last_price = 0
+  this.profit = 0 // will store end profit
 
   this.sell_price_percentage = sell_at; // used for fixed price sells
   this.sell_rate = this.base_rate * this.sell_price_percentage;
@@ -32,7 +33,7 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
   this.strategy = strategy // 0: smart, 1: fixed %
 
   this.smart_strategy = { // params for strategy 0
-    time_for_peak_detection: 60, // minutes, give this time for trying to reach peak price
+    time_for_peak_detection: 60 * 12, // minutes, give this time for trying to reach peak price
     time_for_fixed_sell_detection: 0.15, // when doing fixed sells at certain price, wait if they do not complete
     percentage_for_selling_on_downtrend: 1.05, // if on downtrend, sell if bigger than this price
     minumum_sells_to_consider_downtrend: 2 // each unit is 10 seconds
@@ -185,6 +186,7 @@ PumpHandler.prototype.print_result = function() {
   var buy_cost = this.buy_order.quantity * buy_price * 1.0025; // 0.0025% fee
   var sell_return = this.sell_order.quantity * sell_price * 0.9975; // 0.0025% fee
   var profit = sell_return - buy_cost;
+  this.profit = profit
   this.logger.log(this.exchange + "/" + this.market, "Pump complete! [ BUY: " + buy_price.toFixed(8) + " ]|[ SELL: " + sell_price.toFixed(8) + " ]|[ RESULT: " + profit.toFixed(8) + " ]", true);
 }
 
