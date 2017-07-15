@@ -2,6 +2,7 @@
 require('dotenv').config();
 
 // Constants
+const PumpHandler = require('./pump_handler.js');
 const Detektor = require('./detektor');
 const EventEmitter = require('events');
 const Logger = require('./logger');

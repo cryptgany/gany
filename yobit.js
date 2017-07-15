@@ -1,9 +1,9 @@
 require('dotenv').config();
 
-const Yobit = require('yobit');
+const YobitClient = require('yobit');
 
-function YobitClient(pump_events, skip_volumes = 0.5) {
-  this.client = new Yobit(process.env.YOBIT_KEY, process.env.YOBIT_SECRET);
+function Yobit(pump_events, skip_volumes = 0.5) {
+  this.client = new YobitClient(process.env.YOBIT_KEY, process.env.YOBIT_SECRET);
   this.all_markets = [];
   this.markets = []; // after selecting only good volume markets
   this.market_data = [];
@@ -11,7 +11,7 @@ function YobitClient(pump_events, skip_volumes = 0.5) {
   this.skip_volumes = 0.5 // skip markets with lower than this volume
 }
 
-YobitClient.prototype.watch = function() {
+Yobit.prototype.watch = function() {
   this.get_markets((err, e) => {
     Object.keys(e.pairs).forEach((key) => {
       if (e.pairs[key].hidden == 0 && key.endsWith('btc'))
@@ -23,7 +23,7 @@ YobitClient.prototype.watch = function() {
   setTimeout(() => { this._watch_tickers() }, 10 * 1000)
 }
 
-YobitClient.prototype._watch_tickers = function() {
+Yobit.prototype._watch_tickers = function() {
   var self = this
   cycles = Math.ceil(this.markets.length / 50)
   cycle = 0
@@ -45,7 +45,7 @@ YobitClient.prototype._watch_tickers = function() {
   setTimeout(() => { this._watch_tickers() }, 10 * 1000)
 }
 
-YobitClient.prototype._select_good_volume_markets = function() {
+Yobit.prototype._select_good_volume_markets = function() {
   var self = this
   this.markets = []
   cycles = Math.ceil(this.all_markets.length / 50)
@@ -70,25 +70,26 @@ YobitClient.prototype._select_good_volume_markets = function() {
 }
 
 // Implement standard functions
-YobitClient.prototype.balance = function(callback) {
+Yobit.prototype.balance = function(callback) {
   this.client.getInfo(callback) // implement later
 }
 
-YobitClient.prototype.get_markets = function(callback) {
+Yobit.prototype.get_markets = function(callback) {
   this.client.publicRequest('info', {}, callback)
 }
 
-YobitClient.prototype.get_order = function(order_id, callback) {
+Yobit.prototype.get_order = function(order_id, callback) {
   this.client.privateRequest('OrderInfo', { order_id: order_id }, (err, data) => {
+    console.log("GET ORDER", err, data)
     callback({
       success: data.success == 1,
       message: data.error,
-      result: this._parse_order(data.return)
+      result: this._parse_order(data.return)[0]
     })
   })
 }
 
-YobitClient.prototype.get_orders = function(market, callback) {
+Yobit.prototype.get_orders = function(market, callback) {
   market = market.toLowerCase().replace(/\-/, '_')
   this.client.privateRequest('ActiveOrders', { pair: market }, (err, data) => {
     callback({
@@ -99,7 +100,7 @@ YobitClient.prototype.get_orders = function(market, callback) {
   })
 }
 
-YobitClient.prototype.get_all_orders = function(callback) { // pair is required
+Yobit.prototype.get_all_orders = function(callback) { // pair is required
   this.client.privateRequest('ActiveOrders', { }, (err, data) => {
     callback({
       success: data.success == 1,
@@ -109,35 +110,42 @@ YobitClient.prototype.get_all_orders = function(callback) { // pair is required
   })
 }
 
-YobitClient.prototype.buy_order = function(market, quantity, rate, callback) {
+Yobit.prototype.buy_order = function(market, quantity, rate, callback) {
   market = market.toLowerCase().replace(/\-/, '_')
-  params = { pair: market, type: 'buy', rate: rate, amount: quantity }
+  params = { pair: market, type: 'buy', rate: rate.toFixed(8), amount: quantity }
   this.client.privateRequest('Trade', params, (err, data) => {
     callback(
       { success: data.success == 1,
       message: data.error,
-      result: { id: data.return.order_id } }
+      result: { id: data.success == 1 ? data.return.order_id : undefined } }
     )
   })
 }
 
-YobitClient.prototype.sell_order = function(market, quantity, rate, callback) {
+Yobit.prototype.sell_order = function(market, quantity, rate, callback) {
   market = market.toLowerCase().replace(/\-/, '_')
-  params = { pair: market, type: 'sell', rate: rate, amount: quantity }
+  params = { pair: market, type: 'sell', rate: rate.toFixed(8), amount: quantity }
   this.client.privateRequest('Trade', params, (err, data) => {
     callback(
-      { success: data.success == 1,
+      { success: (data.success == 1),
       message: data.error,
-      result: { id: data.return.order_id } }
+      result: { id: (data.success == 1 ? data.return.order_id : undefined) } }
     )
   })
 }
 
-YobitClient.prototype.cancel_order = function(order_id, callback) {
-  this.client.privateRequest('CancelOrder', { order_id: order_id }, callback)
+Yobit.prototype.cancel_order = function(order_id, callback) {
+  console.log("YOBIT canceling order", order_id)
+  this.client.privateRequest('CancelOrder', { order_id: order_id }, (err, data) => {
+    console.log("CANCEL RETURN", err, data)
+    callback({
+      success: data.success == 1,
+      return: data.return
+    })
+  })
 }
 
-YobitClient.prototype.cancel_all_orders = function(market) { // emergency function
+Yobit.prototype.cancel_all_orders = function(market) { // emergency function
   this.get_orders(market, (response) => {
     response.result.forEach((order, n) => {
       setTimeout(() => {
@@ -148,7 +156,7 @@ YobitClient.prototype.cancel_all_orders = function(market) { // emergency functi
   })
 }
 
-YobitClient.prototype._normalize_ticker_data = function(data) {
+Yobit.prototype._normalize_ticker_data = function(data) {
   return {
     high: data.high,
     low: data.low,
@@ -161,7 +169,7 @@ YobitClient.prototype._normalize_ticker_data = function(data) {
   }
 }
 
-YobitClient.prototype._parse_order = function(e) {
+Yobit.prototype._parse_order = function(e) {
   if (e == undefined) return undefined
   return Object.keys(e).map((order_id) => {
     order = e[order_id]
@@ -174,9 +182,10 @@ YobitClient.prototype._parse_order = function(e) {
       price: order.rate,
       price_per_unit: order.rate,
       opened: order.timestamp_created,
-      status: order.status
+      status: order.status,
+      closed: order.status == 1
     }
   })
 }
 
-module.exports = YobitClient;
+module.exports = Yobit;

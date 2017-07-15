@@ -44,7 +44,7 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
 
 PumpHandler.prototype.start = function() {
   if (this.verbose) console.log("CALL TO ", this.market, "start")
-  this.logger.log(this.exchange + "/" + this.market, "Starting pump. Base rate: " + this.base_rate, true);
+  this.logger.log(this.exchange + "/" + this.market, "Starting pump. Base rate: " + this.base_rate.toFixed(8), true);
 
   // start buy process
   if (this.verbose) console.log(this.market, "Placing buy order... ");
@@ -52,7 +52,7 @@ PumpHandler.prototype.start = function() {
   this.client.buy_order(this.market, this.quantity, this.buy_rate, (data) => {
     this.buy_order_id = data.result.id;
     // wait order completion
-    if (this.verbose) console.log(this.market, "Waiting for BUY order to complete... rate: " + this.buy_rate);
+    if (this.verbose) console.log(this.market, "Waiting for BUY order to complete... rate: " + this.buy_rate.toFixed(8));
     this.cancel_order_if_not_complete(data.result.id, 15*1000)
     this.waitForComplete(data.result.id, (order) => { this.notify_buy_complete_and_sell(order) });
   });
@@ -136,7 +136,7 @@ PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_pri
     this.client.sell_order(this.market, this.quantity, this.sell_rate, (data) => {
       this.sell_order_id = data.result.id;
       // wait order completion
-      if (this.verbose) console.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate);
+      if (this.verbose) console.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate.toFixed(8));
       this.cancel_order_if_not_complete(data.result.id, this.smart_strategy.time_for_fixed_sell_detection * 1000) // wait 5 minutes
       this.waitForComplete(data.result.id, (order) => { this.notify_complete_and_print_result(order) });
     });
@@ -147,11 +147,11 @@ PumpHandler.prototype.analyze_ticker = function(operation, exchange, market, dat
   if(this.verbose && operation=="TICKER" && exchange==this.exchange && market==this.market)
     console.log("event alive:", exchange,market)
   if (!this.pump_ended && !this.sold_on_peak && operation == 'TICKER' && exchange == this.exchange && market == this.market) {
-    if(this.verbose) console.log("analyzing", this.market, "downtrend", this.downtrend, "last", this.last_price)
+    if(this.verbose) console.log("analyzing", this.market, "downtrend", this.downtrend, "last", this.last_price.toFixed(8))
     if (data.ask < this.last_price) {
       this.downtrend++
       if (this.downtrend >= this.smart_strategy.minumum_sells_to_consider_downtrend) { // reached
-        if (this.verbose) console.log("downtrend detected on price " + data.ask, "vs " + this.last_price, "(started on " + this.base_rate + ")")
+        if (this.verbose) console.log("downtrend detected on price " + data.ask.toFixed(8), "vs " + this.last_price.toFixed(8), "(started on " + this.base_rate.toFixed(8) + ")")
         if (data.ask / this.base_rate > this.smart_strategy.percentage_for_selling_on_downtrend) {// and is bigger than 5%
           if (this.verbose) console.log("and price is bigger than 5%, selling")
           this.sell_rate = data.ask * 0.98
