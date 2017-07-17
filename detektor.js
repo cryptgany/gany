@@ -123,13 +123,19 @@ Detektor.prototype._seconds_to_minutes = function(seconds) {
 
 Detektor.prototype.telegram_post = function(exchange, market, volume, time, first_ticker, last_ticker) {
   link = "[" + exchange + "/" + market + "](" + this.market_url(exchange, market) + ")"
-  message = "Vol. up *" + ((volume - 1) * 100).toFixed(2) + "%* since " + this._seconds_to_minutes(time * 10)
-  message += "\nVol: " + first_ticker.volume.toFixed(8) + " to " + last_ticker.volume.toFixed(8)
-  message += "\nBid: " + first_ticker.bid.toFixed(8) + " to " + last_ticker.bid.toFixed(8)
-  message += "\nAsk: " + first_ticker.ask.toFixed(8) + " to " + last_ticker.ask.toFixed(8)
-  message += "\nLast: " + first_ticker.last.toFixed(8) + " to " + last_ticker.last.toFixed(8)
+  message = "\nVol. up *" + ((volume - 1) * 100).toFixed(2) + "%* since " + this._seconds_to_minutes(time * 10)
+  message += "\nVol: " + this.telegram_arrow(first_ticker.volume, last_ticker.volume) + " " + first_ticker.volume.toFixed(4) + " to " + last_ticker.volume.toFixed(4)
+  message += "\nBid: " + this.telegram_arrow(first_ticker.bid, last_ticker.bid) + " " + first_ticker.bid.toFixed(8) + " to " + last_ticker.bid.toFixed(8)
+  message += "\nAsk: " + this.telegram_arrow(first_ticker.ask, last_ticker.ask) + " " + first_ticker.ask.toFixed(8) + " to " + last_ticker.ask.toFixed(8)
+  message += "\nLast: " + this.telegram_arrow(first_ticker.last, last_ticker.last) + " " + first_ticker.last.toFixed(8) + " to " + last_ticker.last.toFixed(8)
   message += "\n24h Low: " + last_ticker.low.toFixed(8) + ". 24h High: " + last_ticker.high.toFixed(8)
   return [link, message]
+}
+
+Detektor.prototype.telegram_arrow = function(first_val, last_val) {
+  if (first_val < last_val) return '\u2B06'
+  if (first_val > last_val) return '\u2B07'
+  return ""
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
