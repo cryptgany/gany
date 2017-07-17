@@ -8,6 +8,7 @@ const EventEmitter = require('events');
 const Logger = require('./logger');
 const Bittrex = require('./bittrex');
 const Yobit = require('./yobit');
+const Poloniex = require('./poloniex');
 require('./klient');
 
 // Initializers
@@ -17,9 +18,11 @@ var test_mode = false;
 var logger = new Logger(true, test_mode);
 var bittrex = new Bittrex(pump_events);
 var yobit = new Yobit(pump_events);
+var poloniex = new Poloniex(pump_events);
 
 // Start
 pump_events.setMaxListeners(50) // max 50 listeners
 bittrex.watch()
 yobit.watch()
-detektor = new Detektor(logger, pump_events, test_mode, {BTRX: bittrex, YOBT: yobit})
+poloniex.watch()
+detektor = new Detektor(logger, pump_events, test_mode, {BTRX: bittrex, YOBT: yobit, POLO: poloniex})

@@ -22,9 +22,8 @@ Poloniex.prototype._watch_tickers = function() {
     } else {
       Object.keys(tickers).forEach((market) => {
         if (this._filter_market(tickers[market])) {
-          console.log("TICKER UPDATE ON", market, this._normalize_ticker_data(tickers[market]))
+          this.pump_events.emit('marketupdate', 'TICKER', 'POLO', market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));
         }
-        // this.pump_events.emit('marketupdate', 'TICKER', 'POLO', market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));
       })
     }
   })
@@ -143,7 +142,7 @@ Poloniex.prototype.cancel_all_orders = function(market) { // emergency function
 }
 
 Poloniex.prototype._filter_market = function(data) {
-  return data.baseVolume > this.skip_volumes
+  return (data.baseVolume > this.skip_volumes) && (data.isFrozen == '0')
 }
 
 Poloniex.prototype._normalize_ticker_data = function(data) {

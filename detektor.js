@@ -22,7 +22,8 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
 
   this.exchange_volume_change = {
     'BTRX': 1.25, // 1.25
-    'YOBT': 1.3
+    'YOBT': 1.3,
+    'POLO': 1.01
   }
 
   this.api_clients = api_clients
@@ -152,6 +153,9 @@ Detektor.prototype.market_url = function(exchange, market) {
   if (exchange == 'YOBT') {
     cur = market.split("-")[0].toLowerCase(0)
     return "http://yobit.net/en/trade/" + cur + "/BTC"
+  }
+  if (exchange == 'POLO') {
+    return "https://poloniex.com/exchange#" + market.toLowerCase().replace(/\-/, "_")
   }
 }
 
