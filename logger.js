@@ -29,7 +29,7 @@ Logger.prototype.log = function(name, str, vip_only = false) {
     if (this.test_mode) {
       this.gany_the_bot.broadcast(name + " [TEST]: " + str, vip_only);
     } else {
-      this.gany_the_bot.broadcast(name + ": " + str, vip_only);
+      this.gany_the_bot.broadcast(name + str, vip_only);
     }
   }
   console.log("[" + time + "] [" + name + "] " + str);

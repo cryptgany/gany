@@ -122,20 +122,21 @@ Detektor.prototype._seconds_to_minutes = function(seconds) {
 }
 
 Detektor.prototype.telegram_post = function(exchange, market, volume, time, first_ticker, last_ticker) {
+  diff = last_ticker.volume - first_ticker.volume
   link = "[" + exchange + "/" + market + "](" + this.market_url(exchange, market) + ")"
-  message = "\nVol. up *" + ((volume - 1) * 100).toFixed(2) + "%* since " + this._seconds_to_minutes(time * 10)
-  message += "\nV: " + this.telegram_arrow(first_ticker.volume, last_ticker.volume) + " " + first_ticker.volume.toFixed(4) + " to " + last_ticker.volume.toFixed(4)
-  message += "\nB: " + this.telegram_arrow(first_ticker.bid, last_ticker.bid) + " " + first_ticker.bid.toFixed(8) + " to " + last_ticker.bid.toFixed(8)
-  message += "\nA: " + this.telegram_arrow(first_ticker.ask, last_ticker.ask) + " " + first_ticker.ask.toFixed(8) + " to " + last_ticker.ask.toFixed(8)
-  message += "\nL: " + this.telegram_arrow(first_ticker.last, last_ticker.last) + " " + first_ticker.last.toFixed(8) + " to " + last_ticker.last.toFixed(8)
+  message = "\nVol. up by *" + diff.toFixed(2) + "* BTC since *" + this._seconds_to_minutes(time * 10) + "*"
+  message += "\nVolume: " + last_ticker.volume.toFixed(4) + " (*" + ((volume - 1) * 100).toFixed(2) + "%*)"
+  message += "\nB: " + first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(first_ticker.bid, last_ticker.bid) + " " + last_ticker.bid.toFixed(8)
+  message += "\nA: " + first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(first_ticker.ask, last_ticker.ask) + " " + last_ticker.ask.toFixed(8)
+  message += "\nL: " + first_ticker.last.toFixed(8) + " " + this.telegram_arrow(first_ticker.last, last_ticker.last) + " " + last_ticker.last.toFixed(8)
   message += "\n24h Low: " + last_ticker.low.toFixed(8) + ". 24h High: " + last_ticker.high.toFixed(8)
   return [link, message]
 }
 
 Detektor.prototype.telegram_arrow = function(first_val, last_val) {
-  if (first_val < last_val) return '\u2B06'
-  if (first_val > last_val) return '\u2B07'
-  return " "
+  if (first_val < last_val) return '\u2197'
+  if (first_val > last_val) return '\u2198'
+  return "\u27A1"
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
