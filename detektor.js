@@ -23,7 +23,7 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
   this.exchange_volume_change = {
     'BTRX': 1.25, // 1.25
     'YOBT': 1.3,
-    'POLO': 1.01
+    'POLO': 1.25
   }
 
   this.api_clients = api_clients
