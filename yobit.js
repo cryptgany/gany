@@ -3,6 +3,7 @@ require('dotenv').config();
 const YobitClient = require('yobit');
 
 function Yobit(pump_events, skip_volumes = 0.5) {
+  this.exchange_name = 'Yobit'
   this.client = new YobitClient(process.env.YOBIT_KEY, process.env.YOBIT_SECRET);
   this.all_markets = [];
   this.markets = []; // after selecting only good volume markets
