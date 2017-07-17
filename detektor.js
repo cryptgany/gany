@@ -18,6 +18,8 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
   this.pumps = []
   this.max_tickers_history = 360 // length (each unit is 10 seconds)
 
+  this.cycle_time = 30 // minutes
+
   this.exchange_volume_change = {
     'BTRX': 1.25, // 1.25
     'YOBT': 1.3
@@ -79,12 +81,13 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
       } else {
         if (tickers = this.get_ticker_history(exchange, market)) {
           message = false
-          max_time = tickers.length <= 180 ? tickers.length : 180
+          ticker_time = this.ticker_time * 60 / this.exchange_ticker_speed(exchange) // convert to minutes
+          max_time = tickers.length <= ticker_time ? tickers.length : ticker_time
           for(time = max_time; time > 1; time--) {
             if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
-              message = this.telegram_post(exchange, market, volume, time, first_ticker, last_ticker)
+              message = this.telegram_post(exchange, market, volume, time * this.exchange_ticker_speed(exchange), first_ticker, last_ticker)
             }
           }
           if (message) {
@@ -99,6 +102,10 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
         }
       }
   }, 0) // run async
+}
+
+Detektor.prototype.exchange_ticker_speed = function(exchange) {
+  return this.api_clients[exchange].ticker_speed
 }
 
 Detektor.prototype.keep_tickers_limited = function() { // will limit tickers history to not fill memory up
@@ -123,7 +130,7 @@ Detektor.prototype._seconds_to_minutes = function(seconds) {
 Detektor.prototype.telegram_post = function(exchange, market, volume, time, first_ticker, last_ticker) {
   diff = last_ticker.volume - first_ticker.volume
   link = "[" + exchange + "/" + market + "](" + this.market_url(exchange, market) + ")"
-  message = "\nVol. up by *" + diff.toFixed(2) + "* BTC since *" + this._seconds_to_minutes(time * 10) + "*"
+  message = "\nVol. up by *" + diff.toFixed(2) + "* BTC since *" + this._seconds_to_minutes(time) + "*"
   message += "\nVolume: " + last_ticker.volume.toFixed(4) + " (*" + ((volume - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(first_ticker.bid, last_ticker.bid) + " " + last_ticker.bid.toFixed(8)
   message += "\nA: " + first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(first_ticker.ask, last_ticker.ask) + " " + last_ticker.ask.toFixed(8)

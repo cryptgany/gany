@@ -13,6 +13,7 @@ function Bittrex(pump_events) {
   });
 
   this.markets = [];
+  this.ticker_speed = 10 // seconds
 
   this.pump_events = pump_events; // push updates
 }
