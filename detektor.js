@@ -14,13 +14,13 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
   this.market_data = {}
   this.pumps_bought = {}
   this.trade_autotrader_enabled = false // based on TRADE info
-  this.ticker_autotrader_enabled = true // based on TICKER info
+  this.ticker_autotrader_enabled = false // based on TICKER info
   this.pumps = []
   this.max_tickers_history = 360 // length (each unit is 10 seconds)
 
   this.exchange_volume_change = {
     'BTRX': 1.25, // 1.25
-    'YOBT': 1.6
+    'YOBT': 1.3
   }
 
   this.api_clients = api_clients
@@ -84,8 +84,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
-              market_url = this.market_url(exchange, market)
-              message = ["[" + exchange + "/" + market + "](" + market_url + ")", "Volume up *" + ((volume - 1) * 100).toFixed(2) + "%* in " + this._seconds_to_minutes(time * 10) + " minutes.\nVolume: " + first_ticker.volume.toFixed(8) + " to " + last_ticker.volume.toFixed(8) + "\nBid: " + first_ticker.bid.toFixed(8) + " to " + last_ticker.bid.toFixed(8) + "\nAsk: " + first_ticker.ask.toFixed(8) + " to " + last_ticker.ask.toFixed(8) + "\nLast: " + first_ticker.last.toFixed(8) + " to " + last_ticker.last.toFixed(8) + "\n24h Low: " + last_ticker.low.toFixed(8) + ". 24h High: " + last_ticker.high.toFixed(8)]
+              message = this.telegram_post(exchange, market, volume, time, first_ticker, last_ticker)
             }
           }
           if (message) {
@@ -116,9 +115,21 @@ Detektor.prototype.keep_tickers_limited = function() { // will limit tickers his
 }
 
 Detektor.prototype._seconds_to_minutes = function(seconds) {
+  console.log("seconds ", seconds)
   var minutes = Math.floor(seconds / 60);
   var seconds = seconds - minutes * 60;
-  return minutes + ":" + ("0" + seconds).slice (-2)
+  return minutes == 0 ? (seconds + " seconds") : minutes + (minutes > 1 ? " minutes" : " minute")
+}
+
+Detektor.prototype.telegram_post = function(exchange, market, volume, time, first_ticker, last_ticker) {
+  link = "[" + exchange + "/" + market + "](" + this.market_url(exchange, market) + ")"
+  message = "Vol. up *" + ((volume - 1) * 100).toFixed(2) + "%* since " + this._seconds_to_minutes(time * 10)
+  message += "\nVol: " + first_ticker.volume.toFixed(8) + " to " + last_ticker.volume.toFixed(8)
+  message += "\nBid: " + first_ticker.bid.toFixed(8) + " to " + last_ticker.bid.toFixed(8)
+  message += "\nAsk: " + first_ticker.ask.toFixed(8) + " to " + last_ticker.ask.toFixed(8)
+  message += "\nLast: " + first_ticker.last.toFixed(8) + " to " + last_ticker.last.toFixed(8)
+  message += "\n24h Low: " + last_ticker.low.toFixed(8) + ". 24h High: " + last_ticker.high.toFixed(8)
+  return [link, message]
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
