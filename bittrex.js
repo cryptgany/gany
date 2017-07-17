@@ -13,7 +13,7 @@ function Bittrex(pump_events) {
   });
 
   this.markets = [];
-  this.ticker_speed = 10 // seconds
+  this.ticker_speed = 5 // seconds
 
   this.pump_events = pump_events; // push updates
 }
@@ -53,7 +53,7 @@ Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seco
       console.log("Error getting BTRX tickers: " + data.message)
     }
   });
-  setTimeout(() => { this._watch_tickers() }, 10 * 1000)
+  setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
 }
 
 // Implement standard functions

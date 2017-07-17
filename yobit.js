@@ -43,7 +43,7 @@ Yobit.prototype._watch_tickers = function() {
       cycle++;
     }, 500 * i)
   }
-  setTimeout(() => { this._watch_tickers() }, 10 * 1000)
+  setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
 }
 
 Yobit.prototype._select_good_volume_markets = function() {
