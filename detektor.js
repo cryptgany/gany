@@ -16,12 +16,12 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
   this.trade_autotrader_enabled = false // based on TRADE info
   this.ticker_autotrader_enabled = false // based on TICKER info
   this.pumps = []
-  this.max_tickers_history = 360 // length (each unit is 10 seconds)
+  this.max_tickers_history = 30 // minutes
 
   this.cycle_time = 30 // minutes
 
   this.exchange_volume_change = {
-    'BTRX': 1.25, // 1.25
+    'BTRX': 1.30, // 1.25
     'YOBT': 1.3,
     'POLO': 1.25
   }
@@ -82,7 +82,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
       } else {
         if (tickers = this.get_ticker_history(exchange, market)) {
           message = false
-          ticker_time = this.ticker_time * 60 / this.exchange_ticker_speed(exchange) // convert to minutes
+          ticker_time = this.cycle_time * 60 / this.exchange_ticker_speed(exchange) // convert to minutes
           max_time = tickers.length <= ticker_time ? tickers.length : ticker_time
           for(time = max_time; time > 1; time--) {
             if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
@@ -112,10 +112,11 @@ Detektor.prototype.exchange_ticker_speed = function(exchange) {
 Detektor.prototype.keep_tickers_limited = function() { // will limit tickers history to not fill memory up
   console.log("RUNNING TICKERS CLEANER...")
   Object.keys(this.tickers_history).forEach((exchange) => {
+    max_tickers = 60 / this.exchange_ticker_speed(exchange) * this.max_tickers_history // calculate ticker size for configured value
     Object.keys(this.tickers_history[exchange]).forEach((market) => {
-      if (this.tickers_history[exchange][market].length > this.max_tickers_history) {
+      if (this.tickers_history[exchange][market].length > max_tickers) {
         tickers = this.tickers_history[exchange][market]
-        this.tickers_history[exchange][market] = tickers.slice(tickers.length - this.max_tickers_history, tickers.length)
+        this.tickers_history[exchange][market] = tickers.slice(tickers.length - max_tickers, tickers.length)
       }
     })
   })
@@ -141,7 +142,7 @@ Detektor.prototype.telegram_post = function(exchange, market, volume, time, firs
 }
 
 Detektor.prototype.exchange_name = function(exchange) {
-  this.api_clients.exchange.exchange_name
+  return this.api_clients[exchange].exchange_name
 }
 
 Detektor.prototype.telegram_arrow = function(first_val, last_val) {
@@ -159,7 +160,7 @@ Detektor.prototype.market_url = function(exchange, market) {
     return "http://yobit.net/en/trade/" + cur + "/BTC"
   }
   if (exchange == 'POLO') {
-    return "https://poloniex.com/exchange#" + market.toLowerCase().replace(/\-/, "_")
+    return "https://poloniex.com/#/exchange/" + market.toLowerCase().replace(/\-/, "_")
   }
 }
 
