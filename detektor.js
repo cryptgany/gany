@@ -79,7 +79,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
       } else {
         if (tickers = this.get_ticker_history(exchange, market)) {
           message = false
-          max_time = tickers.length <= 270 ? tickers.length : 270
+          max_time = tickers.length <= 180 ? tickers.length : 180
           for(time = max_time; time > 1; time--) {
             if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
@@ -115,7 +115,6 @@ Detektor.prototype.keep_tickers_limited = function() { // will limit tickers his
 }
 
 Detektor.prototype._seconds_to_minutes = function(seconds) {
-  console.log("seconds ", seconds)
   var minutes = Math.floor(seconds / 60);
   var seconds = seconds - minutes * 60;
   return minutes == 0 ? (seconds + " seconds") : minutes + (minutes > 1 ? " minutes" : " minute")
