@@ -263,7 +263,7 @@ Detektor.prototype.process_telegram_request = function(msg, responder) {
       messages = []
       this.pumps.filter((pump) => { return !pump.pump_ended }).forEach((pump) => {
         buy_price = pump.buy_order ? pump.buy_order.price_per_unit : pump.buy_rate
-        current_price = this.tickers[pump.exchange][pump.market]
+        current_price = this.tickers[pump.exchange][pump.market].ask
         messages.push(pump.exchange + "/" + pump.market + " [IN:" + buy_price.toFixed(8) + "][NOW:" + current_price.toFixed(8) + "] (" + (((current_price / buy_price) - 1) * 100).toFixed(2) + "%)")
       })
       responder(count + " opened orders at the moment.\n" + messages.join("\n"))
