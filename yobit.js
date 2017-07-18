@@ -165,8 +165,8 @@ Yobit.prototype._normalize_ticker_data = function(data) {
     avg: data.avg,
     volume: data.vol,
     last: data.last,
-    ask: data.buy,
-    bid: data.sell,
+    ask: data.sell,
+    bid: data.buy,
     updated: data.updated
   }
 }

@@ -16,11 +16,11 @@ function Detektor(logger, pump_events, test_mode, database, api_clients) {
   this.trade_autotrader_enabled = false // based on TRADE info
   this.ticker_autotrader_enabled = false // based on TICKER info
   this.pumps = []
-  this.max_tickers_history = 30 // minutes
+  this.max_tickers_history = 20 // minutes
   this.database = database
 
-  this.cycle_time = 30 // minutes
-  this.tickers_history_cleaning_time = 30 // minutes
+  this.cycle_time = 20 // minutes
+  this.tickers_history_cleaning_time = 20 // minutes
 
   this.exchange_volume_change = {
     'BTRX': 1.30, // 1.25

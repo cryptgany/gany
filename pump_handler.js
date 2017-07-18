@@ -36,7 +36,7 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
     time_for_peak_detection: 60 * 12, // minutes, give this time for trying to reach peak price
     time_for_fixed_sell_detection: 0.15, // when doing fixed sells at certain price, wait if they do not complete
     percentage_for_selling_on_downtrend: 1.05, // if on downtrend, sell if bigger than this price
-    minumum_sells_to_consider_downtrend: 2, // each unit is 10 seconds
+    minumum_sells_to_consider_downtrend: 1, // each unit is 10 seconds
     expected_percentage_to_sell: 1.5 // if reached this percentage, sell
   }
 
