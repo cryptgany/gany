@@ -23,7 +23,8 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
   this.exchange_volume_change = {
     'BTRX': 1.30, // 1.25
     'YOBT': 1.3,
-    'POLO': 1.25
+    'POLO': 1.25,
+    'CPIA': 1.25
   }
 
   this.api_clients = api_clients
@@ -161,6 +162,9 @@ Detektor.prototype.market_url = function(exchange, market) {
   }
   if (exchange == 'POLO') {
     return "https://poloniex.com/#/exchange/" + market.toLowerCase().replace(/\-/, "_")
+  }
+  if (exchange == 'CPIA') {
+    return "https://www.cryptopia.co.nz/Exchange/?market=" + market.replace(/\-/, "_")
   }
 }
 
