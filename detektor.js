@@ -6,7 +6,7 @@ require('./protofunctions.js');
 var DateTime = require('node-datetime');
 
 // REAL CODING
-function Detektor(logger, pump_events, test_mode, api_clients) {
+function Detektor(logger, pump_events, test_mode, database, api_clients) {
   this.logger = logger
   this.pump_events = pump_events
   this.test_mode = test_mode
@@ -17,8 +17,10 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
   this.ticker_autotrader_enabled = false // based on TICKER info
   this.pumps = []
   this.max_tickers_history = 30 // minutes
+  this.database = database
 
   this.cycle_time = 30 // minutes
+  this.tickers_history_cleaning_time = 30 // minutes
 
   this.exchange_volume_change = {
     'BTRX': 1.30, // 1.25
@@ -52,12 +54,29 @@ function Detektor(logger, pump_events, test_mode, api_clients) {
     }
   })
   this.logger.listen(this.process_telegram_request.bind(this)) // for telegram
-  setTimeout(() => { this.keep_tickers_limited() }, 5000)
+  setTimeout(() => { this.keep_tickers_limited() }, this.tickers_history_cleaning_time * 60 * 1000)
 }
 
 Detektor.prototype.update_ticker = function(exchange, market, data) {
   this.tickers[exchange] = this.tickers[exchange] || {}
   this.tickers[exchange][market] = data
+}
+
+Detektor.prototype.store_tickers_history = function() {
+  setTimeout(() => { // do async
+    database.store_tickers_history(this.tickers_history)
+  }, 0)
+}
+
+Detektor.prototype.restore_tickers_history = function() {
+  database.get_tickers_history((err, data) => {
+    if (err) console.log("Error trying to fetch tickers history from database:", err)
+    data.forEach((data) => {
+      exchange = data.exchange; market = data.market; ticker_history = data.tickers;
+      this.tickers_history[exchange] = this.tickers_history[exchange] || {}
+      this.tickers_history[exchange][market] = this.tickers_history[exchange][market] = ticker_history
+    })
+  })
 }
 
 Detektor.prototype.update_ticker_history = function(exchange, market, data) {
@@ -121,7 +140,7 @@ Detektor.prototype.keep_tickers_limited = function() { // will limit tickers his
       }
     })
   })
-  setTimeout(() => { this.keep_tickers_limited() }, 30 * 60 * 1000) // clean every 30 minutes
+  setTimeout(() => { this.keep_tickers_limited() }, this.tickers_history_cleaning_time * 60 * 1000) // clean every 30 minutes
 }
 
 Detektor.prototype._seconds_to_minutes = function(seconds) {
