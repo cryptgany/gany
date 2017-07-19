@@ -7,7 +7,7 @@ function Cryptopia(pump_events, skip_volumes = 0.5) {
   this.market_data = [];
   this.pump_events = pump_events;
   this.skip_volumes = 0.5 // skip markets with lower than this volume
-  this.ticker_speed = 30 // seconds
+  this.ticker_speed = 20 // seconds
 }
 
 Cryptopia.prototype.watch = function() {
@@ -33,7 +33,7 @@ Cryptopia.prototype._watch_tickers = function() {
 
 Cryptopia.prototype.get_markets = function(callback) {
   fetched_data = []
-  this.public_request('GetMarkets', (err, data) => {
+  this.public_request('GetMarkets/BTC', (err, data) => {
     if (err) {
       callback(err, data)
     } else {
