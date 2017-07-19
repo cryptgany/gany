@@ -149,6 +149,10 @@ Detektor.prototype.keep_tickers_limited = function() { // will limit tickers his
       }
     })
   })
+  Object.keys(this.tickers_detected_blacklist).forEach((blacklisted) => {
+    if (this.tickers_detected_blacklist[blacklisted] == 0)
+      delete(this.tickers_detected_blacklist[blacklisted])
+  })
   setTimeout(() => { this.keep_tickers_limited() }, this.tickers_history_cleaning_time * 60 * 1000) // clean every 30 minutes
 }
 
