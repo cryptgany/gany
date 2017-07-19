@@ -48,7 +48,9 @@ Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seco
     if (data.success) {
       tickers = data.result
       tickers.forEach((data) => {
-        self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', data.MarketName, self._normalize_ticker_data(data));
+        if (!data.MarketName.match(/BITCNY/)){ // exclude bitcny
+          self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', data.MarketName, self._normalize_ticker_data(data));
+        }
       });
     } else {
       console.log("Error getting BTRX tickers: " + data.message)
