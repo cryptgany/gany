@@ -78,10 +78,12 @@ Detektor.prototype.restore_snapshot = function() {
         this.tickers_history[exchange] = this.tickers_history[exchange] || {}
         this.tickers_history[exchange][market] = this.tickers_history[exchange][market] = ticker_history
       })
+      delete(this.tickers_history._id)
     })
     database.get_tickers_blacklist((err, data) => {
       if (err) console.log("Error trying to fetch tickers blacklist from database:", err)
       this.tickers_detected_blacklist = data[0]
+      delete(detektor.tickers_detected_blacklist._id)
     })
   }, 0)
 }
