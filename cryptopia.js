@@ -37,10 +37,16 @@ Cryptopia.prototype.get_markets = function(callback) {
     if (err) {
       callback(err, data)
     } else {
-      fetched_data.push(data)
-      if (data.endsWith('"Error":null}')) { // wait for data to load
-        callback(null, this._parse_ticker_json(fetched_data.join("")))
-      }
+      if (matched = data.match(/\"Error\"\:null/)) { // doesnt matters where is the end
+        if (matched.index + 13 == data.length) {
+          fetched_data.push(data)
+        } else {
+          fetched_data.push(data.substr(0, matched.index + 13))
+        }
+        json_data = this._parse_ticker_json(fetched_data.join(""))
+        if (json_data)
+          callback(null, json_data)
+      } else { fetched_data.push(data) }
     }
   })
 }
@@ -69,7 +75,13 @@ Cryptopia.prototype.public_request = function(api_method, _callback) {
 }
 
 Cryptopia.prototype._parse_ticker_json = function(tickers_json) {
-  return JSON.parse(tickers_json).Data
+  try {
+    parsed_json = JSON.parse(tickers_json).Data;
+  } catch(e) {
+    parsed_json = false
+    console.log("Could not parse json", e); // error in the above string (in this case, yes)!
+  }
+  return parsed_json;
 }
 Cryptopia.prototype._filter_market = function(data) {
   return (data.BaseVolume > this.skip_volumes) && data.Label.match(/BTC/)
