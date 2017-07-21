@@ -40,7 +40,10 @@ GanyTheBot.prototype.process = function(msg, responder) {
       responder('First of all, you want to start with /subscribe to start getting your signals.')
     } else {
       responder('Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.')
-      responder("I am terribly sorry but people is still working on me so I'm not available :(.")
+      responder("Sorry I am currently unavailable whilst developments are ongoing.")
+      responder("Website www.cryptowarnings.com will be available next month.")
+      responder("Full Release expected end of August.")
+      responder("For further updates and discussion please see https://t.me/joinchat/A-5g1A5VXWFyN6llqtDzdw")
     }
   }
   if (this.is_allowed(chat_id)) {
