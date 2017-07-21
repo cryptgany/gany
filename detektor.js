@@ -278,8 +278,12 @@ Detektor.prototype.process_telegram_request = function(msg, responder) {
       count = this.pumps.filter((pump) => { return pump.pump_ended }).length
       responder(count + " closed orders at the moment.")
     }
+    if (command == '/detektor store snapshot') {
+      this.store_snapshot()
+      responder("Snapshot stored")
+    }
     if (command == '/detektor commands') {
-      responder("Commands are:\nset autotrader false\nset autotrader true\nsee profit\nopen orders\nclosed orders\ncommands")
+      responder("Commands are:\nset autotrader false\nset autotrader true\nsee profit\nopen orders\nclosed orders\nstore snapshot\ncommands")
     }
   }
 }
