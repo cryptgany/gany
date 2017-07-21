@@ -170,7 +170,7 @@ Detektor.prototype.telegram_post = function(exchange, market, volume, time, firs
   message += "\nB: " + first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(first_ticker.bid, last_ticker.bid) + " " + last_ticker.bid.toFixed(8)
   message += "\nA: " + first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(first_ticker.ask, last_ticker.ask) + " " + last_ticker.ask.toFixed(8)
   message += "\nL: " + first_ticker.last.toFixed(8) + " " + this.telegram_arrow(first_ticker.last, last_ticker.last) + " " + last_ticker.last.toFixed(8)
-  message += "\n24h Low: " + last_ticker.low.toFixed(8) + ". 24h High: " + last_ticker.high.toFixed(8)
+  message += "\n24h Low: " + last_ticker.low.toFixed(8) + "\n24h High: " + last_ticker.high.toFixed(8)
   return [link, message]
 }
 
