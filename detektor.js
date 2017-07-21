@@ -254,8 +254,8 @@ Detektor.prototype.analyze_market = function(data) {
 Detektor.prototype.process_telegram_request = function(msg, responder) {
   command = msg.text
   if (command.includes('/detektor')) {
-    if (command == '/detektor set autotrader false') { this.ticker_autotrader_enabled = false; responder("Autotrader disabled.") }
-    if (command == '/detektor set autotrader true') { this.ticker_autotrader_enabled = true; responder("Autotrader enabled.") }
+    if (command == '/detektor set false') { this.ticker_autotrader_enabled = false; responder("Autotrader disabled.") }
+    if (command == '/detektor set true') { this.ticker_autotrader_enabled = true; responder("Autotrader enabled.") }
     if (command == '/detektor see profit') {
       if (this.pumps.length > 0) {
         profit = this.pumps.map((pmp) => { return pmp.profit }).sum()
@@ -282,8 +282,38 @@ Detektor.prototype.process_telegram_request = function(msg, responder) {
       this.store_snapshot()
       responder("Snapshot stored")
     }
+    if (command.match(/\/detektor see/)) {
+      pair = command.replace(/\/detektor see\ /, '').split("/")
+      exchange = pair[0]; market = pair[1]
+      ticker_info = this.tickers[exchange][market]
+      message = this.market_url(exchange, market)
+      message += "\nB: " + ticker_info.bid
+      message += "\nA: " + ticker_info.ask
+      message += "\nL: " + ticker_info.last
+      message += "\n24h Low: " + ticker_info.low
+      message += "\n24h High: " + ticker_info.high
+      responder(message)
+    }
+    if (command.match(/\/detektor buy/)) {
+      pair = command.replace(/\/detektor buy\ /, '').split("/")
+      exchange = pair[0]; market = pair[1]
+      rate = this.tickers[exchange][market].ask
+      var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.01, rate, 1.01, 1.05, this, 0, this.verbose); // COMMENT THIS LINE FOR REAL TESTING
+      pump.start();
+      this.pumps.push(pump); // later review
+      responder("Buy started on " + exchange + " - " + market + " at price " + rate)
+    }
+    if (command.match(/\/detektor sell/)) {
+      pair = command.replace(/\/detektor sell\ /, '').split("/")
+      exchange = pair[0]; market = pair[1]
+      price = this.tickers[exchange][market].bid * 0.98
+      pump = this.pumps.filter((pump) => { return pump.exchange == exchange && pump.market == market && !pump.pump_ended})[0]
+      pump.sell_rate = price
+      pump.sell_on_peak(1);
+      responder("Sell started on " + exchange + " - " + market + " at price " + price)
+    }
     if (command == '/detektor commands') {
-      responder("Commands are:\nset autotrader false\nset autotrader true\nsee profit\nopen orders\nclosed orders\nstore snapshot\ncommands")
+      responder("Commands are:\nset false\nset true\nsee profit\nopen orders\nclosed orders\nstore snapshot\nsee EXCHANGE/MARKET\nbuy EXCHANGE/MARKET\nsell EXCHANGE/MARKET\ncommands")
     }
   }
 }
