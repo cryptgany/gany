@@ -33,6 +33,7 @@ Logger.prototype.log = function(name, str, vip_only = false) {
     }
   }
   console.log("[" + time + "] [" + name + "] " + str);
+  this.log_to_file(name + str)
 }
 
 Logger.prototype.log_to_file = function(str) {

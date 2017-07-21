@@ -64,26 +64,26 @@ Detektor.prototype.update_ticker = function(exchange, market, data) {
 
 Detektor.prototype.store_snapshot = function() {
   setTimeout(() => { // do async
-    database.store_tickers_history(this.tickers_history)
-    database.store_tickers_blacklist(this.tickers_detected_blacklist)
+    this.database.store_tickers_history(this.tickers_history)
+    this.database.store_tickers_blacklist(this.tickers_detected_blacklist)
   }, 0)
 }
 
 Detektor.prototype.restore_snapshot = function() {
   setTimeout(() => { // do async
-    database.get_tickers_history((err, data) => {
+    this.database.get_tickers_history((err, data) => {
       if (err) console.log("Error trying to fetch tickers history from database:", err)
       data.forEach((data) => {
         exchange = data.exchange; market = data.market; ticker_history = data.tickers;
         this.tickers_history[exchange] = this.tickers_history[exchange] || {}
         this.tickers_history[exchange][market] = this.tickers_history[exchange][market] = ticker_history
       })
-      delete(this.tickers_history._id)
+      if (this.tickers_history) delete(this.tickers_history._id)
     })
-    database.get_tickers_blacklist((err, data) => {
+    this.database.get_tickers_blacklist((err, data) => {
       if (err) console.log("Error trying to fetch tickers blacklist from database:", err)
-      this.tickers_detected_blacklist = data[0]
-      delete(detektor.tickers_detected_blacklist._id)
+      this.tickers_detected_blacklist = data[0] || {}
+      if (detektor.tickers_detected_blacklist) delete(detektor.tickers_detected_blacklist._id)
     })
   }, 0)
 }
