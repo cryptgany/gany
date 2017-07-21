@@ -16,7 +16,7 @@
   "devDependencies": {},
   "scripts": {
     "start": "node run.js",
-    "test": "node file.js"
+    "test": "node only_bot.js"
   },
   "author": "",
   "license": "ISC"

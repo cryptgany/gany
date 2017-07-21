@@ -1,7 +1,8 @@
 var MongoClient = require('mongodb').MongoClient;
 
-function Database() {
+function Database(collection = "") {
   this.url = "mongodb://localhost:27017/detektor";
+  this.collection = collection
   this.tickers_history_collection = 'tickers_history';
   this.tickers_blacklist_collection = 'tickers_blacklist';
 }
@@ -61,6 +62,36 @@ Database.prototype.get_tickers_blacklist = function(callback) {
     var collection = db.collection(this.tickers_blacklist_collection);
 
     collection.find().toArray(callback)
+  })
+}
+
+// Model-like functions
+Database.prototype.store_data = function(data, callback) {
+  MongoClient.connect(this.url, (err, db) => {
+    if(err) { return console.dir(err); }
+    var collection = db.collection(this.collection);
+
+    collection.insert(data, (err, result) => {
+      if (err) { console.log("Error storing data on", this.collection, err) } else { callback(result) }
+    });
+  })
+}
+
+Database.prototype.read_data = function(query = {}, callback) {
+  MongoClient.connect(this.url, (err, db) => {
+    if(err) { return console.dir(err); }
+
+    var collection = db.collection(this.collection);
+    collection.find(query).toArray(callback)
+  })
+}
+
+Database.prototype.delete_data = function(query, callback) {
+  MongoClient.connect(this.url, (err, db) => {
+    if(err) { return console.dir(err); }
+    var collection = db.collection(this.collection);
+
+    collection.remove(query, callback);
   })
 }
 
