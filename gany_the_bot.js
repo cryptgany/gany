@@ -5,7 +5,7 @@ const TelegramBot = require('node-telegram-bot-api');
 function GanyTheBot() {
   this.chats = [];
   this.vip_chats = [];
-  this.chats.push(parseInt(process.env.WARNINGS_GROUP)); // disable for testing
+  // this.chats.push(parseInt(process.env.WARNINGS_GROUP)); // disable for testing
   this.vip_chats.push(parseInt(process.env.PERSONAL_CHANNEL)); // by default subscribe to my personal account
   this.vip_chats.push(parseInt(process.env.OTHER_CHANNEL)); // by default subscribe to my personal account
   this.token = process.env.GANY_KEY;
@@ -16,7 +16,7 @@ function GanyTheBot() {
 
 GanyTheBot.prototype.start = function() {
   self = this;
-  self.telegram_bot.onText(/\/dudeimking/, (msg, match) => {
+  self.telegram_bot.onText(/\/subscribenowz/, (msg, match) => {
     // Subscribers
     const chatId = msg.chat.id;
     const resp = match[1]; // the captured "whatever"
