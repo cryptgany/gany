@@ -295,13 +295,19 @@ Detektor.prototype.process_telegram_request = function(msg, responder) {
       responder(message)
     }
     if (command.match(/\/detektor buy/)) {
-      pair = command.replace(/\/detektor buy\ /, '').split("/")
+      exc_amount = command.replace(/\/detektor buy\ /, '').split(" ")
+      pair = exc_amount[0].split("/")
+      if (exc_amount.length == 1) {
+        btc_amount = 0.01
+      } else {
+        btc_amount = parseFloat(exc_amount[1])
+      }
       exchange = pair[0]; market = pair[1]
       rate = this.tickers[exchange][market].ask
-      var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.01, rate, 1.01, 1.05, this, 0, this.verbose); // COMMENT THIS LINE FOR REAL TESTING
+      var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, btc_amount, rate, 1.01, 1.05, this, 0, this.verbose); // COMMENT THIS LINE FOR REAL TESTING
       pump.start();
       this.pumps.push(pump); // later review
-      responder("Buy started on " + exchange + " - " + market + " at price " + rate)
+      responder("Buy started on " + exchange + " - " + market + " at price " + rate + " with " + btc_amount + " bitcoin")
     }
     if (command.match(/\/detektor sell/)) {
       pair = command.replace(/\/detektor sell\ /, '').split("/")
@@ -313,7 +319,7 @@ Detektor.prototype.process_telegram_request = function(msg, responder) {
       responder("Sell started on " + exchange + " - " + market + " at price " + price)
     }
     if (command == '/detektor commands') {
-      responder("Commands are:\nset false\nset true\nsee profit\nopen orders\nclosed orders\nstore snapshot\nsee EXCHANGE/MARKET\nbuy EXCHANGE/MARKET\nsell EXCHANGE/MARKET\ncommands")
+      responder("Commands are:\nset false\nset true\nsee profit\nopen orders\nclosed orders\nstore snapshot\nsee EXCHANGE/MARKET\nbuy EXCHANGE/MARKET BTC_AMOUNT\nsell EXCHANGE/MARKET\ncommands")
     }
   }
 }
