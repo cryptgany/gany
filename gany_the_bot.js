@@ -34,49 +34,51 @@ GanyTheBot.prototype.start = function() {
 
 GanyTheBot.prototype.process = function(msg, responder) {
   text = msg.text; chat_id = msg.chat.id;
-  if (text.match(/\/start/)) {
+  if (text) {
+    if (text.match(/\/start/)) {
+      if (this.is_allowed(chat_id)) {
+        responder('Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot. I will help you setup your configuration so you get the best of me.')
+        responder('First of all, you want to start with /subscribe to start getting your signals.')
+      } else {
+        responder('Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.')
+        responder("Sorry I am currently unavailable whilst developments are ongoing.")
+        responder("Website www.cryptowarnings.com will be available next month.")
+        responder("Full Release expected end of August.")
+        responder("For further updates and discussion please see https://t.me/joinchat/A-5g1A5VXWFyN6llqtDzdw")
+      }
+    }
     if (this.is_allowed(chat_id)) {
-      responder('Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot. I will help you setup your configuration so you get the best of me.')
-      responder('First of all, you want to start with /subscribe to start getting your signals.')
-    } else {
-      responder('Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.')
-      responder("Sorry I am currently unavailable whilst developments are ongoing.")
-      responder("Website www.cryptowarnings.com will be available next month.")
-      responder("Full Release expected end of August.")
-      responder("For further updates and discussion please see https://t.me/joinchat/A-5g1A5VXWFyN6llqtDzdw")
+      if (text.match(/\/subscribe/)) {
+        this.subscriber.user_is_subscribed(chat_id, (err, data) => {
+          if (data.length >= 1) {
+            responder('You are already subscribed.')
+          } else {
+            this.subscriber.subscribe_user(chat_id, (data) => {
+              if (data.result.ok == 1) {
+                this.chats.push(chat_id)
+                responder('You are now subscribed! You will start getting notifications soon. Please be patient and wait.')
+              } else {
+                responder('Could not subscriber, please contact @frooks, your id is ' + chat_id)
+              }
+            })
+          }
+        });
+      }
+      if (text.match(/\/all/)) {
+        responder(this.chats.join(", ") || "No users subscribed")
+      }
     }
-  }
-  if (this.is_allowed(chat_id)) {
-    if (text.match(/\/subscribe/)) {
-      this.subscriber.user_is_subscribed(chat_id, (err, data) => {
-        if (data.length >= 1) {
-          responder('You are already subscribed.')
-        } else {
-          this.subscriber.subscribe_user(chat_id, (data) => {
-            if (data.result.ok == 1) {
-              this.chats.push(chat_id)
-              responder('You are now subscribed! You will start getting notifications soon. Please be patient and wait.')
-            } else {
-              responder('Could not subscriber, please contact @frooks, your id is ' + chat_id)
-            }
-          })
-        }
-      });
-    }
-    if (text.match(/\/all/)) {
-      responder(this.chats.join(", ") || "No users subscribed")
-    }
-  }
 
-  if (this.is_vip(chat_id)) {
-    if (text.match(/\/sendmessage/)) {
-      this.broadcast(text.replace(/\/sendmessage\ /, ''))
-    }
-    if (text.match(/\/delete/)) {
-      this.subscriber.delete_data({}, (err, resp) => { responder('Data deleted.') })
-    }
-    if (text.match(/\/test/)) {
-      this.broadcast("This is a test to all subscribers")
+    if (this.is_vip(chat_id)) {
+      if (text.match(/\/sendmessage/)) {
+        this.broadcast(text.replace(/\/sendmessage\ /, ''))
+      }
+      if (text.match(/\/delete/)) {
+        this.subscriber.delete_data({}, (err, resp) => { responder('Data deleted.') })
+      }
+      if (text.match(/\/test/)) {
+        this.broadcast("This is a test to all subscribers")
+      }
     }
   }
 }
