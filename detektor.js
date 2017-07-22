@@ -1,9 +1,10 @@
 // Detector Lib in NodeJS
 
 // REQUIRED LIBS
-const PumpHandler = require('./pump_handler.js');
-require('./protofunctions.js');
-var DateTime = require('node-datetime');
+const PumpHandler = require('./pump_handler.js')
+const Signal = require('./signal')
+require('./protofunctions.js')
+var DateTime = require('node-datetime')
 
 // REAL CODING
 function Detektor(logger, pump_events, test_mode, database, api_clients) {
@@ -18,6 +19,7 @@ function Detektor(logger, pump_events, test_mode, database, api_clients) {
   this.pumps = []
   this.max_tickers_history = 20 // minutes
   this.database = database
+  this.signal = new Signal()
 
   this.cycle_time = 20 // minutes
   this.tickers_history_cleaning_time = 20 // minutes
@@ -104,6 +106,12 @@ Detektor.prototype.volume_change = function(tickers, time) { // time is in minut
   return last.volume / first.volume
 }
 
+Detektor.prototype.store_signal_in_background = function(signal) {
+  setTimeout(() => {
+    this.signal.store_signal(signal, () => {})
+  }, 0)
+}
+
 Detektor.prototype.analyze_ticker = function(exchange, market, data) {
   setTimeout( () => {
     if (this.tickers_detected_blacklist[exchange+market] && this.tickers_detected_blacklist[exchange+market] > 0) { // if blacklisted
@@ -117,10 +125,12 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
               first_ticker = tickers[tickers.length - time] || tickers.first()
               last_ticker = tickers.last()
+              signal = {exchange: exchange, market: market, change: volume, time: time * this.exchange_ticker_speed(exchange), first_ticker: first_ticker, last_ticker: last_ticker}
               message = this.telegram_post(exchange, market, volume, time * this.exchange_ticker_speed(exchange), first_ticker, last_ticker)
             }
           }
           if (message) {
+            this.store_signal_in_background(signal)
             if (this.ticker_autotrader_enabled && exchange == 'BTRX') { // if enabled
               var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this, 0, this.verbose)
               pump.start();
