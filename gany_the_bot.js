@@ -100,7 +100,7 @@ GanyTheBot.prototype.broadcast = function(text, vip_only = false) {
   chats_for_broadcast.forEach((chat_id) => {
     this.telegram_bot.sendMessage(chat_id, text, {parse_mode: "Markdown"}).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'
-      console.log(error.response.body); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+      console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
     });
   });
 }
