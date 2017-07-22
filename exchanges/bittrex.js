@@ -14,6 +14,7 @@ function Bittrex(pump_events) {
   });
 
   this.markets = [];
+  this.skip_volumes = 0.5
   this.ticker_speed = 5 // seconds
   this.cycle_time = 20 // minutes
 
@@ -21,13 +22,8 @@ function Bittrex(pump_events) {
 }
 
 Bittrex.prototype.watch = function() {
-  this.get_markets((info) => {
-    info.result.forEach((market_info) => {
-      if (market_info.MarketName.match(/^BTC/))
-        this.markets.push(market_info.MarketName);
-    });
-  });
-  this._watch_tickers()
+  this._select_good_volume_markets()
+  setTimeout(() => { this._watch_tickers() }, 5 * 1000)
 }
 
 Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seconds
@@ -36,9 +32,7 @@ Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seco
     if (data.success) {
       tickers = data.result
       tickers.forEach((data) => {
-        if (!data.MarketName.match(/BITCNY/)){ // exclude bitcny
-          self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', data.MarketName, self._normalize_ticker_data(data));
-        }
+        self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', data.MarketName, self._normalize_ticker_data(data));
       });
     } else {
       console.log("Error getting BTRX tickers: " + data.message)
@@ -58,6 +52,17 @@ Bittrex.prototype._watch_trades = function() {
       });
     }
   });
+}
+
+Bittrex.prototype._select_good_volume_markets = function() {
+  this.markets = []
+  this.get_markets((info) => {
+    info.result.forEach((market_info) => {
+      if (market_info.MarketName.match(/^BTC/) && !market_info.MarketName.match(/BITCNY/) && market_info.BaseVolume >= this.skip_volumes)
+        this.markets.push(market_info.MarketName);
+    });
+  });
+  setTimeout(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) // update markets on track every hour
 }
 
 // Implement standard functions

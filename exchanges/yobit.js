@@ -69,7 +69,7 @@ Yobit.prototype._select_good_volume_markets = function() {
       cycle++;
     }, 500 * cycle)
   }
-  setTimeout(() => { this._select_good_volume_markets() }, 60 * 60 * 1000) // update markets on track every hour
+  setTimeout(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) // update markets on track every hour
 }
 
 // Implement standard functions
