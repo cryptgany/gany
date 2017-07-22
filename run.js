@@ -7,10 +7,10 @@ const Detektor = require('./detektor');
 const EventEmitter = require('events');
 const Logger = require('./logger');
 const Database = require('./database')
-const Bittrex = require('./bittrex');
-const Yobit = require('./yobit');
-const Poloniex = require('./poloniex');
-const Cryptopia = require("./cryptopia");
+const Bittrex = require('./exchanges/bittrex');
+const Yobit = require('./exchanges/yobit');
+const Poloniex = require('./exchanges/poloniex');
+const Cryptopia = require("./exchanges/cryptopia");
 
 // Initializers
 class PumpEvents extends EventEmitter {}
