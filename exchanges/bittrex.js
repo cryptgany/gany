@@ -27,19 +27,6 @@ Bittrex.prototype.watch = function() {
         this.markets.push(market_info.MarketName);
     });
   });
-  setTimeout(() => {
-    // listen to market orders
-    var self = this;
-    self.client.websockets.subscribe(self.markets, function(data) {
-      if (data.M === 'updateExchangeState') {
-        data.A.forEach(function(data_for) {
-          // console.log("First", data_for);
-          self.pump_events.emit('marketupdate', 'TRADE', 'BTRX', data_for.MarketName, data_for);
-        });
-      }
-    });
-  }, 1000);
-
   this._watch_tickers()
 }
 
@@ -58,6 +45,19 @@ Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seco
     }
   });
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
+}
+
+Bittrex.prototype._watch_trades = function() {
+  // listen to market orders
+  var self = this;
+  self.client.websockets.subscribe(self.markets, function(data) {
+    if (data.M === 'updateExchangeState') {
+      data.A.forEach(function(data_for) {
+        // console.log("First", data_for);
+        self.pump_events.emit('marketupdate', 'TRADE', 'BTRX', data_for.MarketName, data_for);
+      });
+    }
+  });
 }
 
 // Implement standard functions
