@@ -17,7 +17,7 @@ function Detektor(logger, pump_events, test_mode, database, api_clients) {
   this.trade_autotrader_enabled = false // based on TRADE info
   this.ticker_autotrader_enabled = false // based on TICKER info
   this.pumps = []
-  this.max_tickers_history = 20 // minutes
+  this.max_tickers_history = 60 // minutes
   this.database = database
   this.signal = new Signal()
 
