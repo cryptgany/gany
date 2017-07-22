@@ -4,10 +4,11 @@
 const PumpHandler = require('./pump_handler.js')
 const Signal = require('./signal')
 require('./protofunctions.js')
+const _ = require('underscore')
 var DateTime = require('node-datetime')
 
 // REAL CODING
-function Detektor(logger, pump_events, test_mode, database, api_clients) {
+function Detektor(logger, pump_events, test_mode, database, api_clients, rules) {
   this.logger = logger
   this.pump_events = pump_events
   this.test_mode = test_mode
@@ -35,6 +36,7 @@ function Detektor(logger, pump_events, test_mode, database, api_clients) {
   this.tickers = {}
   this.tickers_history = {}
   this.trades = {}
+  this.rules = rules
 
   this.tickers_detected_blacklist = {}
 
@@ -100,10 +102,10 @@ Detektor.prototype.get_ticker_history = function(exchange, market) {
   return this.tickers_history[exchange][market]
 }
 
-Detektor.prototype.volume_change = function(tickers, time) { // time is in minutes
-  first = tickers[tickers.length - time] || tickers.first()
-  last = tickers.last()
-  return last.volume / first.volume
+Detektor.prototype.volume_change = function(first_ticker, last_ticker) { return this.value_change('volume', first_ticker, last_ticker) }
+
+Detektor.prototype.value_change = function(value, first_ticker, last_ticker) {
+  return last_ticker[value] / first_ticker[value]
 }
 
 Detektor.prototype.store_signal_in_background = function(signal) {
@@ -112,8 +114,13 @@ Detektor.prototype.store_signal_in_background = function(signal) {
   }, 0)
 }
 
+Detektor.prototype.rule_match = function(exchange, first_ticker, last_ticker) {
+  return _.find(this.rules[exchange], (rule) => { return rule(first_ticker, last_ticker, this) })
+}
+
 Detektor.prototype.analyze_ticker = function(exchange, market, data) {
   setTimeout( () => {
+    start = DateTime.create()._now
     if (this.tickers_detected_blacklist[exchange+market] && this.tickers_detected_blacklist[exchange+market] > 0) { // if blacklisted
         this.tickers_detected_blacklist[exchange+market] -= 1
       } else {
@@ -122,9 +129,10 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
           ticker_time = this.cycle_time(exchange)
           max_time = tickers.length <= ticker_time ? tickers.length : ticker_time
           for(time = max_time; time > 1; time--) {
-            if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
-              first_ticker = tickers[tickers.length - time] || tickers.first()
-              last_ticker = tickers.last()
+            first_ticker = tickers[tickers.length - time] || tickers.first()
+            last_ticker = tickers.last()
+            if (this.rule_match(exchange, first_ticker, last_ticker)) {
+              volume = this.volume_change(first_ticker, last_ticker)
               signal = {exchange: exchange, market: market, change: volume, time: time * this.exchange_ticker_speed(exchange), first_ticker: first_ticker, last_ticker: last_ticker}
               message = this.telegram_post(exchange, market, volume, time * this.exchange_ticker_speed(exchange), first_ticker, last_ticker)
             }

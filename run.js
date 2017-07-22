@@ -29,5 +29,13 @@ bittrex.watch()
 yobit.watch()
 poloniex.watch()
 cryptopia.watch()
-detektor = new Detektor(logger, pump_events, test_mode, database, {BTRX: bittrex, YOBT: yobit, POLO: poloniex, CPIA: cryptopia})
+
+rules = {
+  "BTRX": [ function(first_ticker, last_ticker, detektor) { return detektor.volume_change(first_ticker, last_ticker) > 1.3 } ],
+  "POLO": [ function(first_ticker, last_ticker, detektor) { return detektor.volume_change(first_ticker, last_ticker) > 1.3 } ],
+  "CPIA": [ function(first_ticker, last_ticker, detektor) { return detektor.volume_change(first_ticker, last_ticker) > 1.25 } ],
+  "YOBT": [ function(first_ticker, last_ticker, detektor) { return detektor.volume_change(first_ticker, last_ticker) > 1.25 } ]
+}
+
+detektor = new Detektor(logger, pump_events, test_mode, database, {BTRX: bittrex, YOBT: yobit, POLO: poloniex, CPIA: cryptopia}, rules)
 detektor.restore_snapshot()
