@@ -21,7 +21,6 @@ function Detektor(logger, pump_events, test_mode, database, api_clients) {
   this.database = database
   this.signal = new Signal()
 
-  this.cycle_time = 20 // minutes
   this.tickers_history_cleaning_time = 20 // minutes
 
   this.exchange_volume_change = {
@@ -127,7 +126,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
       } else {
         if (tickers = this.get_ticker_history(exchange, market)) {
           message = false
-          ticker_time = this.cycle_time * 60 / this.exchange_ticker_speed(exchange) // convert to minutes
+          ticker_time = this.cycle_time(exchange)
           max_time = tickers.length <= ticker_time ? tickers.length : ticker_time
           for(time = max_time; time > 1; time--) {
             if ((volume = this.volume_change(tickers, time)) > this.exchange_volume_change[exchange]) {
@@ -150,6 +149,10 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
         }
       }
   }, 0) // run async
+}
+
+Detektor.prototype.cycle_time = function(exchange) {
+  return this.api_clients[exchange].cycle_time * 60 / this.exchange_ticker_speed(exchange)
 }
 
 Detektor.prototype.exchange_ticker_speed = function(exchange) {

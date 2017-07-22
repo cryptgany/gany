@@ -8,6 +8,7 @@ function Cryptopia(pump_events, skip_volumes = 0.5) {
   this.pump_events = pump_events;
   this.skip_volumes = 0.5 // skip markets with lower than this volume
   this.ticker_speed = 20 // seconds
+  this.cycle_time = 20 // minutes
 }
 
 Cryptopia.prototype.watch = function() {

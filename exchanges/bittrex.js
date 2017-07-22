@@ -15,6 +15,7 @@ function Bittrex(pump_events) {
 
   this.markets = [];
   this.ticker_speed = 5 // seconds
+  this.cycle_time = 20 // minutes
 
   this.pump_events = pump_events; // push updates
 }
