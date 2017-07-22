@@ -3,8 +3,9 @@
 // REQUIRED LIBS
 const PumpHandler = require('./pump_handler.js')
 const Signal = require('./signal')
-require('./protofunctions.js')
 const _ = require('underscore')
+
+require('./protofunctions.js')
 var DateTime = require('node-datetime')
 
 // REAL CODING
@@ -22,6 +23,7 @@ function Detektor(logger, pump_events, test_mode, database, api_clients, rules) 
   this.tickers_history_cleaning_time = 20 // clean ever X minutes
   this.database = database
   this.signal = new Signal()
+  this.matcher = require('./matcher')
 
   this.exchange_volume_change = {
     'BTRX': 1.30,
@@ -102,11 +104,7 @@ Detektor.prototype.get_ticker_history = function(exchange, market) {
   return this.tickers_history[exchange][market]
 }
 
-Detektor.prototype.volume_change = function(first_ticker, last_ticker) { return this.value_change('volume', first_ticker, last_ticker) }
-
-Detektor.prototype.value_change = function(value, first_ticker, last_ticker) {
-  return last_ticker[value] / first_ticker[value]
-}
+Detektor.prototype.volume_change = function(first_ticker, last_ticker) { return this.matcher.volume_change(first_ticker, last_ticker) }
 
 Detektor.prototype.store_signal_in_background = function(signal) {
   setTimeout(() => {
@@ -115,7 +113,7 @@ Detektor.prototype.store_signal_in_background = function(signal) {
 }
 
 Detektor.prototype.rule_match = function(exchange, first_ticker, last_ticker) {
-  return _.find(this.rules[exchange], (rule) => { return rule(first_ticker, last_ticker, this) })
+  return _.find(this.rules[exchange], (rule) => { return rule(first_ticker, last_ticker, this.matcher) })
 }
 
 Detektor.prototype.analyze_ticker = function(exchange, market, data) {
