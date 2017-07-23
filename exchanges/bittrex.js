@@ -58,10 +58,14 @@ Bittrex.prototype._watch_trades = function() {
 Bittrex.prototype._select_good_volume_markets = function() {
   this.markets = []
   this.get_markets((info) => {
-    info.result.forEach((market_info) => {
-      if (market_info.MarketName.match(/^BTC/) && !market_info.MarketName.match(/BITCNY/) && market_info.BaseVolume >= this.skip_volumes)
-        this.markets.push(market_info.MarketName);
-    });
+    if (info.result) {
+      info.result.forEach((market_info) => {
+        if (market_info.MarketName.match(/^BTC/) && !market_info.MarketName.match(/BITCNY/) && market_info.BaseVolume >= this.skip_volumes)
+          this.markets.push(market_info.MarketName);
+      });
+    } else {
+      console.log("Error trying to fetch data from bittrex:", info)
+    }
   });
   setTimeout(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) // update markets on track every hour
 }
