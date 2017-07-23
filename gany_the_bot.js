@@ -83,6 +83,41 @@ GanyTheBot.prototype.process = function(msg, responder) {
   }
 }
 
+GanyTheBot.prototype.send_signal = function(client, signal) {
+  text = this.telegram_post(client, signal)
+  console.log(text)
+  this.chats.forEach((chat_id) => {
+    this.telegram_bot.sendMessage(chat_id, text, {parse_mode: "Markdown"}).catch((error) => {
+      console.log(error.code);  // => 'ETELEGRAM'
+      console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+    });
+  });
+}
+
+GanyTheBot.prototype.telegram_post = function(client, signal) {
+  diff = signal.last_ticker.volume - signal.first_ticker.volume
+  message = "[" + client.exchange_name + " - " + signal.market + "](" + client.market_url(signal.market) + ")"
+  message += "\nVol. up by *" + diff.toFixed(2) + "* BTC since *" + this._seconds_to_minutes(signal.time) + "*"
+  message += "\nVolume: " + signal.last_ticker.volume.toFixed(4) + " (*" + ((signal.change - 1) * 100).toFixed(2) + "%*)"
+  message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
+  message += "\nA: " + signal.first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.ask, signal.last_ticker.ask) + " " + signal.last_ticker.ask.toFixed(8)
+  message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
+  message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
+  return message
+}
+
+GanyTheBot.prototype.telegram_arrow = function(first_val, last_val) {
+  if (first_val < last_val) return '\u2197'
+  if (first_val > last_val) return '\u2198'
+  return "\u27A1"
+}
+
+GanyTheBot.prototype._seconds_to_minutes = function(seconds) {
+  var minutes = Math.floor(seconds / 60);
+  var seconds = seconds - minutes * 60;
+  return minutes == 0 ? (seconds + " seconds") : minutes + (minutes > 1 ? " minutes" : " minute")
+}
+
 GanyTheBot.prototype.is_allowed = function(subscriber_id) {
   return this.allowed_chats.includes(subscriber_id)
 }

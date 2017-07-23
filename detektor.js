@@ -123,7 +123,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
         this.tickers_detected_blacklist[exchange+market] -= 1
       } else {
         if (tickers = this.get_ticker_history(exchange, market)) {
-          message = false
+          signal = false
           ticker_time = this.cycle_time(exchange)
           max_time = tickers.length <= ticker_time ? tickers.length : ticker_time
           for(time = max_time; time > 1; time--) {
@@ -132,10 +132,9 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             if (this.rule_match(exchange, first_ticker, last_ticker)) {
               volume = this.volume_change(first_ticker, last_ticker)
               signal = {exchange: exchange, market: market, change: volume, time: time * this.exchange_ticker_speed(exchange), first_ticker: first_ticker, last_ticker: last_ticker}
-              message = this.telegram_post(exchange, market, volume, time * this.exchange_ticker_speed(exchange), first_ticker, last_ticker)
             }
           }
-          if (message) {
+          if (signal) {
             this.store_signal_in_background(signal)
             if (this.ticker_autotrader_enabled && exchange == 'BTRX') { // if enabled
               var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this, 0, this.verbose)
@@ -143,7 +142,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
               this.pumps.push(pump);
             }
             this.tickers_detected_blacklist[exchange+market] = 360 * 3 // blacklist for 3 hour, each "1" is 10 seconds
-            this.logger.log(message[0], message[1])
+            this.logger.send_signal(this.api_clients[exchange], signal)
           }
         }
       }
@@ -174,34 +173,6 @@ Detektor.prototype.keep_tickers_limited = function() { // will limit tickers his
       delete(this.tickers_detected_blacklist[blacklisted])
   })
   setTimeout(() => { this.keep_tickers_limited() }, this.tickers_history_cleaning_time * 60 * 1000) // clean every 30 minutes
-}
-
-Detektor.prototype._seconds_to_minutes = function(seconds) {
-  var minutes = Math.floor(seconds / 60);
-  var seconds = seconds - minutes * 60;
-  return minutes == 0 ? (seconds + " seconds") : minutes + (minutes > 1 ? " minutes" : " minute")
-}
-
-Detektor.prototype.telegram_post = function(exchange, market, volume, time, first_ticker, last_ticker) {
-  diff = last_ticker.volume - first_ticker.volume
-  link = "[" + this.exchange_name(exchange) + " - " + market + "](" + this.market_url(exchange, market) + ")"
-  message = "\nVol. up by *" + diff.toFixed(2) + "* BTC since *" + this._seconds_to_minutes(time) + "*"
-  message += "\nVolume: " + last_ticker.volume.toFixed(4) + " (*" + ((volume - 1) * 100).toFixed(2) + "%*)"
-  message += "\nB: " + first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(first_ticker.bid, last_ticker.bid) + " " + last_ticker.bid.toFixed(8)
-  message += "\nA: " + first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(first_ticker.ask, last_ticker.ask) + " " + last_ticker.ask.toFixed(8)
-  message += "\nL: " + first_ticker.last.toFixed(8) + " " + this.telegram_arrow(first_ticker.last, last_ticker.last) + " " + last_ticker.last.toFixed(8)
-  message += "\n24h Low: " + last_ticker.low.toFixed(8) + "\n24h High: " + last_ticker.high.toFixed(8)
-  return [link, message]
-}
-
-Detektor.prototype.exchange_name = function(exchange) {
-  return this.api_clients[exchange].exchange_name
-}
-
-Detektor.prototype.telegram_arrow = function(first_val, last_val) {
-  if (first_val < last_val) return '\u2197'
-  if (first_val > last_val) return '\u2198'
-  return "\u27A1"
 }
 
 Detektor.prototype.market_url = function(exchange, market) {

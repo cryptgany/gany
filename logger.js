@@ -23,6 +23,10 @@ Logger.prototype.listen = function(callback) {
   }
 }
 
+Logger.prototype.send_signal = function(api, signal) {
+  this.gany_the_bot.send_signal(api, signal)
+}
+
 Logger.prototype.log = function(name, str, vip_only = false) {
   var time = DateTime.create()._now;
   if (this.bot_enabled) {
