@@ -14,6 +14,7 @@ function GanyTheBot() {
   this.listeners = []
   this.subscriber = new Subscriber()
   this.chats = []
+  this.detektor = undefined
   this.subscriber.all((err, data) => {
     this.chats = data.map((rec) => { return rec.id })
   })
@@ -39,8 +40,10 @@ GanyTheBot.prototype.start = function() {
           console.log(error.code);  // => 'ETELEGRAM'
           console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
         });
+        this.telegram_bot.answerCallbackQuery(msg.id, 'View options below.');
       } else { // process request of buy/sell
-        this.telegram_bot.answerCallbackQuery(msg.id, 'Processing request of ' + msg.data);
+        this.detektor.process_telegram_request({text: "/detektor " + msg.data}, (response) => { this.telegram_bot.sendMessage(msg.from.id, response) })
+        this.telegram_bot.answerCallbackQuery(msg.id, 'Request processed.');
       }
     }
   });
@@ -101,6 +104,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   text = this.telegram_post(client, signal)
   console.log(text)
   this.chats.forEach((chat_id) => {
+    console.log("options are ", this.options(client, signal, chat_id))
     this.telegram_bot.sendMessage(chat_id, text, this.options(client, signal, chat_id)).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'
       console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
@@ -142,8 +146,8 @@ GanyTheBot.prototype.vip_buy_options = function(exchange_market_code) {
     reply_markup: JSON.stringify({
       inline_keyboard: [
         [{ text: 'See price', callback_data: ('see ' + exchange_market_code) }],
-        [{ text: 'Buy 0.001 BTC', callback_data: ('buy ' + exchange_market_code) }],
-        [{ text: 'Buy 0.01 BTC', callback_data: ('buy ' + exchange_market_code) }]
+        [{ text: 'Buy 0.001 BTC', callback_data: ('buy ' + exchange_market_code + " 0.001") }],
+        [{ text: 'Buy 0.01 BTC', callback_data: ('buy ' + exchange_market_code + " 0.01") }]
       ]
     })
   };

@@ -194,13 +194,17 @@ Detektor.prototype.process_telegram_request = function(msg, responder) {
     }
     if (command == '/detektor open orders') {
       count = this.pumps.filter((pump) => { return !pump.pump_ended }).length
+      opened_orders = []
       messages = []
       this.pumps.filter((pump) => { return !pump.pump_ended }).forEach((pump) => {
         buy_price = pump.buy_order ? pump.buy_order.price_per_unit : pump.buy_rate
         current_price = this.tickers[pump.exchange][pump.market].ask
-        messages.push(pump.exchange + "/" + pump.market + " [IN:" + buy_price.toFixed(8) + "][NOW:" + current_price.toFixed(8) + "] (" + (((current_price / buy_price) - 1) * 100).toFixed(2) + "%)")
+        message = pump.exchange + "/" + pump.market + " [IN:" + buy_price.toFixed(8) + "][NOW:" + current_price.toFixed(8) + "] (" + (((current_price / buy_price) - 1) * 100).toFixed(2) + "%)"
+        opened_orders.push({pump: pump, message: message})
+        messages.push(message)
+        this.logger.show_open_orders(msg.id, opened_orders)
       })
-      responder(count + " opened orders at the moment.\n" + messages.join("\n"))
+      // responder(count + " opened orders at the moment.\n" + messages.join("\n"))
     }
     if (command == '/detektor closed orders') {
       count = this.pumps.filter((pump) => { return pump.pump_ended }).length

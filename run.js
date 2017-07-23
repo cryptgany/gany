@@ -41,4 +41,31 @@ rules = {
 }
 
 detektor = new Detektor(logger, pump_events, test_mode, database, {BTRX: bittrex, YOBT: yobit, POLO: poloniex, CPIA: cryptopia}, rules)
+logger.gany_the_bot.detektor = detektor
 detektor.restore_snapshot()
+
+
+
+prolo = { _id: '5972af30f0ede45c14f6763c',
+    exchange: 'BTRX',
+    market: 'BTC-QTUM',
+    change: 1.3188318649883306,
+    time: 10,
+    first_ticker: 
+     { high: 0.09,
+       low: 0.00249999,
+       volume: 786.85974311,
+       last: 0.00301,
+       ask: 0.00307619,
+       bid: 0.00303,
+       updated: '2017-07-21T05:14:49.977' },
+    last_ticker: 
+     { high: 0.00515,
+       low: 0.00261101,
+       volume: 1037.73570249,
+       last: 0.00284834,
+       ask: 0.00284834,
+       bid: 0.00281,
+       updated: '2017-07-22T01:49:24.3' } }
+
+this.logger.gany_the_bot.send_signal(bittrex, prolo)
