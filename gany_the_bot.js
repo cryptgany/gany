@@ -30,6 +30,20 @@ GanyTheBot.prototype.start = function() {
     if (this.is_vip(msg.chat.id)) // only process vip chat requests
       this.listeners.forEach((listener) => { listener(msg, (response) => { this.telegram_bot.sendMessage(msg.chat.id, response) }) })
   })
+
+  this.telegram_bot.on('callback_query', (msg) => {
+    if (this.is_vip(msg.from.id)) {
+      if (msg.data.match(/options/)) {
+        exchange_market_code = msg.data.split(" ")[1]
+        this.telegram_bot.sendMessage(msg.from.id, "Options for " + exchange_market_code + ":", this.vip_buy_options(exchange_market_code)).catch((error) => {
+          console.log(error.code);  // => 'ETELEGRAM'
+          console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+        });
+      } else { // process request of buy/sell
+        this.telegram_bot.answerCallbackQuery(msg.id, 'Processing request of ' + msg.data);
+      }
+    }
+  });
 }
 
 GanyTheBot.prototype.process = function(msg, responder) {
@@ -87,7 +101,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   text = this.telegram_post(client, signal)
   console.log(text)
   this.chats.forEach((chat_id) => {
-    this.telegram_bot.sendMessage(chat_id, text, {parse_mode: "Markdown"}).catch((error) => {
+    this.telegram_bot.sendMessage(chat_id, text, this.options(client, signal, chat_id)).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'
       console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
     });
@@ -104,6 +118,35 @@ GanyTheBot.prototype.telegram_post = function(client, signal) {
   message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
   message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
   return message
+}
+
+GanyTheBot.prototype.options = function(client, signal, subscriber_id) {
+  if (this.is_vip(subscriber_id)) { return this.vip_options(client, signal) }
+  else { return { parse_mode: "Markdown" } }
+}
+
+GanyTheBot.prototype.vip_options = function(client, signal) {
+  return {
+    parse_mode: "Markdown",
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: 'Options', callback_data: 'options ' + client.code + "/" + signal.market }],
+      ]
+    })
+  };
+}
+
+GanyTheBot.prototype.vip_buy_options = function(exchange_market_code) {
+  return {
+    parse_mode: "Markdown",
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: 'See price', callback_data: ('see ' + exchange_market_code) }],
+        [{ text: 'Buy 0.001 BTC', callback_data: ('buy ' + exchange_market_code) }],
+        [{ text: 'Buy 0.01 BTC', callback_data: ('buy ' + exchange_market_code) }]
+      ]
+    })
+  };
 }
 
 GanyTheBot.prototype.telegram_arrow = function(first_val, last_val) {

@@ -2,6 +2,7 @@ var https = require("https")
 
 function Cryptopia(pump_events, skip_volumes = 0.5) {
   this.exchange_name = 'Cryptopia'
+  this.code = 'CPIA'
   this.all_markets = [];
   this.markets = []; // after selecting only good volume markets
   this.market_data = [];

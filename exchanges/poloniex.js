@@ -2,6 +2,7 @@ const PoloniexClient = require('poloniex-api-node');
 
 function Poloniex(pump_events, skip_volumes = 0.5) {
   this.exchange_name = 'Poloniex'
+  this.code = 'POLO'
   this.client = new PoloniexClient()
   this.all_markets = [];
   this.markets = []; // after selecting only good volume markets

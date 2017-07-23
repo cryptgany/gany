@@ -4,6 +4,7 @@ const BittrexClient = require('node.bittrex.api');
 
 function Bittrex(pump_events) {
   this.exchange_name = 'Bittrex'
+  this.code = 'BTRX'
   this.client = BittrexClient;
   this.client.options({
     'apikey' : process.env.BITTREX_KEY,
