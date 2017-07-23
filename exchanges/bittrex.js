@@ -67,6 +67,11 @@ Bittrex.prototype._select_good_volume_markets = function() {
 
 // Implement standard functions
 
+
+Bittrex.prototype.market_url = function(market) {
+  return "https://bittrex.com/Market/Index?MarketName=" + market
+}
+
 Bittrex.prototype.get_markets = function(callback) {
   this.client.getmarketsummaries( callback );
 }

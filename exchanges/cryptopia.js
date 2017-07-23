@@ -88,6 +88,10 @@ Cryptopia.prototype._filter_market = function(data) {
   return (data.BaseVolume > this.skip_volumes) && data.Label.match(/BTC/)
 }
 
+Cryptopia.prototype.market_url = function(market) {
+  return "https://www.cryptopia.co.nz/Exchange/?market=" + market.replace(/\-/, "_")
+}
+
 Cryptopia.prototype._normalize_ticker_data = function(data) {
   return {
     id: data.TradePairId,

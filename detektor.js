@@ -205,19 +205,7 @@ Detektor.prototype.telegram_arrow = function(first_val, last_val) {
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
-  if (exchange == 'BTRX') {
-    return "https://bittrex.com/Market/Index?MarketName=" + market
-  }
-  if (exchange == 'YOBT') {
-    cur = market.split("-")[0].toLowerCase(0)
-    return "http://yobit.net/en/trade/" + cur + "/BTC"
-  }
-  if (exchange == 'POLO') {
-    return "https://poloniex.com/#/exchange/" + market.toLowerCase().replace(/\-/, "_")
-  }
-  if (exchange == 'CPIA') {
-    return "https://www.cryptopia.co.nz/Exchange/?market=" + market.replace(/\-/, "_")
-  }
+  return this.api_clients[exchange].market_url(market)
 }
 
 Detektor.prototype.process_telegram_request = function(msg, responder) {

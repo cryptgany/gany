@@ -72,6 +72,11 @@ Yobit.prototype._select_good_volume_markets = function() {
   setTimeout(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) // update markets on track every hour
 }
 
+Yobit.prototype.market_url = function(market) {
+  cur = market.split("-")[0].toLowerCase(0)
+  return "http://yobit.net/en/trade/" + cur + "/BTC"
+}
+
 // Implement standard functions
 Yobit.prototype.balance = function(callback) {
   this.client.getInfo(callback) // implement later

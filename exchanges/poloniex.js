@@ -32,6 +32,10 @@ Poloniex.prototype._watch_tickers = function() {
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
 }
 
+Poloniex.prototype.market_url = function(market) {
+  return "https://poloniex.com/#/exchange/" + market.toLowerCase().replace(/\-/, "_")
+}
+
 Poloniex.prototype._filter_market = function(data) {
   return (data.baseVolume > this.skip_volumes) && (data.isFrozen == '0')
 }
