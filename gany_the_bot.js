@@ -50,22 +50,40 @@ GanyTheBot.prototype.start = function() {
           console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
         });
         this.telegram_bot.answerCallbackQuery(msg.id, 'View options below.');
-      } else { // process request of buy/sell
+      }
+      if (msg.data.match(/detektor/)) { // process request of buy/sell
         this.detektor.process_telegram_request({text: "/detektor " + msg.data, id: msg.from.id}, (response) => { this.telegram_bot.sendMessage(msg.from.id, response) })
         this.telegram_bot.answerCallbackQuery(msg.id, 'Request processed.');
       }
     }
-    if (msg.data.match(/configure exchanges/) && this.is_allowed(msg.from.id)) {
-      this.telegram_bot.sendMessage(msg.from.id, "Configuration Exchanges:", this.configuration_menu_exchanges()).catch((error) => {
+    if (msg.data == "configure") {
+      if (this.is_allowed(msg.from.id)) // only process vip chat requests
+        this.telegram_bot.sendMessage(msg.from.id, "Configuration menu:", this.configuration_menu_options()).catch((error) => {
+          console.log(error.code);  // => 'ETELEGRAM'
+          console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+        });
+    }
+    if (msg.data == "configure exchanges" && this.is_allowed(msg.from.id)) {
+      this.telegram_bot.sendMessage(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges()).catch((error) => {
         console.log(error.code);  // => 'ETELEGRAM'
         console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
       });
     }
     if (msg.data.match(/configure exchange\ /) && this.is_allowed(msg.from.id)) {
-      this.telegram_bot.sendMessage(msg.from.id, "Configure Bittrex:", this.configuration_menu_exchanges()).catch((error) => {
-        console.log(error.code);  // => 'ETELEGRAM'
-        console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-      });
+      commands = msg.data.split(" ")
+      if (commands.length == 3) { // show exchange options
+        this.telegram_bot.sendMessage(msg.from.id, "Configure " + commands[2] + ":", this.configuration_menu_enable_disable("configure exchange " + commands[2])).catch((error) => {
+          console.log(error.code);  // => 'ETELEGRAM'
+          console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+        });
+      }
+      if (commands.length == 4) { // was enabled/disabled, show exchanges
+        this.telegram_bot.answerCallbackQuery(msg.id, 'Exchange ' + commands[2] + " " + commands[3]);
+        this.telegram_bot.sendMessage(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges()).catch((error) => {
+          console.log(error.code);  // => 'ETELEGRAM'
+          console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+        });
+      }
     }
   });
 }
@@ -208,7 +226,8 @@ GanyTheBot.prototype.configuration_menu_exchanges = function() {
     reply_markup: JSON.stringify({
       inline_keyboard: [
         [{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }],
-        [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }]
+        [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }],
+        [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })
   };
