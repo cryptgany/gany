@@ -113,8 +113,8 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
 }
 
 GanyTheBot.prototype.show_open_orders = function(subscriber_id, opened_orders) {
-  text = opened_orders.length + " opened orders at the moment."
-  options = this.sell_order_options(opened_orders)
+  text = opened_orders.length + " opened orders at the moment.\n" + opened_orders.map((order) => { return order.message }).join("\n")
+  options = opened_orders.length == 0 ? {} : this.sell_order_options(opened_orders)
   console.log("SELL ORDER OPTIONS", subscriber_id, options)
   console.log(text)
   this.telegram_bot.sendMessage(subscriber_id, text, options).catch((error) => {
@@ -155,7 +155,7 @@ GanyTheBot.prototype.sell_order_options = function(opened_orders) {
   return {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
-      inline_keyboard: opened_orders.map((order) => { return [{text: order.message, callback_data: "sell " + order.pump.exchange + "/" + order.pump.market}] })
+      inline_keyboard: opened_orders.map((order) => { return [{text: "SELL: " + order.pump.exchange + "/" + order.pump.market, callback_data: "sell " + order.pump.exchange + "/" + order.pump.market}] })
     })
   };
 }
