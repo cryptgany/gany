@@ -150,7 +150,6 @@ GanyTheBot.prototype.vip_options = function(client, signal) {
 
 GanyTheBot.prototype.sell_order_options = function(opened_orders) {
   return {
-    parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: opened_orders.map((order) => { return [{text: "SELL: " + order.pump.exchange + "/" + order.pump.market, callback_data: "sell " + order.pump.exchange + "/" + order.pump.market}] })
     })
