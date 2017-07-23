@@ -42,7 +42,7 @@ GanyTheBot.prototype.start = function() {
         });
         this.telegram_bot.answerCallbackQuery(msg.id, 'View options below.');
       } else { // process request of buy/sell
-        this.detektor.process_telegram_request({text: "/detektor " + msg.data}, (response) => { this.telegram_bot.sendMessage(msg.from.id, response) })
+        this.detektor.process_telegram_request({text: "/detektor " + msg.data, id: msg.from.id}, (response) => { this.telegram_bot.sendMessage(msg.from.id, response) })
         this.telegram_bot.answerCallbackQuery(msg.id, 'Request processed.');
       }
     }
@@ -112,6 +112,17 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   });
 }
 
+GanyTheBot.prototype.show_open_orders = function(subscriber_id, opened_orders) {
+  text = opened_orders.length + " opened orders at the moment."
+  options = this.sell_order_options(opened_orders)
+  console.log("SELL ORDER OPTIONS", subscriber_id, options)
+  console.log(text)
+  this.telegram_bot.sendMessage(subscriber_id, text, options).catch((error) => {
+    console.log(error.code);  // => 'ETELEGRAM'
+    console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+  });
+}
+
 GanyTheBot.prototype.telegram_post = function(client, signal) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
   message = "[" + client.exchange_name + " - " + signal.market + "](" + client.market_url(signal.market) + ")"
@@ -136,6 +147,15 @@ GanyTheBot.prototype.vip_options = function(client, signal) {
       inline_keyboard: [
         [{ text: 'Options', callback_data: 'options ' + client.code + "/" + signal.market }],
       ]
+    })
+  };
+}
+
+GanyTheBot.prototype.sell_order_options = function(opened_orders) {
+  return {
+    parse_mode: "Markdown",
+    reply_markup: JSON.stringify({
+      inline_keyboard: opened_orders.map((order) => { return [{text: order.message, callback_data: "sell " + order.pump.exchange + "/" + order.pump.market}] })
     })
   };
 }
