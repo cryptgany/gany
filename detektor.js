@@ -25,13 +25,6 @@ function Detektor(logger, pump_events, test_mode, database, api_clients, rules) 
   this.signal = new Signal()
   this.matcher = require('./matcher')
 
-  this.exchange_volume_change = {
-    'BTRX': 1.30,
-    'YOBT': 1.3,
-    'POLO': 1.25,
-    'CPIA': 1.25
-  }
-
   this.api_clients = api_clients
 
   this.market_data
