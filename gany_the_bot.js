@@ -32,6 +32,14 @@ GanyTheBot.prototype.start = function() {
       this.listeners.forEach((listener) => { listener(msg, (response) => { this.telegram_bot.sendMessage(msg.chat.id, response) }) })
   })
 
+  this.telegram_bot.onText(/\/configure/, (msg, match) => {
+    if (this.is_allowed(msg.chat.id)) // only process vip chat requests
+      this.telegram_bot.sendMessage(msg.chat.id, "Configuration menu:", this.configuration_menu_options()).catch((error) => {
+        console.log(error.code);  // => 'ETELEGRAM'
+        console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+      });
+  })
+
   this.telegram_bot.on('callback_query', (msg) => {
     if (this.is_vip(msg.from.id)) {
       if (msg.data.match(/options/)) {
@@ -45,6 +53,18 @@ GanyTheBot.prototype.start = function() {
         this.detektor.process_telegram_request({text: "/detektor " + msg.data, id: msg.from.id}, (response) => { this.telegram_bot.sendMessage(msg.from.id, response) })
         this.telegram_bot.answerCallbackQuery(msg.id, 'Request processed.');
       }
+    }
+    if (msg.data.match(/configure exchanges/) && this.is_allowed(msg.from.id)) {
+      this.telegram_bot.sendMessage(msg.from.id, "Configuration Exchanges:", this.configuration_menu_exchanges()).catch((error) => {
+        console.log(error.code);  // => 'ETELEGRAM'
+        console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+      });
+    }
+    if (msg.data.match(/configure exchange\ /) && this.is_allowed(msg.from.id)) {
+      this.telegram_bot.sendMessage(msg.from.id, "Configure Bittrex:", this.configuration_menu_exchanges()).catch((error) => {
+        console.log(error.code);  // => 'ETELEGRAM'
+        console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+      });
     }
   });
 }
@@ -164,6 +184,40 @@ GanyTheBot.prototype.vip_buy_options = function(exchange_market_code) {
         [{ text: 'See price', callback_data: ('see ' + exchange_market_code) }],
         [{ text: 'Buy 0.001 BTC', callback_data: ('buy ' + exchange_market_code + " 0.001") }],
         [{ text: 'Buy 0.01 BTC', callback_data: ('buy ' + exchange_market_code + " 0.01") }]
+      ]
+    })
+  };
+}
+
+GanyTheBot.prototype.configuration_menu_options = function() {
+  return {
+    parse_mode: "Markdown",
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: 'Configure Exchanges', callback_data: 'configure exchanges' }, { text: 'Configure Subscription', callback_data: 'configure subscription' }],
+      ]
+    })
+  };
+}
+
+GanyTheBot.prototype.configuration_menu_exchanges = function() {
+  return {
+    parse_mode: "Markdown",
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: 'Bittrex', callback_data: 'configure exchange BTRX' }, { text: 'Poloniex', callback_data: 'configure exchange POLO' }],
+        [{ text: 'Yobit', callback_data: 'configure exchange YOBT' }, { text: 'Cryptopia', callback_data: 'configure exchange CPIA' }]
+      ]
+    })
+  };
+}
+
+GanyTheBot.prototype.configuration_menu_enable_disable = function(menu_str) {
+  return {
+    parse_mode: "Markdown",
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: 'Enable', callback_data: menu_str + " enable" }, { text: 'Disable', callback_data: menu_str + " disable" }],
       ]
     })
   };
