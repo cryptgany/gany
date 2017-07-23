@@ -4,7 +4,7 @@ const BittrexClient = require('node.bittrex.api');
 
 function Bittrex(pump_events) {
   this.exchange_name = 'Bittrex'
-  this.code = 'BTRX'
+  this.code = 'Bittrex'
   this.client = BittrexClient;
   this.client.options({
     'apikey' : process.env.BITTREX_KEY,
@@ -33,10 +33,10 @@ Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seco
     if (data.success) {
       tickers = data.result
       tickers.forEach((data) => {
-        self.pump_events.emit('marketupdate', 'TICKER', 'BTRX', data.MarketName, self._normalize_ticker_data(data));
+        self.pump_events.emit('marketupdate', 'TICKER', 'Bittrex', data.MarketName, self._normalize_ticker_data(data));
       });
     } else {
-      console.log("Error getting BTRX tickers: " + data.message)
+      console.log("Error getting Bittrex tickers: " + data.message)
     }
   });
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
@@ -49,7 +49,7 @@ Bittrex.prototype._watch_trades = function() {
     if (data.M === 'updateExchangeState') {
       data.A.forEach(function(data_for) {
         // console.log("First", data_for);
-        self.pump_events.emit('marketupdate', 'TRADE', 'BTRX', data_for.MarketName, data_for);
+        self.pump_events.emit('marketupdate', 'TRADE', 'Bittrex', data_for.MarketName, data_for);
       });
     }
   });

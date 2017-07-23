@@ -129,7 +129,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
           }
           if (signal) {
             this.store_signal_in_background(signal)
-            if (this.ticker_autotrader_enabled && exchange == 'BTRX') { // if enabled
+            if (this.ticker_autotrader_enabled && exchange == 'Bittrex') { // if enabled
               var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this, 0, this.verbose)
               pump.start();
               this.pumps.push(pump);

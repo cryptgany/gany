@@ -2,7 +2,7 @@ const PoloniexClient = require('poloniex-api-node');
 
 function Poloniex(pump_events, skip_volumes = 0.5) {
   this.exchange_name = 'Poloniex'
-  this.code = 'POLO'
+  this.code = 'Poloniex'
   this.client = new PoloniexClient()
   this.all_markets = [];
   this.markets = []; // after selecting only good volume markets
@@ -25,7 +25,7 @@ Poloniex.prototype._watch_tickers = function() {
     } else {
       Object.keys(tickers).forEach((market) => {
         if (this._filter_market(tickers[market])) {
-          this.pump_events.emit('marketupdate', 'TICKER', 'POLO', market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));
+          this.pump_events.emit('marketupdate', 'TICKER', 'Poloniex', market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));
         }
       })
     }

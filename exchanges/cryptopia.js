@@ -2,7 +2,7 @@ var https = require("https")
 
 function Cryptopia(pump_events, skip_volumes = 0.5) {
   this.exchange_name = 'Cryptopia'
-  this.code = 'CPIA'
+  this.code = 'Cryptopia'
   this.all_markets = [];
   this.markets = []; // after selecting only good volume markets
   this.market_data = [];
@@ -25,7 +25,7 @@ Cryptopia.prototype._watch_tickers = function() {
       tickers.forEach((ticker) => {
         if (this._filter_market(ticker)) {
           market = ticker.Label
-          this.pump_events.emit('marketupdate', 'TICKER', 'CPIA', market.replace(/\//, '-'), this._normalize_ticker_data(ticker));
+          this.pump_events.emit('marketupdate', 'TICKER', 'Cryptopia', market.replace(/\//, '-'), this._normalize_ticker_data(ticker));
         }
       })
     }

@@ -9,6 +9,7 @@ function GanyTheBot() {
   this.allowed_chats.push(parseInt(process.env.PERSONAL_CHANNEL)) // my telegram
   this.allowed_chats.push(parseInt(process.env.OTHER_CHANNEL)); // naj
   this.allowed_chats.push(parseInt(process.env.ADAM_CHANNEL)); // adam
+  this.allowed_chats.push(parseInt(process.env.CARLOSG_CHANNEL)); // Carlos G Designer
   this.vip_chats.push(parseInt(process.env.PERSONAL_CHANNEL));
   this.token = process.env.GANY_KEY;
   this.listeners = []
@@ -77,6 +78,7 @@ GanyTheBot.prototype.process = function(msg, responder) {
         responder('Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot. I will help you setup your configuration so you get the best of me.')
         responder('First of all, you want to start with /subscribe to start getting your signals.')
       } else {
+        console.log("Received /start from unallowed id", msg.from.id)
         responder('Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.')
         responder("Sorry I am currently unavailable whilst developments are ongoing.")
         responder("Website www.cryptowarnings.com will be available next month.")
@@ -205,8 +207,8 @@ GanyTheBot.prototype.configuration_menu_exchanges = function() {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: 'Bittrex', callback_data: 'configure exchange BTRX' }, { text: 'Poloniex', callback_data: 'configure exchange POLO' }],
-        [{ text: 'Yobit', callback_data: 'configure exchange YOBT' }, { text: 'Cryptopia', callback_data: 'configure exchange CPIA' }]
+        [{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }],
+        [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }]
       ]
     })
   };
