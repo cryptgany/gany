@@ -104,7 +104,6 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   text = this.telegram_post(client, signal)
   console.log(text)
   this.chats.forEach((chat_id) => {
-    console.log("options are ", this.options(client, signal, chat_id))
     this.telegram_bot.sendMessage(chat_id, text, this.options(client, signal, chat_id)).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'
       console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
@@ -115,8 +114,6 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
 GanyTheBot.prototype.show_open_orders = function(subscriber_id, opened_orders) {
   text = opened_orders.length + " opened orders at the moment.\n" + opened_orders.map((order) => { return order.message }).join("\n")
   options = opened_orders.length == 0 ? {} : this.sell_order_options(opened_orders)
-  console.log("SELL ORDER OPTIONS", subscriber_id, options)
-  console.log(text)
   this.telegram_bot.sendMessage(subscriber_id, text, options).catch((error) => {
     console.log(error.code);  // => 'ETELEGRAM'
     console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
