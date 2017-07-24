@@ -14,10 +14,10 @@ function GanyTheBot() {
   this.token = process.env.GANY_KEY;
   this.listeners = []
   this.subscriber = new Subscriber()
-  this.chats = []
+  this.subscribers = []
   this.detektor = undefined
   this.subscriber.all((err, data) => {
-    this.chats = data.map((rec) => { return rec.id })
+    this.subscribers = data
   })
 
   this.telegram_bot = new TelegramBot(this.token, {polling: true});
@@ -111,18 +111,19 @@ GanyTheBot.prototype.process = function(msg, responder) {
             responder('You are already subscribed.')
           } else {
             this.subscriber.subscribe_user(chat_id, (data) => {
+              console.log(data)
               if (data.result.ok == 1) {
-                this.chats.push(chat_id)
+                this.subscribers.push(chat_id)
                 responder('You are now subscribed! You will start getting notifications soon. Please be patient and wait.')
               } else {
-                responder('Could not subscriber, please contact @frooks, your id is ' + chat_id)
+                responder('Could not subscribe, please contact @frooks, your id is ' + chat_id)
               }
             })
           }
         });
       }
       if (text.match(/\/all/)) {
-        responder(this.chats.join(", ") || "No users subscribed")
+        responder(this.subscribers.map((sub) => { return sub.id}).join(", ") || "No users subscribed")
       }
     }
 
@@ -143,8 +144,8 @@ GanyTheBot.prototype.process = function(msg, responder) {
 GanyTheBot.prototype.send_signal = function(client, signal) {
   text = this.telegram_post(client, signal)
   console.log(text)
-  this.chats.forEach((chat_id) => {
-    this.telegram_bot.sendMessage(chat_id, text, this.options(client, signal, chat_id)).catch((error) => {
+  this.subscribers.forEach((sub) => {
+    this.telegram_bot.sendMessage(sub.id, text, this.options(client, signal, sub.id)).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'
       console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
     });
@@ -269,7 +270,7 @@ GanyTheBot.prototype.listen = function(callback) {
 }
 
 GanyTheBot.prototype.broadcast = function(text, vip_only = false) {
-  chats_for_broadcast = vip_only ? this.vip_chats : this.chats;
+  chats_for_broadcast = vip_only ? this.vip_chats : this.subscribers.map((sub) => { return sub.id });
   chats_for_broadcast.forEach((chat_id) => {
     this.telegram_bot.sendMessage(chat_id, text, {parse_mode: "Markdown"}).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'

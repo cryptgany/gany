@@ -7,7 +7,7 @@ function Subscriber() {
 
 Subscriber.prototype.subscribe_user = function(subscriber_id, callback) {
   // subscribes an user
-  this.database.store_data({id: subscriber_id}, callback)
+  this.database.store_data({id: subscriber_id, exchanges: { bittrex: true, cryptopia: true, yobit: true, poloniex: true}}, callback)
 }
 
 Subscriber.prototype.user_is_subscribed = function(subscriber_id, callback) {
