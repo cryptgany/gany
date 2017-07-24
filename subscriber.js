@@ -12,4 +12,14 @@ var subscriberSchema = mongoose.Schema({
     }
 });
 
+subscriberSchema.methods.change_exchange_status = function (exchange, decision) {
+  decision = decision == 'enabled' ? true : false
+  if (this.exchanges[exchange] != decision) {
+    this.exchanges[exchange] = decision
+    this.save(function (err, subscriber) {
+      if (err) return console.error(err);
+    });
+  }
+}
+
 module.exports = mongoose.model('subscribers', subscriberSchema);

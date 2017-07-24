@@ -79,6 +79,7 @@ GanyTheBot.prototype.start = function() {
       }
       if (commands.length == 4) { // was enabled/disabled, show exchanges
         this.telegram_bot.answerCallbackQuery(msg.id, 'Exchange ' + commands[2] + " " + commands[3]);
+        _.find(this.subscribers, (s) => {return s.telegram_id == msg.from.id}).change_exchange_status(commands[2], commands[3])
         this.telegram_bot.sendMessage(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges()).catch((error) => {
           console.log(error.code);  // => 'ETELEGRAM'
           console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
@@ -141,7 +142,7 @@ GanyTheBot.prototype.process = function(msg, responder) {
 GanyTheBot.prototype.send_signal = function(client, signal) {
   text = this.telegram_post(client, signal)
   console.log(text)
-  this.subscribers.forEach((sub) => {
+  this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] }).forEach((sub) => {
     this.telegram_bot.sendMessage(sub.telegram_id, text, this.options(client, signal, sub.telegram_id)).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'
       console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
@@ -248,7 +249,7 @@ GanyTheBot.prototype.configuration_menu_enable_disable = function(menu_str) {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: 'Enable', callback_data: menu_str + " enable" }, { text: 'Disable', callback_data: menu_str + " disable" }],
+        [{ text: 'Enable', callback_data: menu_str + " enabled" }, { text: 'Disable', callback_data: menu_str + " disabled" }],
       ]
     })
   };
