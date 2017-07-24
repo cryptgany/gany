@@ -2,6 +2,7 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./subscriber');
+const _ = require('underscore')
 
 function GanyTheBot() {
   this.vip_chats = [];
@@ -13,11 +14,10 @@ function GanyTheBot() {
   this.vip_chats.push(parseInt(process.env.PERSONAL_CHANNEL));
   this.token = process.env.GANY_KEY;
   this.listeners = []
-  this.subscriber = new Subscriber()
   this.subscribers = []
   this.detektor = undefined
-  this.subscriber.all((err, data) => {
-    this.subscribers = data
+  Subscriber.find({}, (err, subscribers) => {
+    this.subscribers = subscribers
   })
 
   this.telegram_bot = new TelegramBot(this.token, {polling: true});
@@ -106,24 +106,21 @@ GanyTheBot.prototype.process = function(msg, responder) {
     }
     if (this.is_allowed(chat_id)) {
       if (text.match(/\/subscribe/)) {
-        this.subscriber.user_is_subscribed(chat_id, (err, data) => {
-          if (data.length >= 1) {
-            responder('You are already subscribed.')
-          } else {
-            this.subscriber.subscribe_user(chat_id, (data) => {
-              console.log(data)
-              if (data.result.ok == 1) {
-                this.subscribers.push(chat_id)
-                responder('You are now subscribed! You will start getting notifications soon. Please be patient and wait.')
-              } else {
-                responder('Could not subscribe, please contact @frooks, your id is ' + chat_id)
-              }
-            })
-          }
-        });
+        if (this.user_is_subscribed(chat_id)) {
+          responder('You are already subscribed.')
+        } else {
+          this.subscribe_user(chat_id, (err, subscriber) => {
+            if (!err) {
+              this.subscribers.push(subscriber)
+              responder('You are now subscribed! You will start getting notifications soon. Please be patient and wait.')
+            } else {
+              responder('Could not subscribe, please contact @frooks, your id is ' + chat_id)
+            }
+          })
+        }
       }
       if (text.match(/\/all/)) {
-        responder(this.subscribers.map((sub) => { return sub.id}).join(", ") || "No users subscribed")
+        responder(this.subscribers.map((sub) => { return sub.telegram_id}).join(", ") || "No users subscribed")
       }
     }
 
@@ -145,7 +142,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   text = this.telegram_post(client, signal)
   console.log(text)
   this.subscribers.forEach((sub) => {
-    this.telegram_bot.sendMessage(sub.id, text, this.options(client, signal, sub.id)).catch((error) => {
+    this.telegram_bot.sendMessage(sub.telegram_id, text, this.options(client, signal, sub.telegram_id)).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'
       console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
     });
@@ -172,6 +169,18 @@ GanyTheBot.prototype.telegram_post = function(client, signal) {
   message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
   return message
 }
+
+GanyTheBot.prototype.user_is_subscribed = function(telegram_id) {
+  return _.find(this.subscribers, (sub) => { return sub.telegram_id == telegram_id } )
+}
+
+GanyTheBot.prototype.subscribe_user = function(telegram_id, callback) {
+  sub = new Subscriber({telegram_id: telegram_id})
+  sub.save((err) => {
+    callback(err, sub)
+  })
+}
+
 
 GanyTheBot.prototype.options = function(client, signal, subscriber_id) {
   if (this.is_vip(subscriber_id)) { return this.vip_options(client, signal) }
@@ -270,7 +279,7 @@ GanyTheBot.prototype.listen = function(callback) {
 }
 
 GanyTheBot.prototype.broadcast = function(text, vip_only = false) {
-  chats_for_broadcast = vip_only ? this.vip_chats : this.subscribers.map((sub) => { return sub.id });
+  chats_for_broadcast = vip_only ? this.vip_chats : this.subscribers.map((sub) => { return sub.telegram_id });
   chats_for_broadcast.forEach((chat_id) => {
     this.telegram_bot.sendMessage(chat_id, text, {parse_mode: "Markdown"}).catch((error) => {
       console.log(error.code);  // => 'ETELEGRAM'

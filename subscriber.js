@@ -1,27 +1,15 @@
 // Handles all the subscription process
-const Database = require('./database')
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/detektor');
 
-function Subscriber() {
-  this.database = new Database("subscribers")
-}
+var subscriberSchema = mongoose.Schema({
+    telegram_id: Number,
+    exchanges: {
+      Bittrex: { type: Boolean, default: true },
+      Poloniex: { type: Boolean, default: true },
+      Cryptopia: { type: Boolean, default: true },
+      Yobit: { type: Boolean, default: true },
+    }
+});
 
-Subscriber.prototype.subscribe_user = function(subscriber_id, callback) {
-  // subscribes an user
-  this.database.store_data({id: subscriber_id, exchanges: { bittrex: true, cryptopia: true, yobit: true, poloniex: true}}, callback)
-}
-
-Subscriber.prototype.user_is_subscribed = function(subscriber_id, callback) {
-  // returns if a user is already subscribed
-  this.database.read_data({id: subscriber_id}, callback)
-}
-
-Subscriber.prototype.all = function(callback) {
-  // returns all subscribers
-  this.database.read_data({}, callback)
-}
-
-Subscriber.prototype.delete_data = function(query, callback) {
-  this.database.delete_data(query, callback)
-}
-
-module.exports = Subscriber;
+module.exports = mongoose.model('subscribers', subscriberSchema);
