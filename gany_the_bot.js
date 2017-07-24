@@ -72,7 +72,7 @@ GanyTheBot.prototype.start = function() {
     if (msg.data.match(/configure exchange\ /) && this.is_allowed(msg.from.id)) {
       commands = msg.data.split(" ")
       if (commands.length == 3) { // show exchange options
-        this.telegram_bot.sendMessage(msg.from.id, "Configure " + commands[2] + ":", this.configuration_menu_enable_disable("configure exchange " + commands[2])).catch((error) => {
+        this.telegram_bot.sendMessage(msg.from.id, "Configure " + commands[2] + " (currently " + this.find_subscriber(msg.from.id).exchange_status(commands[2]) + "):", this.configuration_menu_enable_disable("configure exchange " + commands[2])).catch((error) => {
           console.log(error.code);  // => 'ETELEGRAM'
           console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
         });
@@ -171,8 +171,12 @@ GanyTheBot.prototype.telegram_post = function(client, signal) {
   return message
 }
 
-GanyTheBot.prototype.user_is_subscribed = function(telegram_id) {
+GanyTheBot.prototype.find_subscriber = function(telegram_id) {
   return _.find(this.subscribers, (sub) => { return sub.telegram_id == telegram_id } )
+}
+
+GanyTheBot.prototype.user_is_subscribed = function(telegram_id) {
+  return this.find_subscriber(telegram_id)
 }
 
 GanyTheBot.prototype.subscribe_user = function(telegram_id, callback) {

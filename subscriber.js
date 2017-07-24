@@ -22,4 +22,8 @@ subscriberSchema.methods.change_exchange_status = function (exchange, decision) 
   }
 }
 
+subscriberSchema.methods.exchange_status = function(exchange) {
+  return this.exchanges[exchange] ? "enabled" : "disabled"
+}
+
 module.exports = mongoose.model('subscribers', subscriberSchema);

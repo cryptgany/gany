@@ -11,7 +11,7 @@ Subscriber.find({}, function(err, subscribers) {
   })
 });
 
-ids = [65954004]
+ids = [123123, 345345]
 
 ids.forEach((telegram_id) => {
   sub = new Subscriber({telegram_id: telegram_id})
