@@ -207,7 +207,7 @@ Detektor.prototype.process_telegram_request = function(msg, responder) {
       this.store_snapshot()
       responder("Snapshot stored")
     }
-    if (command.match(/\/detektor see/)) {
+    if (command.match(/\/detektor see/) && !command.match(/\/detektor see profit/)) {
       pair = command.replace(/\/detektor see\ /, '').split("/")
       exchange = pair[0]; market = pair[1]
       ticker_info = this.tickers[exchange][market]

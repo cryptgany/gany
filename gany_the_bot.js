@@ -51,7 +51,8 @@ GanyTheBot.prototype.start = function() {
         });
         this.telegram_bot.answerCallbackQuery(msg.id, 'View options below.');
       }
-      if (msg.data.match(/detektor/)) { // process request of buy/sell
+      if (msg.data.match(/autotrader/)) { // process request of buy/sell
+        msg.data = msg.data.replace(/autotrader\ /, '')
         this.detektor.process_telegram_request({text: "/detektor " + msg.data, id: msg.from.id}, (response) => { this.telegram_bot.sendMessage(msg.from.id, response) })
         this.telegram_bot.answerCallbackQuery(msg.id, 'Request processed.');
       }
@@ -206,7 +207,7 @@ GanyTheBot.prototype.vip_options = function(client, signal) {
 GanyTheBot.prototype.sell_order_options = function(opened_orders) {
   return {
     reply_markup: JSON.stringify({
-      inline_keyboard: opened_orders.map((order) => { return [{text: "SELL: " + order.pump.exchange + "/" + order.pump.market, callback_data: "sell " + order.pump.exchange + "/" + order.pump.market}] })
+      inline_keyboard: opened_orders.map((order) => { return [{text: "SELL: " + order.pump.exchange + "/" + order.pump.market, callback_data: "autotrader sell " + order.pump.exchange + "/" + order.pump.market}] })
     })
   };
 }
@@ -216,9 +217,9 @@ GanyTheBot.prototype.vip_buy_options = function(exchange_market_code) {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: 'See price', callback_data: ('see ' + exchange_market_code) }],
-        [{ text: 'Buy 0.001 BTC', callback_data: ('buy ' + exchange_market_code + " 0.001") }],
-        [{ text: 'Buy 0.01 BTC', callback_data: ('buy ' + exchange_market_code + " 0.01") }]
+        [{ text: 'See price', callback_data: ('autotrader see ' + exchange_market_code) }],
+        [{ text: 'Buy 0.001 BTC', callback_data: ('autotrader buy ' + exchange_market_code + " 0.001") }],
+        [{ text: 'Buy 0.01 BTC', callback_data: ('autotrader buy ' + exchange_market_code + " 0.01") }]
       ]
     })
   };
