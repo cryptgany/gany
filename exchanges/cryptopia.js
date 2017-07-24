@@ -25,7 +25,7 @@ Cryptopia.prototype._watch_tickers = function() {
       tickers.forEach((ticker) => {
         if (this._filter_market(ticker)) {
           market = ticker.Label
-          this.pump_events.emit('marketupdate', 'TICKER', 'Cryptopia', market.replace(/\//, '-'), this._normalize_ticker_data(ticker));
+          this.pump_events.emit('marketupdate', 'TICKER', this.code, market.replace(/\//, '-'), this._normalize_ticker_data(ticker));
         }
       })
     }

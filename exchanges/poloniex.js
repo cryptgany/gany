@@ -25,7 +25,7 @@ Poloniex.prototype._watch_tickers = function() {
     } else {
       Object.keys(tickers).forEach((market) => {
         if (this._filter_market(tickers[market])) {
-          this.pump_events.emit('marketupdate', 'TICKER', 'Poloniex', market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));
+          this.pump_events.emit('marketupdate', 'TICKER', this.code, market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));
         }
       })
     }

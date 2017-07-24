@@ -33,7 +33,7 @@ Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seco
     if (data.success) {
       tickers = data.result
       tickers.forEach((data) => {
-        self.pump_events.emit('marketupdate', 'TICKER', 'Bittrex', data.MarketName, self._normalize_ticker_data(data));
+        self.pump_events.emit('marketupdate', 'TICKER', self.code, data.MarketName, self._normalize_ticker_data(data));
       });
     } else {
       console.log("Error getting Bittrex tickers: " + data.message)

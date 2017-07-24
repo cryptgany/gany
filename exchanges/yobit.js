@@ -39,7 +39,7 @@ Yobit.prototype._watch_tickers = function() {
           console.log('Failed to retrieve yobit data: ', err)
         } else {
           Object.keys(e).forEach((market) => {
-            self.pump_events.emit('marketupdate', 'TICKER', 'Yobit', market.toUpperCase().replace(/\_/, '-'), self._normalize_ticker_data(e[market]));
+            self.pump_events.emit('marketupdate', 'TICKER', self.code, market.toUpperCase().replace(/\_/, '-'), self._normalize_ticker_data(e[market]));
           })
         }
       }, ticker_str)
