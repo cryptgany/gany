@@ -36,7 +36,7 @@ Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seco
         self.pump_events.emit('marketupdate', 'TICKER', self.code, data.MarketName, self._normalize_ticker_data(data));
       });
     } else {
-      console.log("Error getting Bittrex tickers: " + data.message)
+      console.log("Error getting Bittrex tickers: " + data)
     }
   });
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
