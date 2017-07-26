@@ -58,7 +58,7 @@ Yobit.prototype._select_good_volume_markets = function() {
     setTimeout(() => {
       ticker_str = self.all_markets.slice(cycle * 50, (cycle+1) * 50).join("-")
       self.client.getTicker((err, e) => {
-        if (e == undefined) {
+        if (err) {
           console.log('Failed to retrieve yobit data: ', err)
         } else {
           Object.keys(e).forEach((market) => {
@@ -89,7 +89,6 @@ Yobit.prototype.get_markets = function(callback) {
 
 Yobit.prototype.get_order = function(order_id, callback) {
   this.client.privateRequest('OrderInfo', { order_id: order_id }, (err, data) => {
-    console.log("GET ORDER", err, data)
     callback({
       success: data.success == 1,
       message: data.error,
@@ -144,9 +143,7 @@ Yobit.prototype.sell_order = function(market, quantity, rate, callback) {
 }
 
 Yobit.prototype.cancel_order = function(order_id, callback) {
-  console.log("YOBIT canceling order", order_id)
   this.client.privateRequest('CancelOrder', { order_id: order_id }, (err, data) => {
-    console.log("CANCEL RETURN", err, data)
     callback({
       success: data.success == 1,
       return: data.return
