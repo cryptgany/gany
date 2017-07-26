@@ -11,7 +11,7 @@ function Yobit(pump_events, skip_volumes = 0.5) {
   this.market_data = [];
   this.pump_events = pump_events;
   this.skip_volumes = 0.01 // skip markets with lower than this volume
-  this.ticker_speed = 15 // seconds
+  this.ticker_speed = 10 // seconds
   this.cycle_time = 20 // minutes
 }
 
@@ -44,7 +44,7 @@ Yobit.prototype._watch_tickers = function() {
         }
       }, ticker_str)
       cycle++;
-    }, 800 * i)
+    }, 500 * i)
   }
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
 }
@@ -59,7 +59,7 @@ Yobit.prototype._select_good_volume_markets = function() {
       ticker_str = self.all_markets.slice(cycle * 50, (cycle+1) * 50).join("-")
       self.client.getTicker((err, e) => {
         if (err) {
-          console.log('Failed to retrieve yobit data: ', err)
+          console.log('Failed to retrieve yobit data: ', err, e)
         } else {
           Object.keys(e).forEach((market) => {
             if (e[market].vol >= self.skip_volumes)
@@ -68,7 +68,7 @@ Yobit.prototype._select_good_volume_markets = function() {
         }
       }, ticker_str)
       cycle++;
-    }, 500 * cycle)
+    }, 500 * i)
   }
   setTimeout(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) // update markets on track every hour
 }
