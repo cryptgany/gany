@@ -12,7 +12,8 @@ function GanyTheBot() {
   this.allowed_chats.push(parseInt(process.env.ADAM_CHANNEL)); // adam
   this.allowed_chats.push(parseInt(process.env.CARLOSG_CHANNEL)); // Carlos G Designer
   this.vip_chats.push(parseInt(process.env.PERSONAL_CHANNEL));
-  this.vip_chats.push(parseInt(process.env.ADAM_CHANNEL));
+  if (process.env.ENVIRONMENT == 'production')
+    this.vip_chats.push(parseInt(process.env.ADAM_CHANNEL));
   this.token = process.env.GANY_KEY;
   this.listeners = []
   this.subscribers = []
