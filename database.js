@@ -76,6 +76,7 @@ Database.prototype.store_data = function(data, callback) {
 
     collection.insert(data, (err, result) => {
       if (err) { console.log("Error storing data on", this.collection, err) } else { callback(result) }
+      db.close()
     });
   })
 }
@@ -86,6 +87,7 @@ Database.prototype.read_data = function(query = {}, callback) {
 
     var collection = db.collection(this.collection);
     collection.find(query).toArray(callback)
+    db.close()
   })
 }
 
