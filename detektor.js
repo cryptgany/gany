@@ -211,11 +211,11 @@ Detektor.prototype.process_telegram_request = function(msg, responder) {
       exchange = pair[0]; market = pair[1]
       ticker_info = this.tickers[exchange][market]
       message = this.market_url(exchange, market)
-      message += "\nB: " + ticker_info.bid
-      message += "\nA: " + ticker_info.ask
-      message += "\nL: " + ticker_info.last
-      message += "\n24h Low: " + ticker_info.low
-      message += "\n24h High: " + ticker_info.high
+      message += "\nB: " + ticker_info.bid.toFixed(8)
+      message += "\nA: " + ticker_info.ask.toFixed(8)
+      message += "\nL: " + ticker_info.last.toFixed(8)
+      message += "\n24h Low: " + ticker_info.low.toFixed(8)
+      message += "\n24h High: " + ticker_info.high.toFixed(8)
       responder(message)
     }
     if (command.match(/\/detektor buy/)) {
