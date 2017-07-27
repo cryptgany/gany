@@ -38,6 +38,7 @@ Database.prototype.get_tickers_history = function(callback) {
     var collection = db.collection(this.tickers_history_collection);
 
     collection.find().toArray(callback)
+    db.close()
   })
 }
 
@@ -63,6 +64,7 @@ Database.prototype.get_tickers_blacklist = function(callback) {
     var collection = db.collection(this.tickers_blacklist_collection);
 
     collection.find().toArray(callback)
+    db.close()
   })
 }
 
