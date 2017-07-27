@@ -10,7 +10,7 @@ function Yobit(pump_events, skip_volumes = 0.5) {
   this.markets = []; // after selecting only good volume markets
   this.market_data = [];
   this.pump_events = pump_events;
-  this.skip_volumes = 0.01 // skip markets with lower than this volume
+  this.skip_volumes = 0.005 // skip markets with lower than this volume
   this.ticker_speed = 5 // seconds
   this.cycle_time = 20 // minutes
 }
