@@ -58,7 +58,7 @@ Detektor.prototype.store_snapshot_every_1_min = function() {
   setTimeout(() => { // do async
     this.store_snapshot() // call real function
     this.store_snapshot_every_1_min()
-  }, 15 * 1000) // store every 5 mins
+  }, 1 * 60 * 1000) // store every 5 mins
 }
 
 Detektor.prototype.store_snapshot = function() {

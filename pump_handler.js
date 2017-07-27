@@ -34,7 +34,7 @@ function PumpHandler(event_handler, logger, client, exchange, market, btc_amount
 
   this.smart_strategy = { // params for strategy 0
     time_for_peak_detection: 60 * 24, // minutes, give this time for trying to reach peak price
-    time_for_fixed_sell_detection: 0.15, // when doing fixed sells at certain price, wait if they do not complete
+    time_for_fixed_sell_detection: 15, // when doing fixed sells at certain price, wait if they do not complete
     percentage_for_selling_on_downtrend: 1.1, // if on downtrend, sell if bigger than this price
     minumum_sells_to_consider_downtrend: 2, // each unit is 10 seconds
     expected_percentage_to_sell: 1.5 // if reached this percentage, sell
@@ -56,7 +56,9 @@ PumpHandler.prototype.start = function() {
     // wait order completion
     if (this.verbose) console.log(this.market, "Waiting for BUY order to complete... rate: " + this.buy_rate.toFixed(8));
     this.cancel_order_if_not_complete(data.result.id, 15*1000)
-    this.waitForComplete(data.result.id, (order) => { this.notify_buy_complete_and_sell(order) });
+    setTimeout(() => {
+      this.waitForComplete(data.result.id, (order) => { this.notify_buy_complete_and_sell(order) });
+    }, 1500)
   });
 }
 
@@ -76,7 +78,7 @@ PumpHandler.prototype.waitForComplete = function(order_id, callback) {
     if (order.result.closed) { // order completed
       callback(order.result)
     } else {
-      setTimeout(() => { this.waitForComplete(order_id, callback) }, 1000);
+      setTimeout(() => { this.waitForComplete(order_id, callback) }, 1200);
     }
   });
 }
@@ -140,7 +142,9 @@ PumpHandler.prototype.sell_on_peak = function(strategy = this.strategy, last_pri
       // wait order completion
       if (this.verbose) console.log(this.market, "Waiting for SELL order to complete... rate: " + this.sell_rate.toFixed(8));
       this.cancel_order_if_not_complete(data.result.id, this.smart_strategy.time_for_fixed_sell_detection * 1000) // wait 5 minutes
-      this.waitForComplete(data.result.id, (order) => { this.notify_complete_and_print_result(order) });
+      setTimeout(() => {
+        this.waitForComplete(data.result.id, (order) => { this.notify_complete_and_print_result(order); this.event_handler.removeListener('marketupdate', this.ticker_event_handler_method) });
+      }, 1500)
     });
   }
 }

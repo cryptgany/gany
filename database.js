@@ -38,7 +38,7 @@ Database.prototype.get_tickers_history = function(callback) {
     var collection = db.collection(this.tickers_history_collection);
 
     collection.find().toArray(callback)
-    db.close()
+    setTimeout(() => { db.close() }, 1000)
   })
 }
 
@@ -51,7 +51,7 @@ Database.prototype.store_tickers_blacklist = function(tickers) {
     collection.remove({}, (err, removed) => {if (err) console.log("Could not clear tickers blacklist collection:", err)
       collection.insert(tickers, (err, result) => {
         if (err) { console.log("Error storing data on", this.tickers_blacklist_collection, err) }
-        db.close()
+        setTimeout(() => { db.close() }, 1000)
       });
     }); // clear old tickers before storing new
   })
