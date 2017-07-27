@@ -4,6 +4,7 @@
   "description": "",
   "main": "detektor.js",
   "dependencies": {
+    "ccxt": "^1.1.91",
     "dotenv": "^4.0.0",
     "jsonfile": "^3.0.1",
     "mongodb": "^2.2.30",
@@ -12,8 +13,7 @@
     "node-telegram-bot-api": "^0.27.1",
     "node.bittrex.api": "^0.3.3",
     "poloniex-api-node": "^1.3.1",
-    "underscore": "^1.8.3",
-    "yobit": "git://github.com/carlosero/yobit.git"
+    "underscore": "^1.8.3"
   },
   "devDependencies": {},
   "scripts": {
