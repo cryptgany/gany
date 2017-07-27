@@ -24,6 +24,7 @@ Database.prototype.store_tickers_history = function(tickers) {
           }
           collection.insert(record, (err, result) => {
             if (err) { console.log("Error storing data on", this.tickers_history_collection, err) }
+            db.close()
           });
         })
       })
@@ -41,7 +42,6 @@ Database.prototype.get_tickers_history = function(callback) {
   })
 }
 
-
 // TICKERS BLACKLIST
 Database.prototype.store_tickers_blacklist = function(tickers) {
   MongoClient.connect(this.url, (err, db) => {
@@ -51,6 +51,7 @@ Database.prototype.store_tickers_blacklist = function(tickers) {
     collection.remove({}, (err, removed) => {if (err) console.log("Could not clear tickers blacklist collection:", err)
       collection.insert(tickers, (err, result) => {
         if (err) { console.log("Error storing data on", this.tickers_blacklist_collection, err) }
+        db.close()
       });
     }); // clear old tickers before storing new
   })
