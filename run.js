@@ -42,4 +42,4 @@ rules = {
 
 detektor = new Detektor(logger, pump_events, test_mode, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia}, rules)
 logger.gany_the_bot.detektor = detektor
-detektor.restore_snapshot()
+// detektor.restore_snapshot()
