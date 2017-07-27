@@ -12,6 +12,7 @@ function GanyTheBot() {
   this.allowed_chats.push(parseInt(process.env.ADAM_CHANNEL)); // adam
   this.allowed_chats.push(parseInt(process.env.CARLOSG_CHANNEL)); // Carlos G Designer
   this.vip_chats.push(parseInt(process.env.PERSONAL_CHANNEL));
+  this.vip_chats.push(parseInt(process.env.ADAM_CHANNEL));
   this.token = process.env.GANY_KEY;
   this.listeners = []
   this.subscribers = []
@@ -29,8 +30,10 @@ GanyTheBot.prototype.start = function() {
   });
 
   this.telegram_bot.onText(/\/detektor/, (msg, match) => {
-    if (this.is_vip(msg.chat.id)) // only process vip chat requests
+    if (this.is_vip(msg.chat.id)){ // only process vip chat requests
+      console.log("Receiving request from VIP", msg.chat.id, "'" + msg.text + "'")
       this.listeners.forEach((listener) => { listener(msg, (response) => { this.telegram_bot.sendMessage(msg.chat.id, response) }) })
+    }
   })
 
   this.telegram_bot.onText(/\/configure/, (msg, match) => {
@@ -43,6 +46,7 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.on('callback_query', (msg) => {
     if (this.is_vip(msg.from.id)) {
+      console.log("Receiving request from VIP", msg.from.id, "'" + msg.data + "'")
       if (msg.data.match(/options/)) {
         exchange_market_code = msg.data.split(" ")[1]
         this.telegram_bot.sendMessage(msg.from.id, "Options for " + exchange_market_code + ":", this.vip_buy_options(exchange_market_code)).catch((error) => {
@@ -129,9 +133,6 @@ GanyTheBot.prototype.process = function(msg, responder) {
     if (this.is_vip(chat_id)) {
       if (text.match(/\/sendmessage/)) {
         this.broadcast(text.replace(/\/sendmessage\ /, ''))
-      }
-      if (text.match(/\/delete/)) {
-        this.subscriber.delete_data({}, (err, resp) => { responder('Data deleted.') })
       }
       if (text.match(/\/test/)) {
         this.broadcast("This is a test to all subscribers")
