@@ -1,25 +1,25 @@
 require('dotenv').config();
 
-const YobitClient = require('yobit');
+var ccxt = require ('ccxt')
 
 function Yobit(pump_events, skip_volumes = 0.5) {
   this.exchange_name = 'Yobit'
   this.code = 'Yobit'
-  this.client = new YobitClient(process.env.YOBIT_KEY, process.env.YOBIT_SECRET);
+  this.client = ccxt.yobit()
   this.all_markets = [];
   this.markets = []; // after selecting only good volume markets
   this.market_data = [];
   this.pump_events = pump_events;
   this.skip_volumes = 0.01 // skip markets with lower than this volume
-  this.ticker_speed = 10 // seconds
+  this.ticker_speed = 5 // seconds
   this.cycle_time = 20 // minutes
 }
 
 Yobit.prototype.watch = function() {
-  this.get_markets((err, e) => {
-    Object.keys(e.pairs).forEach((key) => {
-      if (e.pairs[key].hidden == 0 && key.endsWith('btc'))
-        this.all_markets.push(key)
+  this.get_markets((e) => {
+    Object.keys(e).forEach((key) => {
+      if (e[key].info.hidden == 0 && e[key].id.endsWith('btc'))
+        this.all_markets.push(e[key].id)
     })
   });
 
@@ -28,47 +28,37 @@ Yobit.prototype.watch = function() {
 }
 
 Yobit.prototype._watch_tickers = function() {
-  var self = this
   cycles = Math.ceil(this.markets.length / 50)
-  cycle = 0
   for(i = 0; i < cycles; i++) {
-    setTimeout(() => {
-      ticker_str = self.markets.slice(cycle * 50, (cycle+1) * 50).join("-")
-      self.client.getTicker((err, e) => {
-        if (e == undefined) {
-          console.log('Failed to retrieve yobit data: ', err)
-        } else {
-          Object.keys(e).forEach((market) => {
-            self.pump_events.emit('marketupdate', 'TICKER', self.code, market.toUpperCase().replace(/\_/, '-'), self._normalize_ticker_data(e[market]));
-          })
-        }
-      }, ticker_str)
-      cycle++;
-    }, 500 * i)
+    ticker_str = this.markets.slice(i * 50, (i+1) * 50).join("-")
+    this.client.apiGetTickerPairs({'pairs': ticker_str}).then((data) => {
+      if (data.error) {
+        console.log("Error trying to retrieve yobit data on _watch_tickers:", data.error)
+      } else {
+        Object.keys(data).forEach((market) => {
+          this.pump_events.emit('marketupdate', 'TICKER', this.code, market.toUpperCase().replace(/\_/, '-'), this._normalize_ticker_data(data[market]));
+        })
+      }
+    })
   }
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
 }
 
 Yobit.prototype._select_good_volume_markets = function() {
-  var self = this
   this.markets = []
   cycles = Math.ceil(this.all_markets.length / 50)
-  cycle = 0
   for(i = 0; i < cycles; i++) {
-    setTimeout(() => {
-      ticker_str = self.all_markets.slice(cycle * 50, (cycle+1) * 50).join("-")
-      self.client.getTicker((err, e) => {
-        if (err) {
-          console.log('Failed to retrieve yobit data: ', err, e)
-        } else {
-          Object.keys(e).forEach((market) => {
-            if (e[market].vol >= self.skip_volumes)
-              self.markets.push(market)
-          })
-        }
-      }, ticker_str)
-      cycle++;
-    }, 500 * i)
+    ticker_str = this.all_markets.slice(i * 50, (i+1) * 50).join("-")
+    this.client.apiGetTickerPairs({'pairs': ticker_str}).then((data) => {
+      if (data.error) {
+        console.log("Error trying to retrieve yobit data on _select_good_volume_markets:", data.error)
+      } else {
+        Object.keys(data).forEach((market) => {
+          if (data[market].vol >= this.skip_volumes)
+            this.markets.push(market)
+        })
+      }
+    })
   }
   setTimeout(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) // update markets on track every hour
 }
@@ -84,7 +74,7 @@ Yobit.prototype.balance = function(callback) {
 }
 
 Yobit.prototype.get_markets = function(callback) {
-  this.client.publicRequest('info', {}, callback)
+  this.client.load_products().then(callback)
 }
 
 Yobit.prototype.get_order = function(order_id, callback) {
@@ -170,8 +160,7 @@ Yobit.prototype._normalize_ticker_data = function(data) {
     volume: data.vol,
     last: data.last,
     ask: data.sell,
-    bid: data.buy,
-    updated: data.updated
+    bid: data.buy
   }
 }
 
