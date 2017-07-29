@@ -198,6 +198,7 @@ GanyTheBot.prototype.options = function(client, signal, subscriber_id) {
 GanyTheBot.prototype.vip_options = function(client, signal) {
   return {
     parse_mode: "Markdown",
+    disable_web_page_preview: true,
     reply_markup: JSON.stringify({
       inline_keyboard: [
         [{ text: 'Options', callback_data: 'options ' + client.code + "/" + signal.market }],
