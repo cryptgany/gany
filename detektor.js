@@ -45,7 +45,7 @@ function Detektor(logger, pump_events, test_mode, database, api_clients, rules) 
     }
   })
   this.logger.listen(this.process_telegram_request.bind(this)) // for telegram
-  // this.store_snapshot_every_1_min()
+  this.store_snapshot_every_1_min()
   setTimeout(() => { this.keep_tickers_limited() }, this.tickers_history_cleaning_time * 60 * 1000)
 }
 
@@ -73,8 +73,9 @@ Detektor.prototype.restore_snapshot = function() {
     this.database.get_tickers_history((err, data) => {
       if (err) console.log("Error trying to fetch tickers history from database:", err)
       data.forEach((data) => {
-        exchange = data.exchange; tickers = data.tickers;
-        this.tickers_history[exchange] = tickers
+        exchange = data.exchange; market = data.market; ticker_history = data.tickers;
+        this.tickers_history[exchange] = this.tickers_history[exchange] || {}
+        this.tickers_history[exchange][market] = this.tickers_history[exchange][market] = ticker_history
       })
       if (this.tickers_history) delete(this.tickers_history._id)
     })

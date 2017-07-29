@@ -13,19 +13,23 @@ Database.prototype.store_tickers_history = function(tickers) {
   MongoClient.connect(this.url, (err, db) => {
     if(err) { return console.dir(err); }
     var collection = db.collection(this.tickers_history_collection);
-    exchanges = Object.keys(tickers).length
+    exchanges_markets_count = 0
+    Object.keys(tickers).forEach((exchange) => { exchanges_markets_count += Object.keys(tickers[exchange]).length })
     stored = 0
     collection.remove({}, (err, removed) => {if (err) console.log("Could not clear tickers history collection:", err)
       Object.keys(tickers).forEach((exchange) => {
-        record = {
-          exchange: exchange,
-          tickers: tickers[exchange]
-        }
-        collection.insert(record, (err, result) => {
-          stored++
-          if (stored >= exchanges) { db.close() }
-          if (err) { console.log("Error storing data on", this.tickers_history_collection, err) }
-        });
+        Object.keys(tickers[exchange]).forEach((market) => {
+          record = {
+            exchange: exchange,
+            market: market,
+            tickers: tickers[exchange][market]
+          }
+          collection.insert(record, (err, result) => {
+            stored += 1
+            if (err) { console.log("Error storing data on", this.tickers_history_collection, err) }
+            if (stored >= exchanges_markets_count) { db.close() }
+          });
+        })
       })
     }); // clear old tickers before storing new
   })
