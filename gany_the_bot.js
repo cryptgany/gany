@@ -45,6 +45,26 @@ GanyTheBot.prototype.start = function() {
       });
   })
 
+  this.telegram_bot.onText(/\/pay/, (msg, match) => {
+    if (this.is_allowed(msg.chat.id)) {
+      subscriber = this.find_subscriber(msg.chat.id)
+      options = { parse_mode: "Markdown" }
+      if (subscriber.btc_address) {
+        message = "Your BTC address for subscription payments is *" + subscriber.btc_address + "*"
+        // if paid, tell no worries
+        // if didnt pay, explain he/she has to pay
+      } else {
+        message = 'Work in progress!'
+        // generate btc address
+
+      }
+      this.telegram_bot.sendMessage(msg.chat.id, message, options).catch((error) => {
+        console.log(error.code);  // => 'ETELEGRAM'
+        console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+      });
+    }
+  })
+
   this.telegram_bot.on('callback_query', (msg) => {
     if (this.is_vip(msg.from.id)) {
       console.log("Receiving request from VIP", msg.from.id, "'" + msg.data + "'")
