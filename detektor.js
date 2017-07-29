@@ -45,7 +45,7 @@ function Detektor(logger, pump_events, test_mode, database, api_clients, rules) 
     }
   })
   this.logger.listen(this.process_telegram_request.bind(this)) // for telegram
-  this.store_snapshot_every_1_min()
+  this.store_snapshot_every_15_min()
   setTimeout(() => { this.keep_tickers_limited() }, this.tickers_history_cleaning_time * 60 * 1000)
 }
 
@@ -54,11 +54,11 @@ Detektor.prototype.update_ticker = function(exchange, market, data) {
   this.tickers[exchange][market] = data
 }
 
-Detektor.prototype.store_snapshot_every_1_min = function() {
+Detektor.prototype.store_snapshot_every_15_min = function() {
   setTimeout(() => { // do async
     this.store_snapshot() // call real function
-    this.store_snapshot_every_1_min()
-  }, 1 * 60 * 1000) // store every 5 mins
+    this.store_snapshot_every_15_min()
+  }, 15 * 60 * 1000) // store every 5 mins
 }
 
 Detektor.prototype.store_snapshot = function() {
