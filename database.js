@@ -41,8 +41,10 @@ Database.prototype.get_tickers_history = function(callback) {
 
     var collection = db.collection(this.tickers_history_collection);
 
-    collection.find().toArray(callback)
-    setTimeout(() => { db.close() }, 1000)
+    collection.find().toArray((err, data) => {
+      callback(err, data)
+      db.close()
+    })
   })
 }
 
@@ -67,8 +69,10 @@ Database.prototype.get_tickers_blacklist = function(callback) {
 
     var collection = db.collection(this.tickers_blacklist_collection);
 
-    collection.find().toArray(callback)
-    db.close()
+    collection.find().toArray((err, data) => {
+      callback(err, data)
+      db.close()
+    })
   })
 }
 
