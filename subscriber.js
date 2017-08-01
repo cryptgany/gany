@@ -10,7 +10,7 @@ var subscriberSchema = mongoose.Schema({
       Cryptopia: { type: Boolean, default: true },
       Yobit: { type: Boolean, default: true },
     }
-});
+}, { timestamps: true });
 
 subscriberSchema.methods.change_exchange_status = function (exchange, decision) {
   decision = decision == 'enabled' ? true : false
