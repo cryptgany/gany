@@ -94,8 +94,10 @@ Database.prototype.read_data = function(query = {}, callback) {
     if(err) { return console.dir(err); }
 
     var collection = db.collection(this.collection);
-    collection.find(query).toArray(callback)
-    db.close()
+    collection.find(query).toArray((err, data) => {
+      callback(err, data)
+      db.close()
+    })
   })
 }
 
