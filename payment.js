@@ -8,12 +8,6 @@ var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/detektor');
 var wallet = new Wallet()
 
-receiver = new Receive(
-  process.env.XPUB,
-  process.env.BLOCKCHAIN_CALLBACK_URL,
-  process.env.BLOCKCHAIN_API_CODE
-)
-
 var paymentSchema = mongoose.Schema({
   telegram_id: Number,
   btc_address: String,
@@ -45,8 +39,16 @@ paymentSchema.statics.available_account = function() {
 
 paymentSchema.statics.payment_address = function(subscriber_id) {
   Payment.available_account().then((account) => {
-    btc_address = account.receiveAddress
-    xpub = account.extendedPublicKey
+    receiver = new Receive(
+      account.extendedPublicKey,
+      process.env.BLOCKCHAIN_CALLBACK_URL,
+      process.env.BLOCKCHAIN_API_CODE
+    ).generate({secret: 12341324}).then((result) => {
+      console.log("RESULT IS", result)
+      // address - the newly generated address, this is where your customer should send bitcoin
+      // index - the index of the newly generated address
+      // callback - the full callback url to which payment notifications will be sent
+    })
   }).catch((e) => { console.log("no payment addresses available found") })
 }
 
