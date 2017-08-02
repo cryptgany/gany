@@ -2,6 +2,7 @@ require('dotenv').config();
 const Receive = require('blockchain.info/Receive')
 const Wallet = require('./wallet')
 const _ = require('underscore')
+const async = require('async')
 
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/detektor');
@@ -25,10 +26,17 @@ var paymentSchema = mongoose.Schema({
 }, { timestamps: true });
 
 paymentSchema.statics.available_account = function() {
-  return _.find(wallet.accounts, async (account) => {
-    Payment.count({btc_address: account.receiveAddress, status: 'pending'}, (err, c) => {
-      return c < 20;
-    })
+  return new Promise((resolve, reject) => {
+    async.filter(wallet.accounts, (account, callback) => {
+      Payment.count({btc_address: account.receiveAddress, status: 'pending'}, (err, c) => {
+        if (c < 20) {
+          callback(account)
+        } else {
+          if (account == wallet.accounts[wallet.accounts.length])
+            reject(undefined)
+        }
+      })
+    }, (account) => { resolve(account) })
   })
   // if we are here, no accounts available
   // return wallet.createAccount()
@@ -36,13 +44,10 @@ paymentSchema.statics.available_account = function() {
 }
 
 paymentSchema.statics.payment_address = function(subscriber_id) {
-  account = Payment.available_account()
-  if (account) {
+  Payment.available_account().then((account) => {
     btc_address = account.receiveAddress
     xpub = account.extendedPublicKey
-  } else {
-    // tell user that his payment can't be processed right now, try later
-  }
+  }).catch((e) => { console.log("no payment addresses available found") })
 }
 
 paymentSchema.statics.generate_payment = function(subscriber_id) {

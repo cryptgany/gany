@@ -4,6 +4,7 @@
   "description": "",
   "main": "detektor.js",
   "dependencies": {
+    "async": "^2.5.0",
     "blockchain.info": "^2.8.1",
     "ccxt": "^1.1.91",
     "dotenv": "^4.0.0",
