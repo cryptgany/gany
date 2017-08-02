@@ -5,6 +5,8 @@ const PumpHandler = require('./pump_handler.js')
 const Signal = require('./signal')
 const _ = require('underscore')
 
+require("./webserver")
+
 require('./protofunctions.js')
 var DateTime = require('node-datetime')
 
