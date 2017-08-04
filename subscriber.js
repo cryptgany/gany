@@ -7,6 +7,8 @@ var subscriberSchema = mongoose.Schema({
     telegram_id: Number,
     btc_address: String,
     btc_private_key: String,
+    subscription_status: Boolean,
+    subscription_expires_on: Date,
     exchanges: {
       Bittrex: { type: Boolean, default: true },
       Poloniex: { type: Boolean, default: true },

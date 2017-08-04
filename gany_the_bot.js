@@ -50,20 +50,41 @@ GanyTheBot.prototype.start = function() {
       subscriber = this.find_subscriber(msg.chat.id)
       options = { parse_mode: "Markdown" }
       if (subscriber.btc_address) {
-        console.log("returning existant")
         message = "Your BTC address for subscription payments is *" + subscriber.btc_address + "*"
+        message += "\nYou should deposit 0.01 BTC monthly in order to receive our awesome notifications."
         message += "\nThis address will not change, you can keep using it for your monthly subscription."
         message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
+        message += "\n*You will start receiving signals as soon as we get 3 confirmations of your payment*"
+        message += "\nYou can check your current subscription on /subscription"
         this.send_message(subscriber.telegram_id, message, options)
       } else {
-        console.log("Generating new!")
         subscriber.generate_btc_address().then((address) => {
           message = "Your BTC address for subscription payments is *" + address + "*"
+          message += "\nYou should deposit 0.01 BTC monthly in order to receive our awesome notifications."
           message += "\nThis address will not change, you can keep using it for your monthly subscription."
           message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
+          message += "\n*You will start receiving signals as soon as we get 3 confirmations of your payment*"
+          message += "\nYou can check your current subscription on /subscription"
           this.send_message(subscriber.telegram_id, message, options)
         })
       }
+    }
+  })
+
+  this.telegram_bot.onText(/\/subscription/, (msg, match) => {
+    if (this.is_allowed(msg.chat.id)) {
+      subscriber = this.find_subscriber(msg.chat.id)
+      options = { parse_mode: "Markdown" }
+      if (subscriber.subscription_status) { // subscription updated
+        message = "You are subscribed."
+        message += "\nYour subscription expires on " + subscriber.subscription_expires_on
+        message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
+      } else { // not subscribed
+        message = "You are not subscribed."
+        message += "\nYou must send 0.01 BTC to address " + subscriber.btc_address + " to start receiving notifications."
+        message += "\nIf you already did, you will start receiving our notifications as soon as your transaction gets 3 confirmations."
+      }
+      this.send_message(subscriber.telegram_id, message, options)
     }
   })
 
