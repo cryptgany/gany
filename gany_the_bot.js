@@ -50,18 +50,20 @@ GanyTheBot.prototype.start = function() {
       subscriber = this.find_subscriber(msg.chat.id)
       options = { parse_mode: "Markdown" }
       if (subscriber.btc_address) {
+        console.log("returning existant")
         message = "Your BTC address for subscription payments is *" + subscriber.btc_address + "*"
-        // if paid, tell no worries
-        // if didnt pay, explain he/she has to pay
+        message += "\nThis address will not change, you can keep using it for your monthly subscription."
+        message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
+        this.send_message(subscriber.telegram_id, message, options)
       } else {
-        message = 'Work in progress!'
-        // generate btc address
-
+        console.log("Generating new!")
+        subscriber.generate_btc_address().then((address) => {
+          message = "Your BTC address for subscription payments is *" + address + "*"
+          message += "\nThis address will not change, you can keep using it for your monthly subscription."
+          message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
+          this.send_message(subscriber.telegram_id, message, options)
+        })
       }
-      this.telegram_bot.sendMessage(msg.chat.id, message, options).catch((error) => {
-        console.log(error.code);  // => 'ETELEGRAM'
-        console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-      });
     }
   })
 
@@ -112,6 +114,13 @@ GanyTheBot.prototype.start = function() {
         });
       }
     }
+  });
+}
+
+GanyTheBot.prototype.send_message = function(chat_id, message, options) {
+  this.telegram_bot.sendMessage(chat_id, message, options).catch((error) => {
+    console.log(error.code);  // => 'ETELEGRAM'
+    console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
   });
 }
 
