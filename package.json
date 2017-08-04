@@ -5,7 +5,7 @@
   "main": "detektor.js",
   "dependencies": {
     "async": "^2.5.0",
-    "blockchain.info": "^2.8.1",
+    "bitcoinjs-lib": "^3.1.1",
     "ccxt": "^1.1.91",
     "dotenv": "^4.0.0",
     "express": "^4.15.3",
