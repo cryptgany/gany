@@ -1,5 +1,6 @@
 require('dotenv').config();
 var blockexplorer = require('blockchain.info/blockexplorer')
+var Payment = require('./payment')
 
 function Wallet(gany_the_bot) {
   this.options = { apiCode: process.env.BLOCKCHAIN_API_CODE }
@@ -56,7 +57,13 @@ Wallet.prototype.mark_subscriber_paid_and_withdraw = function(address, price) {
 }
 
 Wallet.prototype.schedule_for_withdrawal = function(subscriber_id, address, pkey, amount) {
-  console.log("scheduling for withdraw:", subscriber_id, address, pkey, amount)
+  Payment.create({
+    telegram_id: subscriber_id,
+    btc_address: address,
+    payment_address: pkey,
+    amount: amount,
+    status: "pending"
+  })
   // will store the addresses for withdrawing money
   // will run a procedure every X minutes to withdraw money from many accounts at the same time
 }
