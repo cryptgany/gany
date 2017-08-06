@@ -82,7 +82,7 @@ GanyTheBot.prototype.start = function() {
       } else { // not subscribed
         message = "You are not subscribed."
         message += "\nYou must send 0.01 BTC to address " + subscriber.btc_address + " to start receiving notifications."
-        message += "\nIf you already did, you will start receiving our notifications as soon as your transaction gets 3 confirmations."
+        message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
       }
       this.send_message(subscriber.telegram_id, message, options)
     }

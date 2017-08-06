@@ -7,7 +7,7 @@ var subscriberSchema = mongoose.Schema({
     telegram_id: Number,
     btc_address: String,
     btc_private_key: String,
-    subscription_status: Boolean,
+    subscription_status: { type: Boolean, default: false },
     subscription_expires_on: Date,
     exchanges: {
       Bittrex: { type: Boolean, default: true },
@@ -43,8 +43,34 @@ subscriberSchema.methods.generate_btc_address = function() {
   })
 }
 
+subscriberSchema.methods.set_subscription_confirmed = function() {
+  this.subscription_status = true
+  today = new Date()
+  if (this.subscription_expires_on && this.subscription_expires_on >= today) {
+    // is currently subscribed
+    this.subscription_expires_on = this.subscription_expires_on.setDate(this.subscription_expires_on.getDate()+30)
+  } else {
+    today.setDate(today.getDate()+30);
+    this.subscription_expires_on = today
+  }
+  this.save(function(err, subscriber){
+    if (err) { console.error(err); }
+  })
+}
+
+subscriberSchema.statics.unpaid_or_almost_expired = function(days, callback) {
+  date = new Date();
+  date.setDate(date.getDate()-days);
+  Subscriber.find({
+    $and: [
+      { btc_address: {$ne: null} },
+      { $or: [{subscription_status: false}, {subscription_expires_on: {$gt: date}}] }
+    ]
+  }, callback)
+}
+
 subscriberSchema.methods.exchange_status = function(exchange) {
   return this.exchanges[exchange] ? "enabled" : "disabled"
 }
 
-module.exports = mongoose.model('subscribers', subscriberSchema);
+module.exports = Subscriber = mongoose.model('subscribers', subscriberSchema);

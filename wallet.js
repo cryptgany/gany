@@ -1,31 +1,53 @@
 require('dotenv').config();
-const MyWallet = require('blockchain.info/MyWallet')
-
-// For each wallet, we can have 20 simultaneous payments
-// If we get past those 20 payments, we need to generate another wallet for the new payment address
-// When a payment is completed, "close" the address (remove from recognized addresses)
-// Keep  track of: payments, wallets and generated payment addresses
-// payment: subscriber_id, wallet (main), payment_address, amount, date
-// wallet: address, xpub
+const Subscriber = require('./subscriber');
+var blockexplorer = require('blockchain.info/blockexplorer')
 
 function Wallet() {
-  this.options = { apiCode: process.env.BLOCKCHAIN_API_CODE, apiHost: 'http://localhost:3000' }
-  this.wallet = new MyWallet(process.env.WALLET_UID, process.env.WALLET_PASSWD, this.options)
-  this.accounts = []
+  this.options = { apiCode: process.env.BLOCKCHAIN_API_CODE }
+  this.subscriber_list = [] // address list to check
+  this.days_for_subscription_ending = 2 // days
   this.refresh()
+  this.check_transactions()
 }
 
-Wallet.prototype.refresh = function() {
-  return this._accounts().then((data) => { this.accounts = data; })
+Wallet.prototype.refresh = function() { // update list of accounts to check
+  console.log("Refreshing...")
+  // list should be: subscribers with btc address and subscription close to ending (in days)
+  Subscriber.unpaid_or_almost_expired(this.days_for_subscription_ending,
+    (err, subs) => { if(err) { console.log(err) } else { this.subscriber_list = subs }}
+  );
+  setTimeout(() => { this.refresh() }, 1 * 60 * 1000)
 }
 
-Wallet.prototype.create_account = function(label = 'main') {
-  this.wallet.createAccount({label: label}).then(
-    (data) => { this.refresh(); }
-  )
+Wallet.prototype.check_transactions = function() {
+  console.log("Checking transactions")
+  // should check every subscriber's address for balance
+  // if person has balance >= 0.01 then sechedule address for withdrawal and mark as subscribed
+  blockexplorer.getBalance(this.subscriber_list.map((sub) => { return sub.btc_address }), this.options).then((addr_data) => {
+    Object.keys(addr_data).forEach((addr) => {
+      if (addr_data[addr] >= 1000000) {
+        // detected address with enough money, mark subscriber as subscribed and schedule for withdrawal
+      }
+    })
+  }).catch((e) => { console.log("Error on check_transactions", Date.now(), e) })
+  setTimeout(() => { this.check_transactions() }, 5 * 60 * 1000)
 }
 
-Wallet.prototype._accounts = function() { return this.wallet.listAccounts() }
+Wallet.prototype.mark_subscriber_paid = function(address) {
+  subscriber = this.subscriber_list.forEach((sub) => { return sub.btc_address == address })[0]
+  if (subscriber) {
+    subscriber.set_subscription_confirmed()
+    this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, 1000000)
+  }
+}
+
+Wallet.prototype.schedule_for_withdrawal = function(subscriber_id, address, pkey, amount) {
+  console.log("scheduling for withdraw:", subscriber_id, address, pkey, amount)
+  // will store the addresses for withdrawing money
+  // will run a procedure every X minutes to withdraw money from many accounts at the same time
+}
+
+
 
 module.exports = Wallet;
 
