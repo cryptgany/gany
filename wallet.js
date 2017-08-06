@@ -60,7 +60,7 @@ Wallet.prototype.schedule_for_withdrawal = function(subscriber_id, address, pkey
   Payment.create({
     telegram_id: subscriber_id,
     btc_address: address,
-    payment_address: pkey,
+    private_key: pkey,
     amount: amount,
     status: "pending"
   })
