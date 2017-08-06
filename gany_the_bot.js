@@ -74,7 +74,6 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/\/subscription/, (msg, match) => {
     if (this.is_allowed(msg.chat.id)) {
       subscriber = this.find_subscriber(msg.chat.id)
-      options = { parse_mode: "Markdown" }
       if (subscriber.subscription_status) { // subscription updated
         message = "You are subscribed."
         message += "\nYour subscription expires on " + subscriber.subscription_expires_on
@@ -84,7 +83,7 @@ GanyTheBot.prototype.start = function() {
         message += "\nYou must send 0.01 BTC to address " + subscriber.btc_address + " to start receiving notifications."
         message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
       }
-      this.send_message(subscriber.telegram_id, message, options)
+      this.send_message(subscriber.telegram_id, message)
     }
   })
 
@@ -138,11 +137,18 @@ GanyTheBot.prototype.start = function() {
   });
 }
 
-GanyTheBot.prototype.send_message = function(chat_id, message, options) {
+GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse_mode: "Markdown" }) {
   this.telegram_bot.sendMessage(chat_id, message, options).catch((error) => {
     console.log(error.code);  // => 'ETELEGRAM'
     console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
   });
+}
+
+GanyTheBot.prototype.notify_user_got_confirmed = function(subscriber) {
+  message = "Your payment got processed!"
+  message += "\nYou will start receiving notifications from now on."
+  message += "\nYou can check your subscription status on /subscription"
+  this.send_message(subscriber.telegram_id, message)
 }
 
 GanyTheBot.prototype.process = function(msg, responder) {
