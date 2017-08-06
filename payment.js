@@ -103,28 +103,6 @@ paymentSchema.statics.make_payment_transaction = function(tx_data) {
   // push
   console.log("Pushing TX:", tx.build().toHex(), tx)
 
-
-  // [ { payment: 
-  //    { _id: 5987504a4415c025d875fbed,
-  //      updatedAt: 2017-08-06T17:22:18.516Z,
-  //      createdAt: 2017-08-06T17:22:18.516Z,
-  //      telegram_id: 65954004,
-  //      btc_address: '1LrHRgfMASyXkaZTBxVGLj4NrD8LKuRYHU',
-  //      payment_address: 'KySCA6y6vsrHR8tkjZ8DqCcg57vnjJfSUY6hTwyxtidhCnoBqzHb',
-  //      amount: 300000,
-  //      status: 'pending',
-  //      __v: 0 },
-  //   txs: [ '15715ad91727810ce2673c909b163264049fc0c8bc4d15f3a4c28bc2bc3341de' ] },
-  // { payment: 
-  //    { _id: 598767c7d22ed13e6bdab05e,
-  //      updatedAt: 2017-08-06T19:03:53.797Z,
-  //      createdAt: 2017-08-06T19:02:31.821Z,
-  //      btc_address: '142Hg7rV9fwzwUwMKQDCfCprrBdQtmqXt7',
-  //      amount: 300000,
-  //      status: 'pending',
-  //      __v: 0 },
-  //   txs: [ '89a15ead4280c6ed376191d42c020ade59358c11e90f11e7078e504a8768461e' ] } ]
-
 }
 
 PaymentModel = mongoose.model('payments', paymentSchema);
