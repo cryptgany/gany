@@ -6,6 +6,7 @@ function Wallet(gany_the_bot) {
   this.subscriber_list = [] // address list to check
   this.days_for_subscription_ending = 2 // days
   this.gany_the_bot = gany_the_bot
+  this.subscription_price = 300000 // now 0.003, should be 1000000
 }
 
 Wallet.prototype.track_subscriptions = function() {
@@ -28,7 +29,7 @@ Wallet.prototype.check_transactions = function() {
   // if person has balance >= 0.01 then sechedule address for withdrawal and mark as subscribed
   blockexplorer.getBalance(this.subscriber_list.map((sub) => { return sub.btc_address }), this.options).then((addr_data) => {
     Object.keys(addr_data).forEach((addr) => {
-      if (addr_data[addr].final_balance >= 300000) { // now 0.003, should be 1000000
+      if (addr_data[addr].final_balance >= this.subscription_price) { // now 0.003, should be 1000000
         // detected address with enough money, mark subscriber as subscribed and schedule for withdrawal
         this.mark_subscriber_paid_and_withdraw(addr)
       }
@@ -44,7 +45,7 @@ Wallet.prototype.mark_subscriber_paid_and_withdraw = function(address) {
     subscriber.set_subscription_confirmed()
     this.gany_the_bot.notify_user_got_confirmed(subscriber)
 
-    this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, 1000000)
+    this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, this.subscription_price)
   }
 }
 
@@ -54,18 +55,4 @@ Wallet.prototype.schedule_for_withdrawal = function(subscriber_id, address, pkey
   // will run a procedure every X minutes to withdraw money from many accounts at the same time
 }
 
-
-
 module.exports = Wallet;
-
-// accounts
-// extendedPublicKey: 'XPUB FOR CREATING PAYMENT ADDRESSES'
-
-// create account
-// { archived: false,
-//   xpriv: '...',
-//   xpub: 'XPUB FOR CREATING PAYMENT ADDRESSES',
-//   address_labels: [],
-//   cache: 
-//    { receiveAccount: '...',
-//      changeAccount: '...' } }
