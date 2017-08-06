@@ -2,19 +2,25 @@ require('dotenv').config();
 const Subscriber = require('./subscriber');
 var blockexplorer = require('blockchain.info/blockexplorer')
 
-function Wallet() {
+function Wallet(gany_the_bot) {
   this.options = { apiCode: process.env.BLOCKCHAIN_API_CODE }
   this.subscriber_list = [] // address list to check
   this.days_for_subscription_ending = 2 // days
+  this.gany_the_bot = gany_the_bot
+}
+
+Wallet.prototype.track_subscriptions = function() {
   this.refresh()
-  this.check_transactions()
+  setTimeout(() => { this.check_transactions() }, 15*1000) // so they never run at the same time
 }
 
 Wallet.prototype.refresh = function() { // update list of accounts to check
   // list should be: subscribers with btc address and subscription close to ending (in days)
-  Subscriber.unpaid_or_almost_expired(this.days_for_subscription_ending,
-    (err, subs) => { if(err) { console.log(err) } else { this.subscriber_list = subs }}
-  );
+  date = new Date();
+  date.setDate(date.getDate()+this.days_for_subscription_ending);
+  this.subscriber_list = this.gany_the_bot.subscribers.filter((subscriber) => {
+    return subscriber.btc_address && (subscriber.subscription_status == false || subscriber.subscription_expires_on < date)
+  })
   setTimeout(() => { this.refresh() }, 1 * 60 * 1000)
 }
 

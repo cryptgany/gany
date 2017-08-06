@@ -11,6 +11,7 @@ const Bittrex = require('./exchanges/bittrex');
 const Yobit = require('./exchanges/yobit');
 const Poloniex = require('./exchanges/poloniex');
 const Cryptopia = require("./exchanges/cryptopia");
+const Wallet = require("./wallet")
 
 // Initializers
 class PumpEvents extends EventEmitter {}
@@ -22,9 +23,11 @@ var yobit = new Yobit(pump_events);
 var poloniex = new Poloniex(pump_events);
 var cryptopia = new Cryptopia(pump_events);
 var database = new Database();
+var wallet = new Wallet(logger.gany_the_bot);
 
 // Start
 pump_events.setMaxListeners(50) // max 50 listeners
+wallet.track_subscriptions()
 bittrex.watch()
 yobit.watch()
 poloniex.watch()
