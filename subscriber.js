@@ -9,7 +9,7 @@ var subscriberSchema = mongoose.Schema({
     btc_private_key: String,
     subscription_status: { type: Boolean, default: false },
     subscription_expires_on: Date,
-    subscription_type: { type: String, default: 'basic' }, // basic/advanced/pro
+    subscription_type: { type: String, default: 'basic', enum: ['basic', 'advanced', 'pro'] },
     exchanges: {
       Bittrex: { type: Boolean, default: true },
       Poloniex: { type: Boolean, default: true },
