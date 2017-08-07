@@ -12,6 +12,7 @@ const Yobit = require('./exchanges/yobit');
 const Poloniex = require('./exchanges/poloniex');
 const Cryptopia = require("./exchanges/cryptopia");
 const Wallet = require("./wallet")
+const Payment = require("./payment")
 
 // Initializers
 class PumpEvents extends EventEmitter {}
@@ -32,6 +33,7 @@ bittrex.watch()
 yobit.watch()
 poloniex.watch()
 cryptopia.watch()
+Payment.process_payments()
 
 rules = {
   "Bittrex": [ (first_ticker, last_ticker, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.3 } ],

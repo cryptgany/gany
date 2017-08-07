@@ -9,6 +9,7 @@ mongoose.connect('mongodb://localhost:27017/detektor');
 
 const PROCESS_MAXIMUM_INPUTS = 60 // maximum addresses into one transaction
 const CHECK_PAYMENTS_EVERY = 1 // hours
+const SATS_FEE_PER_BYTE = 25 // in satoshis
 
 var paymentSchema = mongoose.Schema({
   telegram_id: Number,
@@ -16,6 +17,7 @@ var paymentSchema = mongoose.Schema({
   private_key: String,
   completed_at: Date,
   amount: Number,
+  real_amount: Number,
   paid_on_tx: String,
   status: {
     type: String,
@@ -28,6 +30,7 @@ paymentSchema.statics.pending = function(callback) {
 }
 
 paymentSchema.statics.process_payments = function() {
+  console.log("running process_payments...")
   // checks every pending payment
   PaymentModel.pending((err, payments) => {
     addresses = payments.map((payment) => { return payment.btc_address })
@@ -43,6 +46,7 @@ paymentSchema.statics.process_payments = function() {
         data = []
         payments.forEach((payment) => {
           utxos = unspent.filter((utxo) => { return utxo.address == payment.btc_address })
+          console.log("UTXOS =",utxos)
           if (utxos.length >= 1) {
             // get from first to last unspent and spend them until we have the entire payment.amount
             // if address does not has sufficient found mark as error and log
@@ -50,14 +54,16 @@ paymentSchema.statics.process_payments = function() {
             utxos.reverse()
             tx_amount = payment.amount
             txs = []
+            total = 0
             utxos.forEach((utxo) => {
               if (tx_amount > 0) {
                 tx_amount -= utxo.satoshis
-                txs.push(utxo.txid)
+                total += utxo.satoshis
+                txs.push([utxo.txid, utxo.vout])
               }
             })
             if (tx_amount <= 0) {
-              data.push({payment: payment, txs: txs})
+              data.push({payment: payment, txs: txs, total: total})
             }
           } else {
             console.log(Date.now(), "ERROR FETCHING UNSPENT FOR SPECIFIC ADDRESS", payment.btc_address)
@@ -65,8 +71,10 @@ paymentSchema.statics.process_payments = function() {
             payment.save()
           }
         })
-        console.log("ready for payment:",data)
-        PaymentModel.make_payment_transaction(data)
+        if (data != []) {
+          console.log("ready for payment:",data)
+          PaymentModel.make_payment_transaction(data)
+        }
       }
     });
   })
@@ -75,34 +83,51 @@ paymentSchema.statics.process_payments = function() {
 
 paymentSchema.statics.make_payment_transaction = function(tx_data) {
   var tx = new bitcoin.TransactionBuilder()
+  input_txs = 0
   // add inputs
-  id = 0
   tx_data.forEach((data) => {
-    data.txs.forEach((tx_id) => {
-      console.log("adding tx_id", tx_id)
-      tx.addInput(tx_id, id)
-      id += 1
+    data.txs.forEach((tx_data) => {
+      tx_id = tx_data[0]; tx_vout = tx_data[1]
+      console.log("adding tx_id", tx_id, "as id", tx_vout)
+      tx.addInput(tx_id, tx_vout)
+      input_txs += 1
     })
   })
+  // calculate fees
+  tx_bytes = (input_txs * 181) + 34 + 10
+  tx_fee = tx_bytes * SATS_FEE_PER_BYTE // minimum fee
+  // inputs * 181 + outs * 34 + 10
+
   // add output
-  total_amount = tx_data.map((d) => { return d.payment.amount}).sum();
-  console.log("adding output for ", total_amount)
-  tx.addOutput(process.env.MAIN_BTC_ADDRESS, total_amount)
+  total_amount = tx_data.map((d) => { return d.total }).sum();
+  console.log("adding output for ", total_amount, "minus fee of", tx_fee)
+  tx.addOutput(process.env.MAIN_BTC_ADDRESS, total_amount - tx_fee)
 
   // sign tx
   id = 0
   tx_data.forEach((data) => {
     pkey = data.payment.private_key
     keyPair = bitcoin.ECPair.fromWIF(pkey)
-    data.txs.forEach((tx_id) => {
+    console.log("FOR PKEY ADDRESS IS", pkey, keyPair.getAddress())
+    data.txs.forEach((tx_data) => {
+      console.log("singing id", tx_data[0], "as id", id)
       tx.sign(id, keyPair)
       id += 1
     })
   })
 
   // push
-  console.log("Pushing TX:", tx.build().toHex(), tx)
+  console.log("Pushing TX:", total_amount, tx_fee, tx.build().toHex())
 
+  a=pushtx.pushtx(tx.build().toHex(), { apiCode: process.env.BLOCKCHAIN_API_CODE })
+  console.log(a)
+  tx_data.forEach((data) => {
+    payment = data.payment
+    payment.completed_at = Date.now()
+    payment.real_amount = data.total
+    payment.status = 'completed'
+    payment.save()
+  })
 }
 
 PaymentModel = mongoose.model('payments', paymentSchema);
