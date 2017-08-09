@@ -10,6 +10,7 @@ mongoose.connect('mongodb://localhost:27017/detektor');
 const PROCESS_MAXIMUM_INPUTS = 60 // maximum addresses into one transaction
 const CHECK_PAYMENTS_EVERY = 1 // hours
 const SATS_FEE_PER_BYTE = 25 // in satoshis
+const MIN_PAYMENTS_TO_PROCESS = 10 // minimum pending payments to start a transaction
 
 var paymentSchema = mongoose.Schema({
   telegram_id: Number,
@@ -33,50 +34,52 @@ paymentSchema.statics.process_payments = function() {
   console.log("running process_payments...")
   // checks every pending payment
   PaymentModel.pending((err, payments) => {
-    addresses = payments.map((payment) => { return payment.btc_address })
+    if (payments.length >= MIN_PAYMENTS_TO_PROCESS) {
+      addresses = payments.map((payment) => { return payment.btc_address })
 
-    request({
-      method: 'POST', url: 'https://insight.bitpay.com/api/addrs/utxo', form: { addrs: addresses.join(",") }
-    }, (error, response, body) => {
-      if (error) {
-        console.log(Date.now(), "ERROR FETCHING UNSPENT", error)
-      } else {
-        // now that we have the unspent outputs we can iterate and transfer from all
-        unspent = JSON.parse(body)
-        data = []
-        payments.forEach((payment) => {
-          utxos = unspent.filter((utxo) => { return utxo.address == payment.btc_address })
-          console.log("UTXOS =",utxos)
-          if (utxos.length >= 1) {
-            // get from first to last unspent and spend them until we have the entire payment.amount
-            // if address does not has sufficient found mark as error and log
-            // continue until we have all addresses as paid
-            utxos.reverse()
-            tx_amount = payment.amount
-            txs = []
-            total = 0
-            utxos.forEach((utxo) => {
-              if (tx_amount > 0) {
-                tx_amount -= utxo.satoshis
-                total += utxo.satoshis
-                txs.push([utxo.txid, utxo.vout])
+      request({
+        method: 'POST', url: 'https://insight.bitpay.com/api/addrs/utxo', form: { addrs: addresses.join(",") }
+      }, (error, response, body) => {
+        if (error) {
+          console.log(Date.now(), "ERROR FETCHING UNSPENT", error)
+        } else {
+          // now that we have the unspent outputs we can iterate and transfer from all
+          unspent = JSON.parse(body)
+          data = []
+          payments.forEach((payment) => {
+            utxos = unspent.filter((utxo) => { return utxo.address == payment.btc_address })
+            console.log("UTXOS =",utxos)
+            if (utxos.length >= 1) {
+              // get from first to last unspent and spend them until we have the entire payment.amount
+              // if address does not has sufficient found mark as error and log
+              // continue until we have all addresses as paid
+              utxos.reverse()
+              tx_amount = payment.amount
+              txs = []
+              total = 0
+              utxos.forEach((utxo) => {
+                if (tx_amount > 0) {
+                  tx_amount -= utxo.satoshis
+                  total += utxo.satoshis
+                  txs.push([utxo.txid, utxo.vout])
+                }
+              })
+              if (tx_amount <= 0) {
+                data.push({payment: payment, txs: txs, total: total})
               }
-            })
-            if (tx_amount <= 0) {
-              data.push({payment: payment, txs: txs, total: total})
+            } else {
+              console.log(Date.now(), "ERROR FETCHING UNSPENT FOR SPECIFIC ADDRESS", payment.btc_address)
+              payment.status = 'error'
+              payment.save()
             }
-          } else {
-            console.log(Date.now(), "ERROR FETCHING UNSPENT FOR SPECIFIC ADDRESS", payment.btc_address)
-            payment.status = 'error'
-            payment.save()
+          })
+          if (data != []) {
+            console.log("ready for payment:",data)
+            PaymentModel.make_payment_transaction(data)
           }
-        })
-        if (data != []) {
-          console.log("ready for payment:",data)
-          PaymentModel.make_payment_transaction(data)
         }
-      }
-    });
+      });
+    }
   })
   setTimeout(() => { PaymentModel.process_payments() }, CHECK_PAYMENTS_EVERY * 60 * 60 * 1000) // 1 hour, should probably be every 1 day
 }
