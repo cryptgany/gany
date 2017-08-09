@@ -24,6 +24,7 @@ var paymentSchema = mongoose.Schema({
     type: String,
     enum: ['pending', 'completed', 'error'],
   },
+  error: String,
 }, { timestamps: true });
 
 paymentSchema.statics.pending = function(callback) {
@@ -70,6 +71,7 @@ paymentSchema.statics.process_payments = function() {
             } else {
               console.log(Date.now(), "ERROR FETCHING UNSPENT FOR SPECIFIC ADDRESS", payment.btc_address)
               payment.status = 'error'
+              payment.error = 'Utxos length was 0'
               payment.save()
             }
           })
