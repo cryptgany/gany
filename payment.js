@@ -119,14 +119,15 @@ paymentSchema.statics.make_payment_transaction = function(tx_data) {
   // push
   console.log("Pushing TX:", total_amount, tx_fee, tx.build().toHex())
 
-  a=pushtx.pushtx(tx.build().toHex(), { apiCode: process.env.BLOCKCHAIN_API_CODE })
-  console.log(a)
-  tx_data.forEach((data) => {
-    payment = data.payment
-    payment.completed_at = Date.now()
-    payment.real_amount = data.total
-    payment.status = 'completed'
-    payment.save()
+  pushtx.pushtx(tx.build().toHex(), { apiCode: process.env.BLOCKCHAIN_API_CODE }).then((res) => {
+    console.log("RESULT IS", res)
+    tx_data.forEach((data) => {
+      payment = data.payment
+      payment.completed_at = Date.now()
+      payment.real_amount = data.total
+      payment.status = 'completed'
+      payment.save()
+    })
   })
 }
 
