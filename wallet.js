@@ -1,6 +1,6 @@
 require('dotenv').config();
 var blockexplorer = require('blockchain.info/blockexplorer')
-var Payment = require('./payment')
+var Payment = require('./models/payment')
 
 function Wallet(gany_the_bot) {
   this.options = { apiCode: process.env.BLOCKCHAIN_API_CODE }

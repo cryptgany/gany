@@ -1,4 +1,4 @@
-const Subscriber = require('./subscriber')
+const Subscriber = require('./models/subscriber')
 
 subs = []
 Subscriber.find({}, function(err, subscribers) {

@@ -2,7 +2,7 @@
 
 // REQUIRED LIBS
 const PumpHandler = require('./pump_handler.js')
-const Signal = require('./signal')
+const Signal = require('./models/signal')
 const _ = require('underscore')
 
 require('./protofunctions.js')
@@ -22,7 +22,6 @@ function Detektor(logger, pump_events, test_mode, database, api_clients, rules) 
   this.max_tickers_history = 60 // minutes of history to be kept
   this.tickers_history_cleaning_time = 20 // clean ever X minutes
   this.database = database
-  this.signal = new Signal()
   this.matcher = require('./matcher')
 
   this.api_clients = api_clients
@@ -101,7 +100,7 @@ Detektor.prototype.volume_change = function(first_ticker, last_ticker) { return 
 
 Detektor.prototype.store_signal_in_background = function(signal) {
   setTimeout(() => {
-    this.signal.store_signal(signal, () => {})
+    Signal.create(signal)
   }, 0)
 }
 

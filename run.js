@@ -12,7 +12,7 @@ const Yobit = require('./exchanges/yobit');
 const Poloniex = require('./exchanges/poloniex');
 const Cryptopia = require("./exchanges/cryptopia");
 const Wallet = require("./wallet")
-const Payment = require("./payment")
+const Payment = require("./models/payment")
 
 // Initializers
 class PumpEvents extends EventEmitter {}
@@ -47,4 +47,4 @@ rules = {
 
 detektor = new Detektor(logger, pump_events, test_mode, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia}, rules)
 logger.gany_the_bot.detektor = detektor
-detektor.restore_snapshot()
+// detektor.restore_snapshot()

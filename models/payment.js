@@ -1,5 +1,5 @@
 require('dotenv').config();
-require('./protofunctions')
+require('../protofunctions')
 var bitcoin = require("bitcoinjs-lib");
 var pushtx = require('blockchain.info/pushtx')
 var request = require('request');

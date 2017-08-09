@@ -1,7 +1,7 @@
 // Will analyze the market
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
-const Subscriber = require('./subscriber');
+const Subscriber = require('./models/subscriber');
 const _ = require('underscore')
 
 function GanyTheBot() {
