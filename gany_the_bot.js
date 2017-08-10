@@ -7,11 +7,6 @@ const _ = require('underscore')
 function GanyTheBot(logger) {
   this.logger = logger
   this.vip_chats = [];
-  this.allowed_chats = [];
-  this.allowed_chats.push(parseInt(process.env.PERSONAL_CHANNEL)) // my telegram
-  this.allowed_chats.push(parseInt(process.env.OTHER_CHANNEL)); // naj
-  this.allowed_chats.push(parseInt(process.env.ADAM_CHANNEL)); // adam
-  this.allowed_chats.push(parseInt(process.env.CARLOSG_CHANNEL)); // Carlos G Designer
   this.vip_chats.push(parseInt(process.env.PERSONAL_CHANNEL));
   if (process.env.ENVIRONMENT == 'production')
     this.vip_chats.push(parseInt(process.env.ADAM_CHANNEL));
@@ -19,6 +14,8 @@ function GanyTheBot(logger) {
   this.subscribers = []
   this.detektor = undefined
   Subscriber.find({}, (err, subscribers) => {
+    if (err)
+      this.logger.error("Could not get subscribers! fatal error", err)
     this.subscribers = subscribers
   })
   this.telegram_bot = new TelegramBot(this.token, {polling: true});
@@ -29,68 +26,60 @@ GanyTheBot.prototype.start = function() {
   // ***************** //
   // MESSAGE CALLBACKS //
   // ***************** //
-  this.telegram_bot.onText(/\/detektor/, (msg, match) => {
-    command = msg.text
-    if (this.is_vip(msg.chat.id)){ // only process vip chat requests
-      console.log("Receiving request from VIP", msg.chat.id, "'" + msg.text + "'")
-      if (command == '/detektor store snapshot') {
-        this.detektor.store_snapshot()
-        this.send_message(msg.chat.id, "Snapshot stored.")
-      }
-      if (command.match(/\/detektor see/)) {
-        pair = command.replace(/\/detektor see\ /, '').split(" ")
-        exchange = pair[0]; market = pair[1]
-        ticker_info = this.detektor.tickers[exchange][market]
-        message = this.detektor.market_url(exchange, market)
-        message += "\nB: " + ticker_info.bid.toFixed(8)
-        message += "\nA: " + ticker_info.ask.toFixed(8)
-        message += "\nL: " + ticker_info.last.toFixed(8)
-        message += "\n24h Low: " + ticker_info.low.toFixed(8)
-        message += "\n24h High: " + ticker_info.high.toFixed(8)
-        this.send_message(msg.chat.id, message)
-      }
-    }
-  })
-
   this.telegram_bot.onText(/\/start/, (msg, match) => {
-    if (this.is_allowed(msg.chat.id)) {
-      message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot. I will help you setup your configuration so you get the best of me.'
-      message += '\nFirst of all, you want to start with /subscribe to start getting notifications.'
-    } else {
-      console.log("Received /start from unallowed id", msg.from.id)
+    if (this.max_subscribers_reached()) {
+      console.log("Received /start but maximum users reaches", msg.from.id)
       message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
       message += "\nSorry I am currently unavailable whilst developments are ongoing."
-      message += "\nWebsite www.cryptowarnings.com will be available next month."
+      message += "\nWebsite www.cryptowise.net will be available soon."
       message += "\nFull Release expected end of August."
-      message += "\nFor further updates and discussion please see https://t.me/joinchat/A-5g1A5VXWFyN6llqtDzdw"
+      message += "\nFor further updates and discussion please see https://t.me/CryptoWarnings"
+    } else {
+      message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
+      message += '\nI will help you setup your configuration so you get the best of me.'
+      message += '\nFirst of all, you want to start with /subscribe to start getting notifications.'
     }
     this.send_message(msg.chat.id, message)
   })
 
   this.telegram_bot.onText(/\/subscribe/, (msg, match) => {
-    if (this.is_allowed(msg.chat.id)) {
-      if (this.user_is_subscribed(msg.chat.id)) {
-        this.send_message(msg.chat.id, 'You are already subscribed.')
-      } else {
-        this.subscribe_user(msg.chat.id, (err, subscriber) => {
-          if (!err) {
-            this.subscribers.push(subscriber)
-            this.send_message(msg.chat.id, 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.')
-          } else {
-            this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.chat.id)
-          }
-        })
+    if (this.is_subscribed(msg.chat.id)) {
+      this.send_message(msg.chat.id, 'You are already subscribed.')
+    } else {
+      this.subscribe_user(msg.chat.id, (err, subscriber) => {
+        if (err) {
+          this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.chat.id)
+        } else {
+          this.subscribers.push(subscriber)
+          this.send_message(msg.chat.id, 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.\nYou can also configure exchanges on /configure')
+        }
+      })
+    }
+  })
+
+  this.telegram_bot.onText(/\/subscription/, (msg, match) => {
+    if (this.is_subscribed(msg.chat.id)) {
+      subscriber = this.find_subscriber(msg.chat.id)
+      if (subscriber.subscription_status) { // subscription updated
+        message = "You are subscribed."
+        message += "\nYour subscription expires on " + subscriber.subscription_expires_on
+        message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
+      } else { // not subscribed
+        message = "You are not subscribed."
+        message += "\nYou must send 0.01 BTC to address " + subscriber.btc_address + " to start receiving notifications."
+        message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
       }
+      this.send_message(subscriber.telegram_id, message)
     }
   })
 
   this.telegram_bot.onText(/\/configure/, (msg, match) => {
-    if (this.is_allowed(msg.chat.id)) // only process vip chat requests
+    if (this.is_subscribed(msg.chat.id)) // only process vip chat requests
       this.send_message(msg.chat.id, "Configuration menu:", this.configuration_menu_options())
   })
 
   this.telegram_bot.onText(/\/pay/, (msg, match) => {
-    if (this.is_allowed(msg.chat.id)) {
+    if (this.is_subscribed(msg.chat.id)) {
       subscriber = this.find_subscriber(msg.chat.id)
       options = { parse_mode: "Markdown" }
       if (subscriber.btc_address) {
@@ -115,19 +104,26 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/subscription/, (msg, match) => {
-    if (this.is_allowed(msg.chat.id)) {
-      subscriber = this.find_subscriber(msg.chat.id)
-      if (subscriber.subscription_status) { // subscription updated
-        message = "You are subscribed."
-        message += "\nYour subscription expires on " + subscriber.subscription_expires_on
-        message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
-      } else { // not subscribed
-        message = "You are not subscribed."
-        message += "\nYou must send 0.01 BTC to address " + subscriber.btc_address + " to start receiving notifications."
-        message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
+  this.telegram_bot.onText(/\/detektor/, (msg, match) => {
+    command = msg.text
+    if (this.is_vip(msg.chat.id)){ // only process vip chat requests
+      console.log("Receiving request from VIP", msg.chat.id, "'" + msg.text + "'")
+      if (command == '/detektor store snapshot') {
+        this.detektor.store_snapshot()
+        this.send_message(msg.chat.id, "Snapshot stored.")
       }
-      this.send_message(subscriber.telegram_id, message)
+      if (command.match(/\/detektor see/)) {
+        pair = command.replace(/\/detektor see\ /, '').split(" ")
+        exchange = pair[0]; market = pair[1]
+        ticker_info = this.detektor.tickers[exchange][market]
+        message = this.detektor.market_url(exchange, market)
+        message += "\nB: " + ticker_info.bid.toFixed(8)
+        message += "\nA: " + ticker_info.ask.toFixed(8)
+        message += "\nL: " + ticker_info.last.toFixed(8)
+        message += "\n24h Low: " + ticker_info.low.toFixed(8)
+        message += "\n24h High: " + ticker_info.high.toFixed(8)
+        this.send_message(msg.chat.id, message)
+      }
     }
   })
 
@@ -140,23 +136,22 @@ GanyTheBot.prototype.start = function() {
   // CALLBACK QUERY //
   // ************** //
   this.telegram_bot.on('callback_query', (msg) => {
-    if (msg.data == "configure") {
-      if (this.is_allowed(msg.from.id)) // only process vip chat requests
+    if (this.is_subscribed(msg.from.id)) {
+      if (msg.data == "configure")
         this.send_message(msg.from.id, "Configuration menu:", this.configuration_menu_options())
-    }
-    if (msg.data == "configure exchanges" && this.is_allowed(msg.from.id)) {
-      this.send_message(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges())
-    }
-    if (msg.data.match(/configure exchange\ /) && this.is_allowed(msg.from.id)) {
-      commands = msg.data.split(" ")
-      if (commands.length == 3) { // show exchange options
-        exchange_status = this.find_subscriber(msg.from.id).exchange_status(commands[2]) ? "enabled" : "disabled"
-        this.send_message(msg.from.id, "Configure " + commands[2] + " (currently " + exchange_status + "):", this.configuration_menu_enable_disable("configure exchange " + commands[2]))
-      }
-      if (commands.length == 4) { // was enabled/disabled, show exchanges
-        this.telegram_bot.answerCallbackQuery(msg.id, 'Exchange ' + commands[2] + " " + commands[3]);
-        _.find(this.subscribers, (s) => {return s.telegram_id == msg.from.id}).change_exchange_status(commands[2], commands[3])
+      if (msg.data == "configure exchanges")
         this.send_message(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges())
+      if (msg.data.match(/configure exchange\ /)) {
+        commands = msg.data.split(" ")
+        if (commands.length == 3) { // show exchange options
+          exchange_status = this.find_subscriber(msg.from.id).exchange_status(commands[2]) ? "enabled" : "disabled"
+          this.send_message(msg.from.id, "Configure " + commands[2] + " (currently " + exchange_status + "):", this.configuration_menu_enable_disable("configure exchange " + commands[2]))
+        }
+        if (commands.length == 4) { // was enabled/disabled, show exchanges
+          this.telegram_bot.answerCallbackQuery(msg.id, 'Exchange ' + commands[2] + " " + commands[3]);
+          _.find(this.subscribers, (s) => {return s.telegram_id == msg.from.id}).change_exchange_status(commands[2], commands[3])
+          this.send_message(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges())
+        }
       }
     }
   });
@@ -178,7 +173,7 @@ GanyTheBot.prototype.notify_user_got_confirmed = function(subscriber) {
 
 GanyTheBot.prototype.send_signal = function(client, signal) {
   text = this.telegram_post_signal(client, signal)
-  console.log(text)
+  this.logger.log(text)
   this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] }).forEach((sub) => {
     this.send_message(sub.telegram_id, text)
   });
@@ -196,11 +191,15 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal) {
   return message
 }
 
+GanyTheBot.prototype.max_subscribers_reached = function() {
+  return this.subscribers.length >= 15 // max number of subscribers at the moment
+}
+
 GanyTheBot.prototype.find_subscriber = function(telegram_id) {
   return _.find(this.subscribers, (sub) => { return sub.telegram_id == telegram_id } )
 }
 
-GanyTheBot.prototype.user_is_subscribed = function(telegram_id) {
+GanyTheBot.prototype.is_subscribed = function(telegram_id) {
   return this.find_subscriber(telegram_id)
 }
 
@@ -256,10 +255,6 @@ GanyTheBot.prototype._seconds_to_minutes = function(seconds) {
   var minutes = Math.floor(seconds / 60);
   var seconds = seconds - minutes * 60;
   return minutes == 0 ? (seconds + " seconds") : minutes + (minutes > 1 ? " minutes" : " minute")
-}
-
-GanyTheBot.prototype.is_allowed = function(subscriber_id) {
-  return this.allowed_chats.includes(subscriber_id)
 }
 
 GanyTheBot.prototype.is_vip = function(subscriber_id) {

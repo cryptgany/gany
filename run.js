@@ -30,6 +30,7 @@ var wallet = new Wallet(logger, gany_the_bot);
 // Start
 pump_events.setMaxListeners(50) // max 50 listeners
 wallet.track_subscriptions()
+gany_the_bot.start()
 bittrex.watch()
 yobit.watch()
 poloniex.watch()
