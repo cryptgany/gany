@@ -170,26 +170,4 @@ Detektor.prototype.market_url = function(exchange, market) {
   return this.api_clients[exchange].market_url(market)
 }
 
-Detektor.prototype.process_telegram_request = function(msg, responder) {
-  command = msg.text
-  if (command.includes('/detektor')) {
-    if (command == '/detektor store snapshot') {
-      this.store_snapshot()
-      responder("Snapshot stored")
-    }
-    if (command.match(/\/detektor see/) && !command.match(/\/detektor see profit/)) {
-      pair = command.replace(/\/detektor see\ /, '').split("/")
-      exchange = pair[0]; market = pair[1]
-      ticker_info = this.tickers[exchange][market]
-      message = this.market_url(exchange, market)
-      message += "\nB: " + ticker_info.bid.toFixed(8)
-      message += "\nA: " + ticker_info.ask.toFixed(8)
-      message += "\nL: " + ticker_info.last.toFixed(8)
-      message += "\n24h Low: " + ticker_info.low.toFixed(8)
-      message += "\n24h High: " + ticker_info.high.toFixed(8)
-      responder(message)
-    }
-  }
-}
-
 module.exports = Detektor;
