@@ -46,14 +46,18 @@ GanyTheBot.prototype.start = function() {
     if (this.is_subscribed(msg.chat.id)) {
       this.send_message(msg.chat.id, 'You are already subscribed.')
     } else {
-      this.subscribe_user(msg.chat.id, (err, subscriber) => {
-        if (err) {
-          this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.chat.id)
-        } else {
-          this.subscribers.push(subscriber)
-          this.send_message(msg.chat.id, 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.\nYou can also configure exchanges on /configure')
-        }
-      })
+      if (this.max_subscribers_reached()) {
+        this.send_message(msg.chat.id, "We are sorry but we can't accept more people by now. Keep updated on our group https://t.me/CryptoWarnings")
+      } else {
+        this.subscribe_user(msg.chat.id, (err, subscriber) => {
+          if (err) {
+            this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.chat.id)
+          } else {
+            this.subscribers.push(subscriber)
+            this.send_message(msg.chat.id, 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.\nYou can also configure exchanges on /configure')
+          }
+        })
+      }
     }
   })
 
@@ -192,7 +196,7 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal) {
 }
 
 GanyTheBot.prototype.max_subscribers_reached = function() {
-  return this.subscribers.length >= 15 // max number of subscribers at the moment
+  return this.subscribers.length >= 2 // max number of subscribers at the moment
 }
 
 GanyTheBot.prototype.find_subscriber = function(telegram_id) {
