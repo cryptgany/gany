@@ -15,34 +15,77 @@ function GanyTheBot() {
   if (process.env.ENVIRONMENT == 'production')
     this.vip_chats.push(parseInt(process.env.ADAM_CHANNEL));
   this.token = process.env.GANY_KEY;
-  this.listeners = []
   this.subscribers = []
   this.detektor = undefined
   Subscriber.find({}, (err, subscribers) => {
     this.subscribers = subscribers
   })
-
   this.telegram_bot = new TelegramBot(this.token, {polling: true});
 }
 
 GanyTheBot.prototype.start = function() {
-  this.telegram_bot.on('message', (msg) => {
-    this.process(msg, (response) => { this.telegram_bot.sendMessage(msg.chat.id, response) })
-  });
 
+  // ***************** //
+  // MESSAGE CALLBACKS //
+  // ***************** //
   this.telegram_bot.onText(/\/detektor/, (msg, match) => {
+    command = msg.text
     if (this.is_vip(msg.chat.id)){ // only process vip chat requests
       console.log("Receiving request from VIP", msg.chat.id, "'" + msg.text + "'")
-      this.listeners.forEach((listener) => { listener(msg, (response) => { this.telegram_bot.sendMessage(msg.chat.id, response) }) })
+      if (command == '/detektor store snapshot') {
+        this.detektor.store_snapshot()
+        this.send_message(msg.chat.id, "Snapshot stored.")
+      }
+      if (command.match(/\/detektor see/)) {
+        pair = command.replace(/\/detektor see\ /, '').split(" ")
+        exchange = pair[0]; market = pair[1]
+        ticker_info = this.detektor.tickers[exchange][market]
+        message = this.detektor.market_url(exchange, market)
+        message += "\nB: " + ticker_info.bid.toFixed(8)
+        message += "\nA: " + ticker_info.ask.toFixed(8)
+        message += "\nL: " + ticker_info.last.toFixed(8)
+        message += "\n24h Low: " + ticker_info.low.toFixed(8)
+        message += "\n24h High: " + ticker_info.high.toFixed(8)
+        this.send_message(msg.chat.id, message)
+      }
+    }
+  })
+
+  this.telegram_bot.onText(/\/start/, (msg, match) => {
+    if (this.is_allowed(msg.chat.id)) {
+      message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot. I will help you setup your configuration so you get the best of me.'
+      message += '\nFirst of all, you want to start with /subscribe to start getting notifications.'
+    } else {
+      console.log("Received /start from unallowed id", msg.from.id)
+      message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
+      message += "\nSorry I am currently unavailable whilst developments are ongoing."
+      message += "\nWebsite www.cryptowarnings.com will be available next month."
+      message += "\nFull Release expected end of August."
+      message += "\nFor further updates and discussion please see https://t.me/joinchat/A-5g1A5VXWFyN6llqtDzdw"
+    }
+    this.send_message(msg.chat.id, message)
+  })
+
+  this.telegram_bot.onText(/\/subscribe/, (msg, match) => {
+    if (this.is_allowed(msg.chat.id)) {
+      if (this.user_is_subscribed(msg.chat.id)) {
+        this.send_message(msg.chat.id, 'You are already subscribed.')
+      } else {
+        this.subscribe_user(msg.chat.id, (err, subscriber) => {
+          if (!err) {
+            this.subscribers.push(subscriber)
+            this.send_message(msg.chat.id, 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.')
+          } else {
+            this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.chat.id)
+          }
+        })
+      }
     }
   })
 
   this.telegram_bot.onText(/\/configure/, (msg, match) => {
     if (this.is_allowed(msg.chat.id)) // only process vip chat requests
-      this.telegram_bot.sendMessage(msg.chat.id, "Configuration menu:", this.configuration_menu_options()).catch((error) => {
-        console.log(error.code);  // => 'ETELEGRAM'
-        console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-      });
+      this.send_message(msg.chat.id, "Configuration menu:", this.configuration_menu_options())
   })
 
   this.telegram_bot.onText(/\/pay/, (msg, match) => {
@@ -87,51 +130,32 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
+  this.telegram_bot.onText(/\/sendmessage/, (msg, match) => {
+    if (this.is_vip(msg.chat.id))
+      this.broadcast(msg.text.replace(/\/sendmessage\ /, ''))
+  })
+
+  // ************** //
+  // CALLBACK QUERY //
+  // ************** //
   this.telegram_bot.on('callback_query', (msg) => {
-    if (this.is_vip(msg.from.id)) {
-      console.log("Receiving request from VIP", msg.from.id, "'" + msg.data + "'")
-      if (msg.data.match(/options/)) {
-        exchange_market_code = msg.data.split(" ")[1]
-        this.telegram_bot.sendMessage(msg.from.id, "Options for " + exchange_market_code + ":", this.vip_buy_options(exchange_market_code)).catch((error) => {
-          console.log(error.code);  // => 'ETELEGRAM'
-          console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-        });
-        this.telegram_bot.answerCallbackQuery(msg.id, 'View options below.');
-      }
-      if (msg.data.match(/autotrader/)) { // process request of buy/sell
-        msg.data = msg.data.replace(/autotrader\ /, '')
-        this.detektor.process_telegram_request({text: "/detektor " + msg.data, id: msg.from.id}, (response) => { this.telegram_bot.sendMessage(msg.from.id, response) })
-        this.telegram_bot.answerCallbackQuery(msg.id, 'Request processed.');
-      }
-    }
     if (msg.data == "configure") {
       if (this.is_allowed(msg.from.id)) // only process vip chat requests
-        this.telegram_bot.sendMessage(msg.from.id, "Configuration menu:", this.configuration_menu_options()).catch((error) => {
-          console.log(error.code);  // => 'ETELEGRAM'
-          console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-        });
+        this.send_message(msg.from.id, "Configuration menu:", this.configuration_menu_options())
     }
     if (msg.data == "configure exchanges" && this.is_allowed(msg.from.id)) {
-      this.telegram_bot.sendMessage(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges()).catch((error) => {
-        console.log(error.code);  // => 'ETELEGRAM'
-        console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-      });
+      this.send_message(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges())
     }
     if (msg.data.match(/configure exchange\ /) && this.is_allowed(msg.from.id)) {
       commands = msg.data.split(" ")
       if (commands.length == 3) { // show exchange options
-        this.telegram_bot.sendMessage(msg.from.id, "Configure " + commands[2] + " (currently " + this.find_subscriber(msg.from.id).exchange_status(commands[2]) + "):", this.configuration_menu_enable_disable("configure exchange " + commands[2])).catch((error) => {
-          console.log(error.code);  // => 'ETELEGRAM'
-          console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-        });
+        exchange_status = this.find_subscriber(msg.from.id).exchange_status(commands[2]) ? "enabled" : "disabled"
+        this.send_message(msg.from.id, "Configure " + commands[2] + " (currently " + exchange_status + "):", this.configuration_menu_enable_disable("configure exchange " + commands[2]))
       }
       if (commands.length == 4) { // was enabled/disabled, show exchanges
         this.telegram_bot.answerCallbackQuery(msg.id, 'Exchange ' + commands[2] + " " + commands[3]);
         _.find(this.subscribers, (s) => {return s.telegram_id == msg.from.id}).change_exchange_status(commands[2], commands[3])
-        this.telegram_bot.sendMessage(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges()).catch((error) => {
-          console.log(error.code);  // => 'ETELEGRAM'
-          console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-        });
+        this.send_message(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges())
       }
     }
   });
@@ -151,74 +175,15 @@ GanyTheBot.prototype.notify_user_got_confirmed = function(subscriber) {
   this.send_message(subscriber.telegram_id, message)
 }
 
-GanyTheBot.prototype.process = function(msg, responder) {
-  text = msg.text; chat_id = msg.chat.id;
-  if (text) {
-    if (text.match(/\/start/)) {
-      if (this.is_allowed(chat_id)) {
-        responder('Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot. I will help you setup your configuration so you get the best of me.')
-        responder('First of all, you want to start with /subscribe to start getting your signals.')
-      } else {
-        console.log("Received /start from unallowed id", msg.from.id)
-        responder('Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.')
-        responder("Sorry I am currently unavailable whilst developments are ongoing.")
-        responder("Website www.cryptowarnings.com will be available next month.")
-        responder("Full Release expected end of August.")
-        responder("For further updates and discussion please see https://t.me/joinchat/A-5g1A5VXWFyN6llqtDzdw")
-      }
-    }
-    if (this.is_allowed(chat_id)) {
-      if (text.match(/\/subscribe/)) {
-        if (this.user_is_subscribed(chat_id)) {
-          responder('You are already subscribed.')
-        } else {
-          this.subscribe_user(chat_id, (err, subscriber) => {
-            if (!err) {
-              this.subscribers.push(subscriber)
-              responder('You are now subscribed! You will start getting notifications soon. Please be patient and wait.')
-            } else {
-              responder('Could not subscribe, please contact @frooks, your id is ' + chat_id)
-            }
-          })
-        }
-      }
-      if (text.match(/\/all/)) {
-        responder(this.subscribers.map((sub) => { return sub.telegram_id}).join(", ") || "No users subscribed")
-      }
-    }
-
-    if (this.is_vip(chat_id)) {
-      if (text.match(/\/sendmessage/)) {
-        this.broadcast(text.replace(/\/sendmessage\ /, ''))
-      }
-      if (text.match(/\/test/)) {
-        this.broadcast("This is a test to all subscribers")
-      }
-    }
-  }
-}
-
 GanyTheBot.prototype.send_signal = function(client, signal) {
-  text = this.telegram_post(client, signal)
+  text = this.telegram_post_signal(client, signal)
   console.log(text)
   this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] }).forEach((sub) => {
-    this.telegram_bot.sendMessage(sub.telegram_id, text, this.options(client, signal, sub.telegram_id)).catch((error) => {
-      console.log(error.code);  // => 'ETELEGRAM'
-      console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-    });
+    this.send_message(sub.telegram_id, text)
   });
 }
 
-GanyTheBot.prototype.show_open_orders = function(subscriber_id, opened_orders) {
-  text = opened_orders.length + " opened orders at the moment.\n" + opened_orders.map((order) => { return order.message }).join("\n")
-  options = opened_orders.length == 0 ? {} : this.sell_order_options(opened_orders)
-  this.telegram_bot.sendMessage(subscriber_id, text, options).catch((error) => {
-    console.log(error.code);  // => 'ETELEGRAM'
-    console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-  });
-}
-
-GanyTheBot.prototype.telegram_post = function(client, signal) {
+GanyTheBot.prototype.telegram_post_signal = function(client, signal) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
   message = "[" + client.exchange_name + " - " + signal.market + "](" + client.market_url(signal.market) + ")"
   message += "\nVol. up by *" + diff.toFixed(2) + "* BTC since *" + this._seconds_to_minutes(signal.time) + "*"
@@ -243,45 +208,6 @@ GanyTheBot.prototype.subscribe_user = function(telegram_id, callback) {
   sub.save((err) => {
     callback(err, sub)
   })
-}
-
-
-GanyTheBot.prototype.options = function(client, signal, subscriber_id) {
-  if (this.is_vip(subscriber_id)) { return this.vip_options(client, signal) }
-  else { return { parse_mode: "Markdown" } }
-}
-
-GanyTheBot.prototype.vip_options = function(client, signal) {
-  return {
-    parse_mode: "Markdown",
-    disable_web_page_preview: true,
-    reply_markup: JSON.stringify({
-      inline_keyboard: [
-        [{ text: 'Options', callback_data: 'options ' + client.code + "/" + signal.market }],
-      ]
-    })
-  };
-}
-
-GanyTheBot.prototype.sell_order_options = function(opened_orders) {
-  return {
-    reply_markup: JSON.stringify({
-      inline_keyboard: opened_orders.map((order) => { return [{text: "SELL: " + order.pump.exchange + "/" + order.pump.market, callback_data: "autotrader sell " + order.pump.exchange + "/" + order.pump.market}] })
-    })
-  };
-}
-
-GanyTheBot.prototype.vip_buy_options = function(exchange_market_code) {
-  return {
-    parse_mode: "Markdown",
-    reply_markup: JSON.stringify({
-      inline_keyboard: [
-        [{ text: 'See price', callback_data: ('autotrader see ' + exchange_market_code) }],
-        [{ text: 'Buy 0.001 BTC', callback_data: ('autotrader buy ' + exchange_market_code + " 0.001") }],
-        [{ text: 'Buy 0.01 BTC', callback_data: ('autotrader buy ' + exchange_market_code + " 0.01") }]
-      ]
-    })
-  };
 }
 
 GanyTheBot.prototype.configuration_menu_options = function() {
@@ -339,17 +265,10 @@ GanyTheBot.prototype.is_vip = function(subscriber_id) {
   return this.vip_chats.includes(subscriber_id)
 }
 
-GanyTheBot.prototype.listen = function(callback) {
-  this.listeners.push(callback)
-}
-
 GanyTheBot.prototype.broadcast = function(text, vip_only = false) {
   chats_for_broadcast = vip_only ? this.vip_chats : this.subscribers.map((sub) => { return sub.telegram_id });
   chats_for_broadcast.forEach((chat_id) => {
-    this.telegram_bot.sendMessage(chat_id, text, {parse_mode: "Markdown"}).catch((error) => {
-      console.log(error.code);  // => 'ETELEGRAM'
-      console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
-    });
+    this.send_message(chat_id, text)
   });
 }
 

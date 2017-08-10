@@ -43,7 +43,6 @@ function Detektor(logger, pump_events, test_mode, database, api_clients, rules) 
       }
     }
   })
-  this.logger.listen(this.process_telegram_request.bind(this)) // for telegram
   this.store_snapshot_every_15_min()
   setTimeout(() => { this.keep_tickers_limited() }, this.tickers_history_cleaning_time * 60 * 1000)
 }
@@ -174,34 +173,6 @@ Detektor.prototype.market_url = function(exchange, market) {
 Detektor.prototype.process_telegram_request = function(msg, responder) {
   command = msg.text
   if (command.includes('/detektor')) {
-    if (command == '/detektor set false') { this.ticker_autotrader_enabled = false; responder("Autotrader disabled.") }
-    if (command == '/detektor set true') { this.ticker_autotrader_enabled = true; responder("Autotrader enabled.") }
-    if (command == '/detektor see profit') {
-      if (this.pumps.length > 0) {
-        profit = this.pumps.map((pmp) => { return pmp.profit }).sum()
-      } else {
-        profit = 0
-      }
-      responder(profit + " in profits so far.")
-    }
-    if (command == '/detektor open orders') {
-      count = this.pumps.filter((pump) => { return !pump.pump_ended }).length
-      opened_orders = []
-      messages = []
-      this.pumps.filter((pump) => { return !pump.pump_ended }).forEach((pump) => {
-        buy_price = pump.buy_order ? pump.buy_order.price_per_unit : pump.buy_rate
-        current_price = this.tickers[pump.exchange][pump.market].ask
-        message = pump.exchange + "/" + pump.market + "(" + pump.buy_order.quantity + ") [IN:" + buy_price.toFixed(8) + "][NOW:" + current_price.toFixed(8) + "] (" + (((current_price / buy_price) - 1) * 100).toFixed(2) + "%)"
-        opened_orders.push({pump: pump, message: message})
-        messages.push(message)
-      })
-      this.logger.gany_the_bot.show_open_orders(msg.id || msg.from.id, opened_orders)
-      // responder(count + " opened orders at the moment.\n" + messages.join("\n"))
-    }
-    if (command == '/detektor closed orders') {
-      count = this.pumps.filter((pump) => { return pump.pump_ended }).length
-      responder(count + " closed orders at the moment.")
-    }
     if (command == '/detektor store snapshot') {
       this.store_snapshot()
       responder("Snapshot stored")
@@ -217,33 +188,6 @@ Detektor.prototype.process_telegram_request = function(msg, responder) {
       message += "\n24h Low: " + ticker_info.low.toFixed(8)
       message += "\n24h High: " + ticker_info.high.toFixed(8)
       responder(message)
-    }
-    if (command.match(/\/detektor buy/)) {
-      exc_amount = command.replace(/\/detektor buy\ /, '').split(" ")
-      pair = exc_amount[0].split("/")
-      if (exc_amount.length == 1) {
-        btc_amount = 0.01
-      } else {
-        btc_amount = parseFloat(exc_amount[1])
-      }
-      exchange = pair[0]; market = pair[1]
-      rate = this.tickers[exchange][market].ask
-      var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, btc_amount, rate, 1.01, 1.05, this, 0, this.verbose); // COMMENT THIS LINE FOR REAL TESTING
-      pump.start();
-      this.pumps.push(pump); // later review
-      responder("Buy started on " + exchange + " - " + market + " at price " + rate + " with " + btc_amount + " bitcoin")
-    }
-    if (command.match(/\/detektor sell/)) {
-      pair = command.replace(/\/detektor sell\ /, '').split("/")
-      exchange = pair[0]; market = pair[1]
-      price = this.tickers[exchange][market].bid * 0.98
-      pump = this.pumps.filter((pump) => { return pump.exchange == exchange && pump.market == market && !pump.pump_ended})[0]
-      pump.sell_rate = price
-      pump.sell_on_peak(1);
-      responder("Sell started on " + exchange + " - " + market + " at price " + price)
-    }
-    if (command == '/detektor commands') {
-      responder("Commands are:\nset false\nset true\nsee profit\nopen orders\nclosed orders\nstore snapshot\nsee EXCHANGE/MARKET\nbuy EXCHANGE/MARKET BTC_AMOUNT\nsell EXCHANGE/MARKET\ncommands")
     }
   }
 }

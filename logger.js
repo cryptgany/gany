@@ -17,12 +17,6 @@ function Logger(bot_enabled = true, test_mode = false) {
   }
 }
 
-Logger.prototype.listen = function(callback) {
-  if (this.bot_enabled) {
-    this.gany_the_bot.listen(callback)
-  }
-}
-
 Logger.prototype.send_signal = function(api, signal) {
   this.gany_the_bot.send_signal(api, signal)
 }
