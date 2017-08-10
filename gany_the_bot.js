@@ -108,8 +108,8 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/^(see|SEE)/, (msg, match) => {
-    market = msg.text.toUpperCase().replace(/SEE\ /, '')
+  this.telegram_bot.onText(/\/see/, (msg, match) => {
+    market = msg.text.toUpperCase().replace(/\/SEE\ /, '')
     markets = this.detektor.get_market_data(market)
     if (markets.length == 0)
       message = "Not found."
