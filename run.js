@@ -13,18 +13,19 @@ const Poloniex = require('./exchanges/poloniex');
 const Cryptopia = require("./exchanges/cryptopia");
 const Wallet = require("./wallet")
 const Payment = require("./models/payment")
+const GanyTheBot = require('./gany_the_bot')
 
 // Initializers
 class PumpEvents extends EventEmitter {}
 var pump_events = new PumpEvents();
-var test_mode = false;
-var logger = new Logger(true, test_mode);
+var logger = new Logger();
+var gany_the_bot = new GanyTheBot()
 var bittrex = new Bittrex(pump_events);
 var yobit = new Yobit(pump_events);
 var poloniex = new Poloniex(pump_events);
 var cryptopia = new Cryptopia(pump_events);
 var database = new Database();
-var wallet = new Wallet(logger.gany_the_bot);
+var wallet = new Wallet(gany_the_bot);
 
 // Start
 pump_events.setMaxListeners(50) // max 50 listeners
@@ -45,6 +46,6 @@ rules = {
           ]
 }
 
-detektor = new Detektor(logger, pump_events, test_mode, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia}, rules)
-logger.gany_the_bot.detektor = detektor
+detektor = new Detektor(logger, gany_the_bot, pump_events, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia}, rules)
+gany_the_bot.detektor = detektor
 // detektor.restore_snapshot()

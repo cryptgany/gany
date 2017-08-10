@@ -161,7 +161,7 @@ GanyTheBot.prototype.start = function() {
   });
 }
 
-GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse_mode: "Markdown" }) {
+GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse_mode: "Markdown", disable_web_page_preview: true }) {
   this.telegram_bot.sendMessage(chat_id, message, options).catch((error) => {
     console.log(error.code);  // => 'ETELEGRAM'
     console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }

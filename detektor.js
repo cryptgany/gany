@@ -9,10 +9,10 @@ require('./protofunctions.js')
 var DateTime = require('node-datetime')
 
 // REAL CODING
-function Detektor(logger, pump_events, test_mode, database, api_clients, rules) {
+function Detektor(logger, telegram_bot, pump_events, database, api_clients, rules) {
   this.logger = logger
+  this.telegram_bot = telegram_bot
   this.pump_events = pump_events
-  this.test_mode = test_mode
   this.verbose = false
   this.market_data = {}
   this.pumps_bought = {}
@@ -133,7 +133,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
               this.pumps.push(pump);
             }
             this.tickers_detected_blacklist[exchange+market] = 360 * 3 // blacklist for 3 hour, each "1" is 10 seconds
-            this.logger.send_signal(this.api_clients[exchange], signal)
+            this.telegram_bot.send_signal(this.api_clients[exchange], signal)
           }
         }
       }
