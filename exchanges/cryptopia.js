@@ -1,6 +1,7 @@
 var https = require("https")
 
-function Cryptopia(pump_events, skip_volumes = 0.5) {
+function Cryptopia(logger, pump_events, skip_volumes = 0.5) {
+  this.logger = logger
   this.exchange_name = 'Cryptopia'
   this.code = 'Cryptopia'
   this.all_markets = [];
@@ -20,7 +21,7 @@ Cryptopia.prototype.watch = function() {
 Cryptopia.prototype._watch_tickers = function() {
   this.get_markets((err, tickers) => {
     if (err) {
-      console.log('Failed to retrieve Cryptopia data: ', err)
+      this.logger.error('Failed to retrieve Cryptopia data: ', err)
     } else {
       tickers.forEach((ticker) => {
         if (this._filter_market(ticker)) {

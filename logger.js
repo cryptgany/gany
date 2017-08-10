@@ -6,10 +6,14 @@ const Util = require('util');
 function Logger() {
 }
 
-Logger.prototype.log = function(type, str) {
-  var time = DateTime.create()._now;
-  message = "[" + time + "] " + str
-  if (type == "error") { console.error(message) } else { console.log(message) }
+Logger.prototype.log = function(...args) {
+  console.log(this._timestamp(), ...args)
 }
+
+Logger.prototype.error = function(...args) {
+  console.error(this._timestamp(), ...args)
+}
+
+Logger.prototype._timestamp = function() { return "[" + DateTime.create()._now + "]" }
 
 module.exports = Logger;

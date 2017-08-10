@@ -2,7 +2,8 @@ require('dotenv').config();
 
 var ccxt = require ('ccxt')
 
-function Yobit(pump_events, skip_volumes = 0.5) {
+function Yobit(logger, pump_events, skip_volumes = 0.5) {
+  this.logger = logger
   this.exchange_name = 'Yobit'
   this.code = 'Yobit'
   this.client = ccxt.yobit({
@@ -36,7 +37,7 @@ Yobit.prototype._watch_tickers = function() {
     ticker_str = this.markets.slice(i * 50, (i+1) * 50).join("-")
     this.client.apiGetTickerPairs({'pairs': ticker_str}).then((data) => {
       if (data.error) {
-        console.log("Error trying to retrieve yobit data on _watch_tickers:", data.error)
+        this.logger.error("Error trying to retrieve yobit data on _watch_tickers:", data.error)
       } else {
         Object.keys(data).forEach((market) => {
           this.pump_events.emit('marketupdate', 'TICKER', this.code, market.toUpperCase().replace(/\_/, '-'), this._normalize_ticker_data(data[market]));
@@ -54,7 +55,7 @@ Yobit.prototype._select_good_volume_markets = function() {
     ticker_str = this.all_markets.slice(i * 50, (i+1) * 50).join("-")
     this.client.apiGetTickerPairs({'pairs': ticker_str}).then((data) => {
       if (data.error) {
-        console.log("Error trying to retrieve yobit data on _select_good_volume_markets:", data.error)
+        this.logger.error("Error trying to retrieve yobit data on _select_good_volume_markets:", data.error)
       } else {
         Object.keys(data).forEach((market) => {
           if (data[market].vol >= this.skip_volumes)

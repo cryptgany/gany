@@ -19,13 +19,13 @@ const GanyTheBot = require('./gany_the_bot')
 class PumpEvents extends EventEmitter {}
 var pump_events = new PumpEvents();
 var logger = new Logger();
-var gany_the_bot = new GanyTheBot()
-var bittrex = new Bittrex(pump_events);
-var yobit = new Yobit(pump_events);
-var poloniex = new Poloniex(pump_events);
-var cryptopia = new Cryptopia(pump_events);
+var gany_the_bot = new GanyTheBot(logger)
+var bittrex = new Bittrex(logger, pump_events);
+var yobit = new Yobit(logger, pump_events);
+var poloniex = new Poloniex(logger, pump_events);
+var cryptopia = new Cryptopia(logger, pump_events);
 var database = new Database();
-var wallet = new Wallet(gany_the_bot);
+var wallet = new Wallet(logger, gany_the_bot);
 
 // Start
 pump_events.setMaxListeners(50) // max 50 listeners

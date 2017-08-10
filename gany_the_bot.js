@@ -4,7 +4,8 @@ const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./models/subscriber');
 const _ = require('underscore')
 
-function GanyTheBot() {
+function GanyTheBot(logger) {
+  this.logger = logger
   this.vip_chats = [];
   this.allowed_chats = [];
   this.allowed_chats.push(parseInt(process.env.PERSONAL_CHANNEL)) // my telegram
@@ -109,7 +110,7 @@ GanyTheBot.prototype.start = function() {
           message += "\n*You will start receiving signals as soon as we get 3 confirmations of your payment*"
           message += "\nYou can check your current subscription on /subscription"
           this.send_message(subscriber.telegram_id, message, options)
-        })
+        }).catch((e) => { this.logger.error("Error trying to generate btc address", e) })
       }
     }
   })

@@ -1,6 +1,7 @@
 const PoloniexClient = require('poloniex-api-node');
 
-function Poloniex(pump_events, skip_volumes = 0.5) {
+function Poloniex(logger, pump_events, skip_volumes = 0.5) {
+  this.logger = logger
   this.exchange_name = 'Poloniex'
   this.code = 'Poloniex'
   this.client = new PoloniexClient()
@@ -21,7 +22,7 @@ Poloniex.prototype.watch = function() {
 Poloniex.prototype._watch_tickers = function() {
   this.client.returnTicker((err, tickers) => {
     if (err) {
-      console.log('Failed to retrieve poloniex data: ', err)
+      this.logger.error('Failed to retrieve poloniex data: ', err)
     } else {
       Object.keys(tickers).forEach((market) => {
         if (this._filter_market(tickers[market])) {

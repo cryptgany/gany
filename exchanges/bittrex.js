@@ -2,7 +2,8 @@ require('dotenv').config();
 
 const BittrexClient = require('node.bittrex.api');
 
-function Bittrex(pump_events) {
+function Bittrex(logger, pump_events) {
+  this.logger = logger
   this.exchange_name = 'Bittrex'
   this.code = 'Bittrex'
   this.client = BittrexClient;
@@ -36,7 +37,7 @@ Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seco
         self.pump_events.emit('marketupdate', 'TICKER', self.code, data.MarketName, self._normalize_ticker_data(data));
       });
     } else {
-      console.log("Error getting Bittrex tickers: ", data)
+      this.logger.error("Error getting Bittrex tickers: ", data)
     }
   });
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
@@ -64,7 +65,7 @@ Bittrex.prototype._select_good_volume_markets = function() {
           this.markets.push(market_info.MarketName);
       });
     } else {
-      console.log("Error trying to fetch data from bittrex:", info)
+      this.logger.error("Error trying to fetch data from bittrex:", info)
     }
   });
   setTimeout(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) // update markets on track every hour

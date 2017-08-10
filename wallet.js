@@ -2,15 +2,16 @@ require('dotenv').config();
 var blockexplorer = require('blockchain.info/blockexplorer')
 var Payment = require('./models/payment')
 
-function Wallet(gany_the_bot) {
+function Wallet(logger, gany_the_bot) {
+  this.logger = logger
   this.options = { apiCode: process.env.BLOCKCHAIN_API_CODE }
   this.subscriber_list = [] // address list to check
   this.days_for_subscription_ending = 2 // days
   this.gany_the_bot = gany_the_bot
   this.subscription_price = {
-    basic: 300000, // now 0.003, should be 1000000
+    basic:    1000000, // 0.01
     advanced: 3000000, // 0.03
-    pro: 5000000, // 0.05
+    pro:      5000000, // 0.05
   }
 }
 
@@ -41,7 +42,7 @@ Wallet.prototype.check_transactions = function() {
         this.mark_subscriber_paid_and_withdraw(addr, this.subscription_price[addresses_sub_type[addr]])
       }
     })
-  }).catch((e) => { console.log("Error on check_transactions", Date.now(), e) })
+  }).catch((e) => { this.logger.error("Error on check_transactions", e) })
   setTimeout(() => { this.check_transactions() }, 5 * 60 * 1000)
 }
 
@@ -53,6 +54,8 @@ Wallet.prototype.mark_subscriber_paid_and_withdraw = function(address, price) {
     this.gany_the_bot.notify_user_got_confirmed(subscriber)
 
     this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, price)
+  } else {
+    this.logger.error("Could not find the subscriber of the address", address)
   }
 }
 
