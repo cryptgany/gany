@@ -170,4 +170,15 @@ Detektor.prototype.market_url = function(exchange, market) {
   return this.api_clients[exchange].market_url(market)
 }
 
+Detektor.prototype.get_market_data = function(market_name) {
+  markets = []
+  Object.keys(this.tickers).forEach((exchange) => {
+    Object.keys(this.tickers[exchange]).forEach((market) => {
+      if (market.split("-").includes(market_name))
+        markets.push({exchange: exchange, market: market, ticker: this.tickers[exchange][market]})
+    })
+  })
+  return markets
+}
+
 module.exports = Detektor;

@@ -28,11 +28,11 @@ GanyTheBot.prototype.start = function() {
   // ***************** //
   this.telegram_bot.onText(/\/start/, (msg, match) => {
     if (this.max_subscribers_reached()) {
-      console.log("Received /start but maximum users reaches", msg.from.id)
+      console.log("Received /start but maximum users reached", msg.from.id)
       message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
       message += "\nSorry I am currently unavailable whilst developments are ongoing."
       message += "\nWebsite www.cryptowise.net will be available soon."
-      message += "\nFull Release expected end of August."
+      message += "\nFull release expected end of August."
       message += "\nFor further updates and discussion please see https://t.me/CryptoWarnings"
     } else {
       message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
@@ -108,6 +108,20 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
+  this.telegram_bot.onText(/^(see|SEE)/, (msg, match) => {
+    market = msg.text.toUpperCase().replace(/SEE\ /, '')
+    markets = this.detektor.get_market_data(market)
+    if (markets.length == 0)
+      message = "Not found."
+    if (markets.length > 5)
+      message = "Too many markets found"
+    if (markets.length > 0 && markets.length < 5)
+      message = markets.map((market_info) => {
+        return this.telegram_post_price_check(market_info.exchange, market_info.market, market_info.ticker)
+      }).join("\n\n")
+    this.send_message(msg.chat.id, message)
+  })
+
   this.telegram_bot.onText(/\/detektor/, (msg, match) => {
     command = msg.text
     if (this.is_vip(msg.chat.id)){ // only process vip chat requests
@@ -120,12 +134,7 @@ GanyTheBot.prototype.start = function() {
         pair = command.replace(/\/detektor see\ /, '').split(" ")
         exchange = pair[0]; market = pair[1]
         ticker_info = this.detektor.tickers[exchange][market]
-        message = this.detektor.market_url(exchange, market)
-        message += "\nB: " + ticker_info.bid.toFixed(8)
-        message += "\nA: " + ticker_info.ask.toFixed(8)
-        message += "\nL: " + ticker_info.last.toFixed(8)
-        message += "\n24h Low: " + ticker_info.low.toFixed(8)
-        message += "\n24h High: " + ticker_info.high.toFixed(8)
+        message = this.telegram_post_price_check(exchange, market, ticker_info)
         this.send_message(msg.chat.id, message)
       }
     }
@@ -192,6 +201,16 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal) {
   message += "\nA: " + signal.first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.ask, signal.last_ticker.ask) + " " + signal.last_ticker.ask.toFixed(8)
   message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
   message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
+  return message
+}
+
+GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, ticker_info) {
+  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ")"
+  message += "\nB: " + ticker_info.bid.toFixed(8)
+  message += "\nA: " + ticker_info.ask.toFixed(8)
+  message += "\nL: " + ticker_info.last.toFixed(8)
+  message += "\n24h Low: " + ticker_info.low.toFixed(8)
+  message += "\n24h High: " + ticker_info.high.toFixed(8)
   return message
 }
 
