@@ -209,13 +209,14 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   message += "\nB: " + ticker_info.bid.toFixed(8)
   message += "\nA: " + ticker_info.ask.toFixed(8)
   message += "\nL: " + ticker_info.last.toFixed(8)
+  message += "\nVolume: " + ticker_info.volume.toFixed(4) + " BTC"
   message += "\n24h Low: " + ticker_info.low.toFixed(8)
   message += "\n24h High: " + ticker_info.high.toFixed(8)
   return message
 }
 
 GanyTheBot.prototype.max_subscribers_reached = function() {
-  return this.subscribers.length >= 100 // max number of subscribers at the moment
+  return this.subscribers.length >= 2 // max number of subscribers at the moment
 }
 
 GanyTheBot.prototype.find_subscriber = function(telegram_id) {
