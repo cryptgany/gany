@@ -216,7 +216,7 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
 }
 
 GanyTheBot.prototype.max_subscribers_reached = function() {
-  return this.subscribers.length >= 2 // max number of subscribers at the moment
+  return this.subscribers.length >= 100 // max number of subscribers at the moment
 }
 
 GanyTheBot.prototype.find_subscriber = function(telegram_id) {
