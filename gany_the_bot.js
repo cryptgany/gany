@@ -44,7 +44,12 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/\/subscribe/, (msg, match) => {
     if (this.is_subscribed(msg.chat.id)) {
-      this.send_message(msg.chat.id, 'You are already subscribed.')
+      if (this.is_blocked(msg.chat.id)) {
+        this.unblock_subscriber(msg.chat.id)
+        this.send_message(msg.chat.id, 'You will now start receiving notifications again.')
+      } else {
+        this.send_message(msg.chat.id, 'You are already subscribed.')
+      }
     } else {
       if (this.max_subscribers_reached()) {
         this.send_message(msg.chat.id, "We are sorry but we can't accept more people by now. Keep updated on our group https://t.me/CryptoWarnings")
@@ -172,8 +177,11 @@ GanyTheBot.prototype.start = function() {
 
 GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse_mode: "Markdown", disable_web_page_preview: true }) {
   this.telegram_bot.sendMessage(chat_id, message, options).catch((error) => {
-    console.log(error.code);  // => 'ETELEGRAM'
-    console.log(error.response); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
+    if (error.message.match(/bot\ was\ blocked\ by\ the\ user/)) { // user blocked the bot
+      this.logger.log("Blocked user " + chat_id)
+      this.block_subscriber(chat_id)
+    }
+    this.logger.error(error.code, error.message); // => { ok: false, error_code: 400, description: 'Bad Request: chat not found' }
   });
 }
 
@@ -187,7 +195,7 @@ GanyTheBot.prototype.notify_user_got_confirmed = function(subscriber) {
 GanyTheBot.prototype.send_signal = function(client, signal) {
   text = this.telegram_post_signal(client, signal)
   this.logger.log(text)
-  this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] }).forEach((sub) => {
+  this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] && !sub.blocked }).forEach((sub) => {
     this.send_message(sub.telegram_id, text)
   });
 }
@@ -227,11 +235,28 @@ GanyTheBot.prototype.is_subscribed = function(telegram_id) {
   return this.find_subscriber(telegram_id)
 }
 
+GanyTheBot.prototype.is_blocked = function(telegram_id) {
+  sub = this.find_subscriber(telegram_id)
+  return sub && sub.blocked
+}
+
 GanyTheBot.prototype.subscribe_user = function(telegram_id, callback) {
   sub = new Subscriber({telegram_id: telegram_id})
   sub.save((err) => {
     callback(err, sub)
   })
+}
+
+GanyTheBot.prototype.block_subscriber = function(telegram_id) {
+  sub = this.find_subscriber(telegram_id)
+  sub.blocked = true
+  sub.save()
+}
+
+GanyTheBot.prototype.unblock_subscriber = function(telegram_id) {
+  sub = this.find_subscriber(telegram_id)
+  sub.blocked = false
+  sub.save()
 }
 
 GanyTheBot.prototype.configuration_menu_options = function() {

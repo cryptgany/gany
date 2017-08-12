@@ -10,6 +10,7 @@ var subscriberSchema = mongoose.Schema({
     subscription_status: { type: Boolean, default: false },
     subscription_expires_on: Date,
     subscription_type: { type: String, default: 'basic', enum: ['basic', 'advanced', 'pro'] },
+    blocked: { type: Boolean, default: false },
     exchanges: {
       Bittrex: { type: Boolean, default: true },
       Poloniex: { type: Boolean, default: true },
