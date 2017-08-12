@@ -127,6 +127,13 @@ GanyTheBot.prototype.start = function() {
     this.send_message(msg.chat.id, message)
   })
 
+  this.telegram_bot.onText(/\/(stop|block)/, (msg, match) => {
+    if (this.is_subscribed(msg.chat.id)) {
+      this.block_subscriber(msg.chat.id)
+    }
+    this.send_message(msg.chat.id, 'You wont receive my notifications anymore. To change that, you can type /subscribe')
+  })
+
   this.telegram_bot.onText(/\/detektor/, (msg, match) => {
     command = msg.text
     if (this.is_vip(msg.chat.id)){ // only process vip chat requests
