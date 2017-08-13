@@ -2,6 +2,7 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./models/subscriber');
+const Signal = require('./models/signal')
 const _ = require('underscore')
 
 function GanyTheBot(logger) {
@@ -200,14 +201,23 @@ GanyTheBot.prototype.notify_user_got_confirmed = function(subscriber) {
 }
 
 GanyTheBot.prototype.send_signal = function(client, signal) {
-  text = this.telegram_post_signal(client, signal)
-  this.logger.log(text)
-  this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] && !sub.blocked }).forEach((sub) => {
-    this.send_message(sub.telegram_id, text)
-  });
+  this.previous_signal(signal.exchange, signal.market, (prev) => {
+    text = this.telegram_post_signal(client, signal, prev)
+    this.logger.log(text)
+    this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] && !sub.blocked }).forEach((sub) => {
+      this.send_message(sub.telegram_id, text)
+    });
+
+  })
 }
 
-GanyTheBot.prototype.telegram_post_signal = function(client, signal) {
+GanyTheBot.prototype.previous_signal = async function(exchange, market, callback) {
+  Signal.find({exchange: exchange, market: market}).limit(1).sort([['createdAt', 'descending']]).exec((err, data) => {
+    callback(data[0])
+  })
+}
+
+GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
   message = "[" + client.exchange_name + " - " + signal.market + "](" + client.market_url(signal.market) + ")"
   message += "\nVol. up by *" + diff.toFixed(2) + "* BTC since *" + this._seconds_to_minutes(signal.time) + "*"
@@ -216,6 +226,10 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal) {
   message += "\nA: " + signal.first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.ask, signal.last_ticker.ask) + " " + signal.last_ticker.ask.toFixed(8)
   message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
   message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
+  if (prev) {
+    if (prev.createdAt) { message += "\nLast Signal: " + prev.createdAt }
+    message += "\nLast Signal Price: " + prev.last_ticker.last.toFixed(8) + "(" + (((signal.last_ticker.last / prev.last_ticker.last) - 1) * 100).toFixed(2) + "%)"
+  }
   return message
 }
 
