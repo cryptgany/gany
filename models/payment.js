@@ -32,7 +32,7 @@ paymentSchema.statics.pending = function(callback) {
 }
 
 paymentSchema.statics.process_payments = function() {
-  this.logger.log("running process_payments...")
+  console.log("running process_payments...")
   // checks every pending payment
   PaymentModel.pending((err, payments) => {
     if (payments.length >= MIN_PAYMENTS_TO_PROCESS) {
@@ -42,14 +42,14 @@ paymentSchema.statics.process_payments = function() {
         method: 'POST', url: 'https://insight.bitpay.com/api/addrs/utxo', form: { addrs: addresses.join(",") }
       }, (error, response, body) => {
         if (error) {
-          this.logger.error(Date.now(), "ERROR FETCHING UNSPENT", error)
+          console.error(Date.now(), "ERROR FETCHING UNSPENT", error)
         } else {
           // now that we have the unspent outputs we can iterate and transfer from all
           unspent = JSON.parse(body)
           data = []
           payments.forEach((payment) => {
             utxos = unspent.filter((utxo) => { return utxo.address == payment.btc_address })
-            this.logger.log("UTXOS =",utxos)
+            console.log("UTXOS =",utxos)
             if (utxos.length >= 1) {
               // get from first to last unspent and spend them until we have the entire payment.amount
               // if address does not has sufficient found mark as error and log
@@ -69,14 +69,14 @@ paymentSchema.statics.process_payments = function() {
                 data.push({payment: payment, txs: txs, total: total})
               }
             } else {
-              this.logger.error(Date.now(), "ERROR FETCHING UNSPENT FOR SPECIFIC ADDRESS", payment.btc_address)
+              console.error(Date.now(), "ERROR FETCHING UNSPENT FOR SPECIFIC ADDRESS", payment.btc_address)
               payment.status = 'error'
               payment.error = 'Utxos length was 0'
               payment.save()
             }
           })
           if (data != []) {
-            this.logger.log("ready for payment:",data)
+            console.log("ready for payment:",data)
             PaymentModel.make_payment_transaction(data)
           }
         }
@@ -93,7 +93,7 @@ paymentSchema.statics.make_payment_transaction = function(tx_data) {
   tx_data.forEach((data) => {
     data.txs.forEach((tx_data) => {
       tx_id = tx_data[0]; tx_vout = tx_data[1]
-      this.logger.log("adding tx_id", tx_id, "as id", tx_vout)
+      console.log("adding tx_id", tx_id, "as id", tx_vout)
       tx.addInput(tx_id, tx_vout)
       input_txs += 1
     })
@@ -105,7 +105,7 @@ paymentSchema.statics.make_payment_transaction = function(tx_data) {
 
   // add output
   total_amount = tx_data.map((d) => { return d.total }).sum();
-  this.logger.log("adding output for ", total_amount, "minus fee of", tx_fee)
+  console.log("adding output for ", total_amount, "minus fee of", tx_fee)
   tx.addOutput(process.env.MAIN_BTC_ADDRESS, total_amount - tx_fee)
 
   // sign tx
@@ -114,17 +114,17 @@ paymentSchema.statics.make_payment_transaction = function(tx_data) {
     pkey = data.payment.private_key
     keyPair = bitcoin.ECPair.fromWIF(pkey)
     data.txs.forEach((tx_data) => {
-      this.logger.log("singing id", tx_data[0], "as id", id)
+      console.log("singing id", tx_data[0], "as id", id)
       tx.sign(id, keyPair)
       id += 1
     })
   })
 
   // push
-  this.logger.log("Pushing TX:", total_amount, tx_fee, tx.build().toHex())
+  console.log("Pushing TX:", total_amount, tx_fee, tx.build().toHex())
 
   pushtx.pushtx(tx.build().toHex(), { apiCode: process.env.BLOCKCHAIN_API_CODE }).then((res) => {
-    this.logger.log("RESULT IS", res)
+    console.log("RESULT IS", res)
     tx_data.forEach((data) => {
       payment = data.payment
       payment.completed_at = Date.now()
