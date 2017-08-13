@@ -29,88 +29,98 @@ GanyTheBot.prototype.start = function() {
   // MESSAGE CALLBACKS //
   // ***************** //
   this.telegram_bot.onText(/\/start/, (msg, match) => {
-    if (this.max_subscribers_reached()) {
-      console.log("Received /start but maximum users reached", msg.from.id)
-      message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
-      message += "\nSorry I am currently unavailable whilst developments are ongoing."
-      message += "\nWebsite www.cryptowise.net will be available soon."
-      message += "\nFull release expected end of August."
-      message += "\nFor further updates and discussion please see https://t.me/CryptoWarnings"
-    } else {
-      message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
-      message += '\nI will help you setup your configuration so you get the best of me.'
-      message += '\nFirst of all, you want to start with /subscribe to start getting notifications.'
+    if (this.is_not_a_group(msg)) {
+      if (this.max_subscribers_reached()) {
+        console.log("Received /start but maximum users reached", msg.from.id)
+        message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
+        message += "\nSorry I am currently unavailable whilst developments are ongoing."
+        message += "\nWebsite www.cryptowise.net will be available soon."
+        message += "\nFull release expected end of August."
+        message += "\nFor further updates and discussion please see https://t.me/CryptoWarnings"
+      } else {
+        message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
+        message += '\nI will help you setup your configuration so you get the best of me.'
+        message += '\nFirst of all, you want to start with /subscribe to start getting notifications.'
+      }
+      this.send_message(msg.chat.id, message)
     }
-    this.send_message(msg.chat.id, message)
   })
 
   this.telegram_bot.onText(/\/subscribe/, (msg, match) => {
-    if (this.is_subscribed(msg.chat.id)) {
-      if (this.is_blocked(msg.chat.id)) {
-        this.unblock_subscriber(msg.chat.id)
-        this.send_message(msg.chat.id, 'You will now start receiving notifications again.')
+    if (this.is_not_a_group(msg)) {
+      if (this.is_subscribed(msg.chat.id)) {
+        if (this.is_blocked(msg.chat.id)) {
+          this.unblock_subscriber(msg.chat.id)
+          this.send_message(msg.chat.id, 'You will now start receiving notifications again.')
+        } else {
+          this.send_message(msg.chat.id, 'You are already subscribed.')
+        }
       } else {
-        this.send_message(msg.chat.id, 'You are already subscribed.')
-      }
-    } else {
-      if (this.max_subscribers_reached()) {
-        this.send_message(msg.chat.id, "We are sorry but we can't accept more people by now. Keep updated on our group https://t.me/CryptoWarnings")
-      } else {
-        this.subscribe_user(msg.chat.id, (err, subscriber) => {
-          if (err) {
-            this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.chat.id)
-          } else {
-            this.subscribers.push(subscriber)
-            this.send_message(msg.chat.id, 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.\nYou can also configure exchanges on /configure')
-          }
-        })
+        if (this.max_subscribers_reached()) {
+          this.send_message(msg.chat.id, "We are sorry but we can't accept more people by now. Keep updated on our group https://t.me/CryptoWarnings")
+        } else {
+          this.subscribe_user(msg.chat.id, (err, subscriber) => {
+            if (err) {
+              this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.chat.id)
+            } else {
+              this.subscribers.push(subscriber)
+              this.send_message(msg.chat.id, 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.\nYou can also configure exchanges on /configure')
+            }
+          })
+        }
       }
     }
   })
 
   this.telegram_bot.onText(/\/subscription/, (msg, match) => {
-    if (this.is_subscribed(msg.chat.id)) {
-      subscriber = this.find_subscriber(msg.chat.id)
-      if (subscriber.subscription_status) { // subscription updated
-        message = "You are subscribed."
-        message += "\nYour subscription expires on " + subscriber.subscription_expires_on
-        message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
-      } else { // not subscribed
-        message = "You are not subscribed."
-        message += "\nYou must send 0.01 BTC to address " + subscriber.btc_address + " to start receiving notifications."
-        message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
+    if (this.is_not_a_group(msg)) {
+      if (this.is_subscribed(msg.chat.id)) {
+        subscriber = this.find_subscriber(msg.chat.id)
+        if (subscriber.subscription_status) { // subscription updated
+          message = "You are subscribed."
+          message += "\nYour subscription expires on " + subscriber.subscription_expires_on
+          message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
+        } else { // not subscribed
+          message = "You are not subscribed."
+          message += "\nYou must send 0.01 BTC to address " + subscriber.btc_address + " to start receiving notifications."
+          message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
+        }
+        this.send_message(subscriber.telegram_id, message)
       }
-      this.send_message(subscriber.telegram_id, message)
     }
   })
 
   this.telegram_bot.onText(/\/configure/, (msg, match) => {
-    if (this.is_subscribed(msg.chat.id)) // only process vip chat requests
-      this.send_message(msg.chat.id, "Configuration menu:", this.configuration_menu_options())
+    if (this.is_not_a_group(msg)) {
+      if (this.is_subscribed(msg.chat.id)) // only process vip chat requests
+        this.send_message(msg.chat.id, "Configuration menu:", this.configuration_menu_options())
+    }
   })
 
   this.telegram_bot.onText(/\/pay/, (msg, match) => {
-    if (this.is_subscribed(msg.chat.id)) {
-      subscriber = this.find_subscriber(msg.chat.id)
-      options = { parse_mode: "Markdown" }
-      if (subscriber.btc_address) {
-        message = "Your BTC address for subscription payments is *" + subscriber.btc_address + "*"
-        message += "\nYou should deposit 0.01 BTC monthly in order to receive our awesome notifications."
-        message += "\nThis address will not change, you can keep using it for your monthly subscription."
-        message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
-        message += "\n*You will start receiving signals as soon as we get 3 confirmations of your payment*"
-        message += "\nYou can check your current subscription on /subscription"
-        this.send_message(subscriber.telegram_id, message, options)
-      } else {
-        subscriber.generate_btc_address().then((address) => {
-          message = "Your BTC address for subscription payments is *" + address + "*"
+    if (this.is_not_a_group(msg)) {
+      if (this.is_subscribed(msg.chat.id)) {
+        subscriber = this.find_subscriber(msg.chat.id)
+        options = { parse_mode: "Markdown" }
+        if (subscriber.btc_address) {
+          message = "Your BTC address for subscription payments is *" + subscriber.btc_address + "*"
           message += "\nYou should deposit 0.01 BTC monthly in order to receive our awesome notifications."
           message += "\nThis address will not change, you can keep using it for your monthly subscription."
           message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
           message += "\n*You will start receiving signals as soon as we get 3 confirmations of your payment*"
           message += "\nYou can check your current subscription on /subscription"
           this.send_message(subscriber.telegram_id, message, options)
-        }).catch((e) => { this.logger.error("Error trying to generate btc address", e) })
+        } else {
+          subscriber.generate_btc_address().then((address) => {
+            message = "Your BTC address for subscription payments is *" + address + "*"
+            message += "\nYou should deposit 0.01 BTC monthly in order to receive our awesome notifications."
+            message += "\nThis address will not change, you can keep using it for your monthly subscription."
+            message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
+            message += "\n*You will start receiving signals as soon as we get 3 confirmations of your payment*"
+            message += "\nYou can check your current subscription on /subscription"
+            this.send_message(subscriber.telegram_id, message, options)
+          }).catch((e) => { this.logger.error("Error trying to generate btc address", e) })
+        }
       }
     }
   })
@@ -185,6 +195,13 @@ GanyTheBot.prototype.start = function() {
       }
     }
   });
+}
+
+GanyTheBot.prototype.is_not_a_group = function(msg) {
+  if (msg.chat.type == 'group') {
+    this.send_message(msg.chat.id, 'Hello group ' + msg.chat.title + '. I am sorry but I only work in 1 on 1 mode. Groups not implemented.')
+  }
+  return msg.chat.type != 'group'
 }
 
 GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse_mode: "Markdown", disable_web_page_preview: true }) {
