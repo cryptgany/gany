@@ -49,4 +49,5 @@ rules = {
 
 detektor = new Detektor(logger, gany_the_bot, pump_events, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia}, rules)
 gany_the_bot.detektor = detektor
-detektor.restore_snapshot()
+if (process.env.ENVIRONMENT != 'development')
+  detektor.restore_snapshot()
