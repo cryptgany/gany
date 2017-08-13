@@ -161,9 +161,12 @@ GanyTheBot.prototype.start = function() {
         message = this.telegram_post_price_check(exchange, market, ticker_info)
         this.send_message(msg.chat.id, message)
       }
-      if (command == '/detektor allcount') {
-        this.send_message(msg.chat.id, this.subscribers.length + " subscribers.")
-      }
+    }
+  })
+
+  this.telegram_bot.onText(/\/allcount/, (msg, match) => {
+    if (this.is_vip(msg.chat.id)){ // only process vip chat requests
+      this.send_message(msg.chat.id, this.subscribers.length + " subscribers.")
     }
   })
 
@@ -199,7 +202,7 @@ GanyTheBot.prototype.start = function() {
 
 GanyTheBot.prototype.is_not_a_group = function(msg) {
   if (msg.chat.type == 'group') {
-    this.send_message(msg.chat.id, 'Hello group ' + msg.chat.title + '. I am sorry but I only work in 1 on 1 mode. Groups not implemented.')
+    this.send_message(msg.chat.id, 'Hello group ' + msg.chat.title + '. I am sorry but I only work in 1 on 1 mode. Groups not implemented.\nYou can still use the /see coin feature.')
   }
   return msg.chat.type != 'group'
 }
@@ -228,7 +231,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
     this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] && !sub.blocked }).forEach((sub) => {
       this.send_message(sub.telegram_id, text)
     });
-
+    this.detektor.store_signal_in_background(signal)
   })
 }
 
@@ -249,7 +252,7 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
   message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
   if (prev) {
     if (prev.createdAt) { message += "\nLast Signal: " + moment(prev.createdAt).fromNow() }
-    message += "\nLast Signal Price: " + prev.last_ticker.last.toFixed(8) + " (" + (((signal.last_ticker.last / prev.last_ticker.last) - 1) * 100).toFixed(2) + "%)"
+    message += "\nLast Signal Price: " + prev.last_ticker.last.toFixed(8)
   }
   return message
 }

@@ -109,7 +109,6 @@ Detektor.prototype.rule_match = function(exchange, first_ticker, last_ticker) {
 
 Detektor.prototype.analyze_ticker = function(exchange, market, data) {
   setTimeout( () => {
-    start = DateTime.create()._now
     if (this.tickers_detected_blacklist[exchange+market] && this.tickers_detected_blacklist[exchange+market] > 0) { // if blacklisted
         this.tickers_detected_blacklist[exchange+market] -= 1
       } else {
@@ -126,7 +125,6 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             }
           }
           if (signal) {
-            this.store_signal_in_background(signal)
             if (this.ticker_autotrader_enabled && exchange == 'Bittrex') { // if enabled
               var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this, 0, this.verbose)
               pump.start();
