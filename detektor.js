@@ -69,7 +69,7 @@ Detektor.prototype.store_snapshot = function() {
 Detektor.prototype.restore_snapshot = function() {
   setTimeout(() => { // do async
     this.database.get_tickers_history((err, data) => {
-      if (err) console.log("Error trying to fetch tickers history from database:", err)
+      if (err) this.logger.error("Error trying to fetch tickers history from database:", err)
       data.forEach((data) => {
         exchange = data.exchange; market = data.market; ticker_history = data.tickers;
         this.tickers_history[exchange] = this.tickers_history[exchange] || {}
@@ -78,7 +78,7 @@ Detektor.prototype.restore_snapshot = function() {
       if (this.tickers_history) delete(this.tickers_history._id)
     })
     this.database.get_tickers_blacklist((err, data) => {
-      if (err) console.log("Error trying to fetch tickers blacklist from database:", err)
+      if (err) this.logger.error("Error trying to fetch tickers blacklist from database:", err)
       this.tickers_detected_blacklist = data[0] || {}
       if (detektor.tickers_detected_blacklist) delete(detektor.tickers_detected_blacklist._id)
     })
@@ -149,7 +149,7 @@ Detektor.prototype.exchange_ticker_speed = function(exchange) {
 }
 
 Detektor.prototype.keep_tickers_limited = function() { // will limit tickers history to not fill memory up
-  console.log("RUNNING TICKERS CLEANER...")
+  this.logger.log("RUNNING TICKERS CLEANER...")
   Object.keys(this.tickers_history).forEach((exchange) => {
     max_tickers = 60 / this.exchange_ticker_speed(exchange) * this.max_tickers_history // calculate ticker size for configured value
     Object.keys(this.tickers_history[exchange]).forEach((market) => {

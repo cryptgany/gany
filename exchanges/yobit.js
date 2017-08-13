@@ -152,8 +152,8 @@ Yobit.prototype.cancel_all_orders = function(market) { // emergency function
   this.get_orders(market, (response) => {
     response.result.forEach((order, n) => {
       setTimeout(() => {
-        console.log("canceling order " + order.id)
-        this.cancel_order(order.id, (err, info) => { console.log("order deleted", err, info) })
+        this.logger.log("canceling order " + order.id)
+        this.cancel_order(order.id, (err, info) => { this.logger.log("order deleted", err, info) })
       }, 1000 * (n + 1))
     })
   })

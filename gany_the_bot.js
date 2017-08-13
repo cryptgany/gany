@@ -31,7 +31,7 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/\/start/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
       if (this.max_subscribers_reached()) {
-        console.log("Received /start but maximum users reached", msg.from.id)
+        this.logger.log("Received /start but maximum users reached", msg.from.id)
         message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
         message += "\nSorry I am currently unavailable whilst developments are ongoing."
         message += "\nWebsite www.cryptowise.net will be available soon."
@@ -149,7 +149,7 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/\/detektor/, (msg, match) => {
     command = msg.text
     if (this.is_vip(msg.chat.id)){ // only process vip chat requests
-      console.log("Receiving request from VIP", msg.chat.id, "'" + msg.text + "'")
+      this.logger.log("Receiving request from VIP", msg.chat.id, "'" + msg.text + "'")
       if (command == '/detektor store snapshot') {
         this.detektor.store_snapshot()
         this.send_message(msg.chat.id, "Snapshot stored.")

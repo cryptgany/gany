@@ -82,7 +82,7 @@ Cryptopia.prototype._parse_ticker_json = function(tickers_json) {
     parsed_json = JSON.parse(tickers_json).Data;
   } catch(e) {
     parsed_json = false
-    console.log("Could not parse json", e); // error in the above string (in this case, yes)!
+    this.logger.error("Could not parse json", e); // error in the above string (in this case, yes)!
   }
   return parsed_json;
 }
