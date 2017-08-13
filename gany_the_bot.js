@@ -209,7 +209,7 @@ GanyTheBot.prototype.is_not_a_group = function(msg) {
 
 GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse_mode: "Markdown", disable_web_page_preview: true }) {
   this.telegram_bot.sendMessage(chat_id, message, options).catch((error) => {
-    if (error.message.match(/bot\ was\ blocked\ by\ the\ user/)) { // user blocked the bot
+    if (error.message.match(/bot\ was\ blocked\ by\ the\ user/) || error.message.match(/bot\ is\ not\ a\ member\ of\ the\ supergroup\ chat/)) { // user blocked the bot
       this.logger.log("Blocked user " + chat_id)
       this.block_subscriber(chat_id)
     }
