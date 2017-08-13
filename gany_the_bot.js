@@ -4,6 +4,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./models/subscriber');
 const Signal = require('./models/signal')
 const _ = require('underscore')
+var moment = require('moment');
 
 function GanyTheBot(logger) {
   this.logger = logger
@@ -227,8 +228,8 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
   message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
   message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
   if (prev) {
-    if (prev.createdAt) { message += "\nLast Signal: " + prev.createdAt }
-    message += "\nLast Signal Price: " + prev.last_ticker.last.toFixed(8) + "(" + (((signal.last_ticker.last / prev.last_ticker.last) - 1) * 100).toFixed(2) + "%)"
+    if (prev.createdAt) { message += "\nLast Signal: " + moment(prev.createdAt).fromNow() }
+    message += "\nLast Signal Price: " + prev.last_ticker.last.toFixed(8) + " (" + (((signal.last_ticker.last / prev.last_ticker.last) - 1) * 100).toFixed(2) + "%)"
   }
   return message
 }
