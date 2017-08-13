@@ -151,6 +151,9 @@ GanyTheBot.prototype.start = function() {
         message = this.telegram_post_price_check(exchange, market, ticker_info)
         this.send_message(msg.chat.id, message)
       }
+      if (command == '/detektor allcount') {
+        this.send_message(msg.chat.id, this.subscribers.length + " subscribers.")
+      }
     }
   })
 
