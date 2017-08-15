@@ -137,6 +137,44 @@ GanyTheBot.prototype.start = function() {
     this.send_message(msg.chat.id, 'You wont receive my notifications anymore. To change that, you can type /subscribe')
   })
 
+  this.telegram_bot.onText(/\/help/, (msg, match) => {
+    message = "/whatisgany - What is this bot?"
+    message += "\n/subscribe - Subscribe to Gany's notifications"
+    message += "\n/stop - Stop receiving notifications from Gany"
+    message += "\n/configure - Configure the exchanges you want or don't want"
+    message += "\n/see XXX - See information on all exchanges about XXX currency"
+    message += "\n/pricing - See information about pricing of Gany"
+    message += "\n/whatisbal - What is B A L ?"
+    this.send_message(msg.chat.id, message)
+  })
+
+  this.telegram_bot.onText(/\/whatisgany/, (msg, match) => {
+    if (this.is_subscribed(msg.chat.id)) {
+      message = "Gany is a CrytpoCurrency Analysis bot that monitors multiple exchanges and markets"
+      message += " 24/7, giving its subscribers notifications when certain conditions happen in a given market.\n\n"
+      message += "It's information is not a direct buy or sell signal, it gives detailed information about changes during specific times"
+      message += " so traders can analyse them and make wiser decisions about their investments."
+      this.send_message(msg.chat.id, message)
+    }
+  })
+
+  this.telegram_bot.onText(/\/whatisbal/, (msg, match) => {
+    if (this.is_subscribed(msg.chat.id)) {
+      message = "\nB: Bid"
+      message += "\nA: Ask"
+      message += "\nL: Last"
+      this.send_message(msg.chat.id, message)
+    }
+  })
+
+  this.telegram_bot.onText(/\/pricing/, (msg, match) => {
+    message = "Gany starts with a trial period of two weeks, starting at the moment that you type /subscribe"
+    message += "\nAfter the trial period, a monthly fee of 0.01 BTC must be paid for receiving notifications."
+    message += "\nGany is an evolving product, there will be new exchanges added, mobile app (for which your subscription will work) and much more."
+    message += "\nFor more information visit us at www.cryptowise.net"
+    this.send_message(msg.chat.id, message)
+  })
+
   this.telegram_bot.onText(/\/detektor/, (msg, match) => {
     command = msg.text
     if (this.is_vip(msg.chat.id)){ // only process vip chat requests
