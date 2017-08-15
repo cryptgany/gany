@@ -209,6 +209,8 @@ GanyTheBot.prototype.start = function() {
   // ************** //
   this.telegram_bot.on('callback_query', (msg) => {
     if (this.is_subscribed(msg.from.id)) {
+      if (msg.data == 'configure subscription')
+        this.send_message(msg.from.id, "Comming soon, you can take a look at /pricing")
       if (msg.data == "configure")
         this.send_message(msg.from.id, "Configuration menu:", this.configuration_menu_options())
       if (msg.data == "configure exchanges")
