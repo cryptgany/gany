@@ -216,7 +216,7 @@ GanyTheBot.prototype.start = function() {
       if (msg.data.match(/configure exchange\ /)) {
         commands = msg.data.split(" ")
         if (commands.length == 3) { // show exchange options
-          exchange_status = this.find_subscriber(msg.from.id).exchange_status(commands[2]) ? "enabled" : "disabled"
+          exchange_status = this.find_subscriber(msg.from.id).exchange_status(commands[2])
           this.send_message(msg.from.id, "Configure " + commands[2] + " (currently " + exchange_status + "):", this.configuration_menu_enable_disable("configure exchange " + commands[2]))
         }
         if (commands.length == 4) { // was enabled/disabled, show exchanges
