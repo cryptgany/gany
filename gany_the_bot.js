@@ -30,7 +30,7 @@ GanyTheBot.prototype.start = function() {
   // ***************** //
   this.telegram_bot.onText(/\/start/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
-      message = 'Hello ' + msg.from.first_name + '. My name is CryptGany, the Technical Analysis bot.'
+      message = 'Hello ' + msg.from.first_name + '. I am CryptGany, the Cryptocurrency Trading Analyst Bot.'
       if (this.is_subscribed(msg.chat.id)) {
         message += "\nLooks like you are already subscribed. Do you need any /help ?"
       } else {
@@ -56,7 +56,7 @@ GanyTheBot.prototype.start = function() {
             this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.chat.id)
           } else {
             this.subscribers.push(subscriber)
-            this.send_message(msg.chat.id, 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.\nYou can also configure exchanges on /configure')
+            this.send_message(msg.chat.id, 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.\nYou can also configure exchanges on /configure.\nThis is a public beta, please any bug that you find or comments that you want to give us, meet us at https://t.me/CryptoWarnings\nYou can also see the /help')
           }
         })
       }
@@ -145,6 +145,7 @@ GanyTheBot.prototype.start = function() {
     message += "\n/see XXX - See information on all exchanges about XXX currency"
     message += "\n/pricing - See information about pricing of Gany"
     message += "\n/whatisbal - What is B A L ?"
+    message += "\nThe information you want is not here? You can talk to us in our discussion group https://t.me/CryptoWarnings"
     this.send_message(msg.chat.id, message)
   })
 
