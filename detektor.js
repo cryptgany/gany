@@ -61,22 +61,12 @@ Detektor.prototype.store_snapshot_every_15_min = function() {
 
 Detektor.prototype.store_snapshot = function() {
   setTimeout(() => { // do async
-    this.database.store_tickers_history(this.tickers_history)
     this.database.store_tickers_blacklist(this.tickers_detected_blacklist)
   }, 0)
 }
 
 Detektor.prototype.restore_snapshot = function() {
   setTimeout(() => { // do async
-    this.database.get_tickers_history((err, data) => {
-      if (err) this.logger.error("Error trying to fetch tickers history from database:", err)
-      data.forEach((data) => {
-        exchange = data.exchange; market = data.market; ticker_history = data.tickers;
-        this.tickers_history[exchange] = this.tickers_history[exchange] || {}
-        this.tickers_history[exchange][market] = this.tickers_history[exchange][market] = ticker_history
-      })
-      if (this.tickers_history) delete(this.tickers_history._id)
-    })
     this.database.get_tickers_blacklist((err, data) => {
       if (err) this.logger.error("Error trying to fetch tickers blacklist from database:", err)
       this.tickers_detected_blacklist = data[0] || {}

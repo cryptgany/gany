@@ -3,49 +3,7 @@ var MongoClient = require('mongodb').MongoClient;
 function Database(collection = "") {
   this.url = "mongodb://localhost:27017/detektor";
   this.collection = collection
-  this.tickers_history_collection = 'tickers_history';
   this.tickers_blacklist_collection = 'tickers_blacklist';
-}
-
-
-// TICKERS HISTORY
-Database.prototype.store_tickers_history = function(tickers) {
-  MongoClient.connect(this.url, (err, db) => {
-    if(err) { return console.dir(err); }
-    var collection = db.collection(this.tickers_history_collection);
-    exchanges_markets_count = 0
-    Object.keys(tickers).forEach((exchange) => { exchanges_markets_count += Object.keys(tickers[exchange]).length })
-    stored = 0
-    collection.remove({}, (err, removed) => {if (err) console.log("Could not clear tickers history collection:", err)
-      Object.keys(tickers).forEach((exchange) => {
-        Object.keys(tickers[exchange]).forEach((market) => {
-          record = {
-            exchange: exchange,
-            market: market,
-            tickers: tickers[exchange][market]
-          }
-          collection.insert(record, (err, result) => {
-            stored += 1
-            if (err) { console.log("Error storing data on", this.tickers_history_collection, err) }
-            if (stored >= exchanges_markets_count) { db.close() }
-          });
-        })
-      })
-    }); // clear old tickers before storing new
-  })
-}
-
-Database.prototype.get_tickers_history = function(callback) {
-  MongoClient.connect(this.url, (err, db) => {
-    if(err) { return console.dir(err); }
-
-    var collection = db.collection(this.tickers_history_collection);
-
-    collection.find().toArray((err, data) => {
-      callback(err, data)
-      db.close()
-    })
-  })
 }
 
 // TICKERS BLACKLIST
