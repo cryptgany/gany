@@ -4,14 +4,14 @@ const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./models/subscriber');
 const Signal = require('./models/signal')
 const _ = require('underscore')
+require('./protofunctions.js')
 var moment = require('moment');
 
 function GanyTheBot(logger) {
   this.logger = logger
-  this.vip_chats = [];
-  this.vip_chats.push(parseInt(process.env.PERSONAL_CHANNEL));
+  this.god_users = [parseInt(process.env.PERSONAL_CHANNEL)];
   if (process.env.ENVIRONMENT == 'production')
-    this.vip_chats.push(parseInt(process.env.ADAM_CHANNEL));
+    this.mod_users = [parseInt(process.env.ADAM_CHANNEL)]
   this.token = process.env.GANY_KEY;
   this.subscribers = []
   this.detektor = undefined
@@ -83,7 +83,7 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/\/configure/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
-      if (this.is_subscribed(msg.chat.id)) // only process vip chat requests
+      if (this.is_subscribed(msg.chat.id))
         this.send_message(msg.chat.id, "Configuration menu:", this.configuration_menu_options())
     }
   })
@@ -112,6 +112,38 @@ GanyTheBot.prototype.start = function() {
             this.send_message(subscriber.telegram_id, message, options)
           }).catch((e) => { this.logger.error("Error trying to generate btc address", e) })
         }
+      }
+    }
+  })
+
+  // private, personal autotrader
+  this.telegram_bot.onText(/\/autotrader/, (msg, match) => {
+    if (this.is_god(msg.chat.id)) {
+      if (msg.text == '/autotrader status') { this.send_message(msg.chat.id, this.detektor.ticker_autotrader_enabled) }
+      if (msg.text == '/autotrader enable') { this.detektor.ticker_autotrader_enabled = true; this.send_message(msg.chat.id, 'Done') }
+      if (msg.text == '/autotrader disable') { this.detektor.ticker_autotrader_enabled = false; this.send_message(msg.chat.id, 'Done') }
+      if (msg.text == '/autotrader profit') {
+        if (this.detektor.pumps.length > 0) {
+          profit = this.detektor.pumps.map((pmp) => { return pmp.profit }).sum()
+        } else {
+          profit = 0
+        }
+        this.send_message(msg.chat.id, profit + " in profits so far.")
+      }
+      if (msg.text == '/autotrader open orders') {
+        count = this.detektor.pumps.filter((pump) => { return !pump.pump_ended }).length
+        messages = []
+        this.detektor.pumps.filter((pump) => { return !pump.pump_ended }).forEach((pump) => {
+          buy_price = pump.buy_order ? pump.buy_order.price_per_unit : pump.buy_rate
+          current_price = this.tickers[pump.exchange][pump.market].ask
+          message = pump.exchange + "/" + pump.market + "(" + pump.buy_order.quantity + ") [IN:" + buy_price.toFixed(8) + "][NOW:" + current_price.toFixed(8) + "] (" + (((current_price / buy_price) - 1) * 100).toFixed(2) + "%)"
+          messages.push(message)
+        })
+        this.send_message(msg.chat.id, count + " opened orders at the moment.\n" + messages.join("\n"))
+      }
+      if (msg.text == '/autotrader closed orders') {
+        count = this.detektor.pumps.filter((pump) => { return pump.pump_ended }).length
+        this.send_message(msg.chat.id, count + " closed orders at the moment.")
       }
     }
   })
@@ -178,8 +210,8 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/\/detektor/, (msg, match) => {
     command = msg.text
-    if (this.is_vip(msg.chat.id)){ // only process vip chat requests
-      this.logger.log("Receiving request from VIP", msg.chat.id, "'" + msg.text + "'")
+    if (this.is_mod(msg.chat.id)){ // only process vip chat requests
+      this.logger.log("Receiving request from MOD", msg.chat.id, "'" + msg.text + "'")
       if (command == '/detektor store snapshot') {
         this.detektor.store_snapshot()
         this.send_message(msg.chat.id, "Snapshot stored.")
@@ -195,13 +227,13 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/\/allcount/, (msg, match) => {
-    if (this.is_vip(msg.chat.id)){ // only process vip chat requests
+    if (this.is_mod(msg.chat.id)){ // only process vip chat requests
       this.send_message(msg.chat.id, this.subscribers.length + " subscribers.")
     }
   })
 
   this.telegram_bot.onText(/\/sendmessage/, (msg, match) => {
-    if (this.is_vip(msg.chat.id))
+    if (this.is_mod(msg.chat.id))
       this.broadcast(msg.text.replace(/\/sendmessage\ /, ''))
   })
 
@@ -379,12 +411,21 @@ GanyTheBot.prototype._seconds_to_minutes = function(seconds) {
   return minutes == 0 ? (seconds + " seconds") : minutes + (minutes > 1 ? " minutes" : " minute")
 }
 
-GanyTheBot.prototype.is_vip = function(subscriber_id) {
-  return this.vip_chats.includes(subscriber_id)
+GanyTheBot.prototype.is_god = function(subscriber_id) {
+  return this.god_users.includes(subscriber_id)
+}
+GanyTheBot.prototype.is_mod = function(subscriber_id) {
+  return this.mod_users.includes(subscriber_id) || this.is_god(subscriber_id)
+}
+
+GanyTheBot.prototype.message_gods = function(text) {
+  this.god_users.forEach((chat_id) => {
+    this.send_message(chat_id, text)
+  });
 }
 
 GanyTheBot.prototype.broadcast = function(text, vip_only = false) {
-  chats_for_broadcast = vip_only ? this.vip_chats : this.subscribers.map((sub) => { return sub.telegram_id });
+  chats_for_broadcast = vip_only ? this.god_users : this.subscribers.map((sub) => { return sub.telegram_id });
   chats_for_broadcast.forEach((chat_id) => {
     this.send_message(chat_id, text)
   });
