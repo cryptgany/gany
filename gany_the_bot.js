@@ -135,7 +135,7 @@ GanyTheBot.prototype.start = function() {
         messages = []
         this.detektor.pumps.filter((pump) => { return !pump.pump_ended }).forEach((pump) => {
           buy_price = pump.buy_order ? pump.buy_order.price_per_unit : pump.buy_rate
-          current_price = this.tickers[pump.exchange][pump.market].ask
+          current_price = this.detektor.tickers[pump.exchange][pump.market].ask
           message = pump.exchange + "/" + pump.market + "(" + pump.buy_order.quantity + ") [IN:" + buy_price.toFixed(8) + "][NOW:" + current_price.toFixed(8) + "] (" + (((current_price / buy_price) - 1) * 100).toFixed(2) + "%)"
           messages.push(message)
         })

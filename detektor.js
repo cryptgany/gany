@@ -125,7 +125,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             this.detect_spam()
 
             if (this.ticker_autotrader_enabled && exchange == 'Bittrex') { // if enabled
-              var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.05, last_ticker.ask, 1.01, 1.15, this, 0)
+              var pump = new PumpHandler(this.pump_events, this.telegram_bot , this.api_clients[exchange], exchange, market, 0.0008, last_ticker.ask, 1.01, 1.15, this)
               pump.start();
               this.pumps.push(pump);
             }
