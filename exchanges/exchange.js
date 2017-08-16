@@ -9,9 +9,11 @@
 class AbstractExchange {
 
     /* minimun attributes */
-    constructor(exchangeName, ticketSpeed, cycleTime){
+    constructor(logger, pumpEvents, exchangeName, tickerSpeed, cycleTime){
+        this._logger = logger;
+        this._pumpEvents = pumpEvents;
         this._exchangeName = exchangeName;
-        this._ticketSpeed = ticketSpeed;
+        this._tickerSpeed = tickerSpeed;
         this._cycleTime = cycleTime;
     }
 
