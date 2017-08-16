@@ -24,6 +24,13 @@ function Detektor(logger, telegram_bot, pump_events, database, api_clients, rule
   this.database = database
   this.matcher = require('./matcher')
 
+  this.spam_detector = { // small spam detector so we don't send so many notifications when lags/delays happen in exchanges
+    max_time: 3 * 1000, // minimum MS between notifications
+    mute_for: 5 * 1000, // seconds muted when trying to do more than max signals
+    last_signal: Date.now(),
+    muted: false
+  }
+
   this.api_clients = api_clients
 
   this.market_data
@@ -115,17 +122,33 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             }
           }
           if (signal) {
+            this.detect_spam()
+
             if (this.ticker_autotrader_enabled && exchange == 'Bittrex') { // if enabled
               var pump = new PumpHandler(this.pump_events, this.logger, this.api_clients[exchange], exchange, market, 0.001, last_ticker.ask, 1.01, 1.05, this, 0, this.verbose)
               pump.start();
               this.pumps.push(pump);
             }
             this.tickers_detected_blacklist[exchange+market] = 360 * 3 // blacklist for 3 hour, each "1" is 10 seconds
-            this.telegram_bot.send_signal(this.api_clients[exchange], signal)
+            if (!this.muted())
+              this.telegram_bot.send_signal(this.api_clients[exchange], signal)
           }
         }
       }
   }, 0) // run async
+}
+
+Detektor.prototype.muted = function() { return this.spam_detector.muted }
+
+Detektor.prototype.detect_spam = function() {
+  time = Date.now()
+  if (!this.muted() && (time - this.spam_detector.last_signal) <= this.spam_detector.max_time) {
+    this.spam_detector.muted = true
+    this.spam_detector.muted_since = time
+    this.logger.log("Muting detektor.")
+    setTimeout(() => { this.spam_detector.muted = false }, this.spam_detector.mute_for)
+  }
+  this.spam_detector.last_signal = time
 }
 
 Detektor.prototype.cycle_time = function(exchange) {
