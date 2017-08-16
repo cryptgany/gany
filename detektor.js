@@ -26,7 +26,7 @@ function Detektor(logger, telegram_bot, pump_events, database, api_clients, rule
   this.autotrader_btc_amount = 0.05
 
   this.spam_detector = { // small spam detector so we don't send so many notifications when lags/delays happen in exchanges
-    max_time: 3 * 1000, // minimum MS between notifications
+    max_time: 2 * 1000, // minimum MS between notifications
     mute_for: 5 * 1000, // seconds muted when trying to do more than max signals
     last_signal: Date.now(),
     muted: false
