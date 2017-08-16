@@ -122,6 +122,11 @@ GanyTheBot.prototype.start = function() {
       if (msg.text == '/autotrader status') { this.send_message(msg.chat.id, this.detektor.ticker_autotrader_enabled) }
       if (msg.text == '/autotrader enable') { this.detektor.ticker_autotrader_enabled = true; this.send_message(msg.chat.id, 'Done') }
       if (msg.text == '/autotrader disable') { this.detektor.ticker_autotrader_enabled = false; this.send_message(msg.chat.id, 'Done') }
+      if (msg.text == '/autotrader rate') { this.send_message(msg.chat.id, 'Current btc for orders: ' + this.detektor.autotrader_btc_amount) }
+      if (msg.text.match(/\/autotrader\ set\ rate/)) {
+        this.detektor.autotrader_btc_amount = parseFloat(msg.text.split(" ")[3])
+        this.send_message(msg.chat.id, 'Btc for orders changed to: ' + this.detektor.autotrader_btc_amount)
+      }
       if (msg.text == '/autotrader profit') {
         if (this.detektor.pumps.length > 0) {
           profit = this.detektor.pumps.map((pmp) => { return pmp.profit }).sum()

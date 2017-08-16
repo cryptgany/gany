@@ -23,6 +23,7 @@ function Detektor(logger, telegram_bot, pump_events, database, api_clients, rule
   this.tickers_history_cleaning_time = 20 // clean ever X minutes
   this.database = database
   this.matcher = require('./matcher')
+  this.autotrader_btc_amount = 0.05
 
   this.spam_detector = { // small spam detector so we don't send so many notifications when lags/delays happen in exchanges
     max_time: 3 * 1000, // minimum MS between notifications
@@ -125,7 +126,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             this.detect_spam()
 
             if (this.ticker_autotrader_enabled && exchange == 'Bittrex') { // if enabled
-              var pump = new PumpHandler(this.pump_events, this.telegram_bot , this.api_clients[exchange], exchange, market, 0.0008, last_ticker.ask, 1.01, 1.15, this)
+              var pump = new PumpHandler(this.pump_events, this.telegram_bot , this.api_clients[exchange], exchange, market, this.autotrader_btc_amount, last_ticker.ask, 1.01, 1.15, this)
               pump.start();
               this.pumps.push(pump);
             }
