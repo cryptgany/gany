@@ -14,6 +14,7 @@ const Cryptopia = require("./exchanges/cryptopia");
 const Wallet = require("./wallet")
 const Payment = require("./models/payment")
 const GanyTheBot = require('./gany_the_bot')
+const Kraken = require('./exchanges/kraken');
 
 // Initializers
 class PumpEvents extends EventEmitter {}
@@ -24,6 +25,7 @@ var bittrex = new Bittrex(logger, pump_events);
 var yobit = new Yobit(logger, pump_events);
 var poloniex = new Poloniex(logger, pump_events);
 var cryptopia = new Cryptopia(logger, pump_events);
+let kraken = new Kraken(logger,pump_events);
 var database = new Database();
 var wallet = new Wallet(logger, gany_the_bot);
 
@@ -35,6 +37,7 @@ bittrex.watch()
 yobit.watch()
 poloniex.watch()
 cryptopia.watch()
+kraken.watch();
 Payment.process_payments()
 
 rules = {
@@ -47,6 +50,6 @@ rules = {
           ]
 }
 
-detektor = new Detektor(logger, gany_the_bot, pump_events, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia}, rules)
+detektor = new Detektor(logger, gany_the_bot, pump_events, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia, Kraken : kraken}, rules)
 gany_the_bot.detektor = detektor
 detektor.restore_snapshot()

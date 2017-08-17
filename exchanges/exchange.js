@@ -9,12 +9,14 @@
 class AbstractExchange {
 
     /* minimun attributes */
-    constructor(logger, pumpEvents, exchangeName, tickerSpeed, cycleTime){
+    constructor(logger, pumpEvents, exchangeName, tickerSpeed = 5, cycleTime, code, skipVolumes){
         this._logger = logger;
         this._pumpEvents = pumpEvents;
         this._exchangeName = exchangeName;
         this._tickerSpeed = tickerSpeed;
         this._cycleTime = cycleTime;
+        this._code = code;
+        this._skipVolumes = skipVolumes;
     }
 
     /*

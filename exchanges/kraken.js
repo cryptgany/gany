@@ -5,18 +5,27 @@ const KrakenClient = require('kraken-exchange-api');
 
 class Kraken extends AbstractExchange {
 
-    constructor(logger, pumpEvents, exchangeName, tickerSpeed, cycleTime){
-        super(logger, pumpEvents,exchangeName, tickerSpeed, cycleTime);
+    constructor(logger, pumpEvents, exchangeName,skipVolumes = 0.5){
+        super(logger, pumpEvents,'Kraken', 5, 1, 'Kraken', skipVolumes);
         this.client = new KrakenClient(key,secret);
-    }
+    }   
 
     watch(){
-        console.log('watch function impl');
         this.watchTickers();   
+        setTimeout(()=>this.watch(),1000 * this._tickerSpeed); 
+    }
+
+    getAssets() {
+        this.client.api('Assets', {asset: 'XBT'},(err,data) => {
+            if(err) 
+                console.log(JSON.stringify(err));
+            else
+                console.log(JSON.stringify(data));
+        });
     }
 
     watchTickers(){
-        this.marketUrl()
+        this.fetchAssetPairs()
         .then((data) => {
             return this.fetchTicker(data.result);
         })
@@ -24,11 +33,10 @@ class Kraken extends AbstractExchange {
             this.emitData(data.result);
         })
         .catch((e)=> console.error('Error fetching data: ',e));
-        setTimeout(()=>this.watchTickers(),1000 * this._tickerSpeed); 
+        
     }
 
-    marketUrl(){
-        console.log('marketUrl function impl');
+    fetchAssetPairs() {
         let that = this;
         return new Promise(function (resolve, reject){
             that.client.api('AssetPairs', {},(err,data) => {
@@ -40,8 +48,14 @@ class Kraken extends AbstractExchange {
         });
     }
 
+    /**
+     * It is not necessary because Kraken is too picky to provide URL for a market :)
+     */
+    marketUrl(){
+        console.log('functionality not implemented!');
+    }
+
     fetchTicker(assetPairs){
-        console.log('fetchTicker function!...');
         let pairs = Object.keys(assetPairs).join();
         let that = this;
         return new Promise(function (resolve, reject){
@@ -55,16 +69,15 @@ class Kraken extends AbstractExchange {
     }
 
     emitData(data){
-        console.log('Emitting Data!...');
+        var that = this;
         Object.keys(data).forEach(key => {
-            this.pumpEvents.emit('marketupdate', 'TICKER', this.code, key, this.mapData(ticker));
+            that._pumpEvents.emit('marketupdate', 'TICKER', this._code, key, this.mapData(data[key]));
         });
     }
 
     mapData(ticker){
-        console.log('mapping data!');
         return {
-            id: null,//it does not seem to have an ID XD
+            id: null,//it does not seem to have an ID XD where should we get this id from?
             high: ticker.h[0],
             low: ticker.l[0],
             volume: ticker.v[0],
