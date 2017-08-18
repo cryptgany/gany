@@ -18,9 +18,9 @@ class Kraken extends AbstractExchange {
     getAssets() {
         this.client.api('Assets', {asset: 'XBT'},(err,data) => {
             if(err) 
-                console.log(JSON.stringify(err));
+                this._logger.log(JSON.stringify(err));
             else
-                console.log(JSON.stringify(data));
+                this._logger.log(JSON.stringify(data));
         });
     }
 
@@ -32,8 +32,7 @@ class Kraken extends AbstractExchange {
         .then((data)=>{
             this.emitData(data.result);
         })
-        .catch((e)=> console.error('Error fetching data: ',e));
-        
+        .catch((e)=> this._logger.error('Error fetching data: ',e));
     }
 
     fetchAssetPairs() {
@@ -52,7 +51,7 @@ class Kraken extends AbstractExchange {
      * It is not necessary because Kraken is too picky to provide URL for a market :)
      */
     marketUrl(){
-        console.log('functionality not implemented!');
+        this._logger.log('functionality not implemented!');
     }
 
     fetchTicker(assetPairs){
