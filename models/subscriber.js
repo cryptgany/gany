@@ -16,6 +16,7 @@ var subscriberSchema = mongoose.Schema({
       Poloniex: { type: Boolean, default: true },
       Cryptopia: { type: Boolean, default: true },
       Yobit: { type: Boolean, default: true },
+      Kraken: { type: Boolean, default: true },
     },
 }, { timestamps: true });
 

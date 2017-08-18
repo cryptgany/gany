@@ -12,7 +12,7 @@ class AbstractExchange {
     constructor(logger, pumpEvents, exchangeName, tickerSpeed = 5, cycleTime, code, skipVolumes){
         this._logger = logger;
         this._pumpEvents = pumpEvents;
-        this._exchangeName = exchangeName;
+        this.exchange_name = exchangeName;
         this.ticker_speed = tickerSpeed;
         this.cycle_time = cycleTime;
         this._code = code;

@@ -50,8 +50,8 @@ class Kraken extends AbstractExchange {
     /**
      * It is not necessary because Kraken is too picky to provide URL for a market :)
      */
-    marketUrl(){
-        this._logger.log('functionality not implemented!');
+    market_url(market){
+        return "https://www.kraken.com/charts"
     }
 
     fetchTicker(assetPairs){
