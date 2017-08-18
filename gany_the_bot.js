@@ -10,6 +10,7 @@ var moment = require('moment');
 function GanyTheBot(logger) {
   this.logger = logger
   this.god_users = [parseInt(process.env.PERSONAL_CHANNEL)];
+  this.mod_users = []
   if (process.env.ENVIRONMENT == 'production')
     this.mod_users = [parseInt(process.env.ADAM_CHANNEL)]
   this.token = process.env.GANY_KEY;
@@ -297,9 +298,13 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   this.previous_signal(signal.exchange, signal.market, (prev) => {
     text = this.telegram_post_signal(client, signal, prev)
     this.logger.log(text)
-    this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] && !sub.blocked }).forEach((sub) => {
-      this.send_message(sub.telegram_id, text)
-    });
+    if (client.exchange_name == 'Kraken') {
+      this.message_gods(text); this.message_mods(text);
+    } else {
+      this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] && !sub.blocked }).forEach((sub) => {
+        this.send_message(sub.telegram_id, text)
+      });
+    }
     this.detektor.store_signal_in_background(signal)
   })
 }
@@ -425,6 +430,12 @@ GanyTheBot.prototype.is_mod = function(subscriber_id) {
 
 GanyTheBot.prototype.message_gods = function(text) {
   this.god_users.forEach((chat_id) => {
+    this.send_message(chat_id, text)
+  });
+}
+
+GanyTheBot.prototype.message_mods = function(text) {
+  this.mod_users.forEach((chat_id) => {
     this.send_message(chat_id, text)
   });
 }

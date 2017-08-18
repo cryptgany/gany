@@ -61,3 +61,4 @@ typings/
 # TRASH
 .DS_Store
 package-lock.json
+.vscode
