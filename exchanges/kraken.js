@@ -6,13 +6,13 @@ const KrakenClient = require('kraken-exchange-api');
 class Kraken extends AbstractExchange {
 
     constructor(logger, pumpEvents, exchangeName,skipVolumes = 0.5){
-        super(logger, pumpEvents,'Kraken', 5, 1, 'Kraken', skipVolumes);
+        super(logger, pumpEvents,'Kraken', 5, 20, 'Kraken', skipVolumes);
         this.client = new KrakenClient(key,secret);
     }   
 
     watch(){
         this.watchTickers();   
-        setTimeout(()=>this.watch(),1000 * this._tickerSpeed); 
+        setTimeout(()=>this.watch(),1000 * this.ticker_speed);
     }
 
     getAssets() {
