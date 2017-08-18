@@ -76,13 +76,12 @@ class Kraken extends AbstractExchange {
 
     mapData(ticker){
         return {
-            id: null,//it does not seem to have an ID XD where should we get this id from?
-            high: ticker.h[0],
-            low: ticker.l[0],
-            volume: ticker.v[0],
-            last: ticker.c[0],
-            ask: ticker.a[0],
-            bid: ticker.b[0],
+            high: parseFloat(ticker.h[1]),
+            low: parseFloat(ticker.l[1]),
+            volume: parseFloat(ticker.v[1]),
+            last: parseFloat(ticker.c[0]),
+            ask: parseFloat(ticker.a[0]),
+            bid: parseFloat(ticker.b[0]),
         }
     }
 
