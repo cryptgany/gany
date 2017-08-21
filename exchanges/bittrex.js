@@ -28,6 +28,10 @@ Bittrex.prototype.watch = function() {
   setTimeout(() => { this._watch_tickers() }, 5 * 1000)
 }
 
+Bittrex.prototype.volume_for = function(pair) {
+  return pair.split("-")[0]
+}
+
 Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seconds
   var self = this
   self.client.getmarketsummaries((data) => {

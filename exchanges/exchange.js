@@ -33,6 +33,13 @@ class AbstractExchange {
         throw new Error('You have to implement the method marketUrl!');
     }
 
+    /*
+        Override when necessary
+    */
+    volume_for(pair) {
+        return 'BTC'
+    }
+
 
 }
 

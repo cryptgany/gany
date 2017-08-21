@@ -34,6 +34,10 @@ Cryptopia.prototype._watch_tickers = function() {
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
 }
 
+Cryptopia.prototype.volume_for = function(pair) {
+  return 'BTC' // all markets on Cryptopia are BTC
+}
+
 Cryptopia.prototype.get_markets = function(callback) {
   fetched_data = []
   this.public_request('GetMarkets/BTC', (err, data) => {

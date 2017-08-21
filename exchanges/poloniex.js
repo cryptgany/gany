@@ -19,6 +19,10 @@ Poloniex.prototype.watch = function() {
   this._watch_tickers()
 }
 
+Poloniex.prototype.volume_for = function(pair) {
+  return pair.split("-")[0]
+}
+
 Poloniex.prototype._watch_tickers = function() {
   this.client.returnTicker((err, tickers) => {
     if (err) {

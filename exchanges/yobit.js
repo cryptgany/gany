@@ -31,6 +31,10 @@ Yobit.prototype.watch = function() {
   setTimeout(() => { this._watch_tickers() }, 5 * 1000)
 }
 
+Yobit.prototype.volume_for = function(pair) {
+  return 'BTC' // all markets on Yobit are BTC
+}
+
 Yobit.prototype._watch_tickers = function() {
   cycles = Math.ceil(this.markets.length / 50)
   for(i = 0; i < cycles; i++) {
