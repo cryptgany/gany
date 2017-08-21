@@ -43,6 +43,10 @@ class Kraken extends AbstractExchange {
         });
     }
 
+    volume_for(pair) {
+        return pair.split("-")[0]
+    }
+
     watchTickers(){
         this.fetchAssetPairs()
         .then((data) => {
