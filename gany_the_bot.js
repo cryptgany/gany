@@ -161,7 +161,7 @@ GanyTheBot.prototype.start = function() {
       message = "Not found."
     if (markets.length > 5)
       message = "Too many markets found"
-    if (markets.length > 0 && markets.length < 5)
+    if (markets.length > 0 && markets.length <= 5)
       message = markets.map((market_info) => {
         return this.telegram_post_price_check(market_info.exchange, market_info.market, market_info.ticker)
       }).join("\n\n")

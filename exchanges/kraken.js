@@ -93,7 +93,7 @@ class Kraken extends AbstractExchange {
     emitData(data){
         var that = this;
         Object.keys(data).forEach(key => {
-            if (key != 'USDTZUSD')
+            if (key != 'USDTZUSD' && key.match(/(XBT|XXBT)/))
             that._pumpEvents.emit('marketupdate', 'TICKER', this._code, this.mapName(key), this.mapData(data[key]));
         });
     }
