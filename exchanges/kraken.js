@@ -3,8 +3,7 @@ const key          = process.env.KRAKEN_KEY; // API Key
 const secret       = process.env.KRAKEN_SECRET; // API Private Key
 const KrakenClient = require('kraken-exchange-api');
 const CurrencyMap = {
-    'XXBT': 'BTC',
-    'XBT': 'BTC',
+    'XXBT': 'XBT',
     'XETC': 'ETC',
     'XETH': 'ETH',
     'ZEUR': 'EUR',
