@@ -2,6 +2,26 @@ const AbstractExchange = require('./exchange');
 const key          = process.env.KRAKEN_KEY; // API Key
 const secret       = process.env.KRAKEN_SECRET; // API Private Key
 const KrakenClient = require('kraken-exchange-api');
+const CurrencyMap = {
+    'XXBT': 'BTC',
+    'XBT': 'BTC',
+    'XETC': 'ETC',
+    'XETH': 'ETH',
+    'ZEUR': 'EUR',
+    'ZUSD': 'USD',
+    'ZCAD': 'CAD',
+    'ZGBP': 'GBP',
+    'ZJPY': 'JPY',
+    'XICN': 'ICN',
+    'XLTC': 'LTC',
+    'XMLN': 'MLN',
+    'XREP': 'REP',
+    'XXDG': 'XDG',
+    'XXLM': 'XLM',
+    'XXMR': 'XMR',
+    'XXRP': 'XRP',
+    'XZEC': 'ZEC'
+}
 
 class Kraken extends AbstractExchange {
 
@@ -70,8 +90,25 @@ class Kraken extends AbstractExchange {
     emitData(data){
         var that = this;
         Object.keys(data).forEach(key => {
-            that._pumpEvents.emit('marketupdate', 'TICKER', this._code, key, this.mapData(data[key]));
+            that._pumpEvents.emit('marketupdate', 'TICKER', this._code, this.mapName(key), this.mapData(data[key]));
         });
+    }
+
+    mapName(market) {
+        if (market.length == 6) { // simple name ex: BCHUSD
+            return this.mapCurrencyName(market.substr(0,3)) + "-" + this.mapCurrencyName(market.substr(3,6))
+        }
+        if (market.length == 7) { // specific DASH market
+            return this.mapCurrencyName(market.substr(0,4)) + "-" + this.mapCurrencyName(market.substr(4,7))
+        }
+        if (market.length == 8) { // simple name ex XXBTZUSD
+            return this.mapCurrencyName(market.substr(0,4)) + "-" + this.mapCurrencyName(market.substr(4,8))
+        }
+        return market
+    }
+
+    mapCurrencyName(name) {
+        return CurrencyMap[name] || name
     }
 
     mapData(ticker){
