@@ -8,16 +8,16 @@ class Kraken extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName,skipVolumes = 0.5){
         super(logger, pumpEvents,'Kraken', 5, 20, 'Kraken', skipVolumes);
         this.client = new KrakenClient(key,secret);
-    }   
+    }
 
     watch(){
-        this.watchTickers();   
+        this.watchTickers();
         setTimeout(()=>this.watch(),1000 * this.ticker_speed);
     }
 
     getAssets() {
         this.client.api('Assets', {asset: 'XBT'},(err,data) => {
-            if(err) 
+            if(err)
                 this._logger.log(JSON.stringify(err));
             else
                 this._logger.log(JSON.stringify(data));
@@ -39,7 +39,7 @@ class Kraken extends AbstractExchange {
         let that = this;
         return new Promise(function (resolve, reject){
             that.client.api('AssetPairs', {},(err,data) => {
-                if(err) 
+                if(err)
                     reject(err);
                 else
                     resolve(data);
@@ -59,12 +59,12 @@ class Kraken extends AbstractExchange {
         let that = this;
         return new Promise(function (resolve, reject){
             that.client.api('Ticker', {pair:pairs},(err,data) => {
-                if(err) 
+                if(err)
                     reject(err);
                 else
                     resolve(data);
             });
-        });        
+        });
     }
 
     emitData(data){
