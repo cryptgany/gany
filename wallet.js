@@ -34,7 +34,7 @@ Wallet.prototype.check_transactions = function() {
   setTimeout(() => { this.check_transactions() }, 5 * 60 * 1000)
   // first of all, check if users already have enough balance
   this.subscriber_list = this.subscriber_list.filter((sub) => {
-    if (sub.balance > this.subscription_price[sub.subscription_type]) {
+    if (sub.balance >= this.subscription_price[sub.subscription_type]) {
       sub.set_subscription_confirmed(-this.subscription_price[sub.subscription_type])
       this.gany_the_bot.notify_user_got_confirmed(sub)
       return false
