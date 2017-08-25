@@ -11,6 +11,7 @@ var subscriberSchema = mongoose.Schema({
     subscription_expires_on: Date,
     subscription_type: { type: String, default: 'basic', enum: ['basic', 'advanced', 'pro'] },
     blocked: { type: Boolean, default: false },
+    balance: { type: Number, default: 0 },
     exchanges: {
       Bittrex: { type: Boolean, default: true },
       Poloniex: { type: Boolean, default: true },
@@ -46,7 +47,7 @@ subscriberSchema.methods.generate_btc_address = function() {
   })
 }
 
-subscriberSchema.methods.set_subscription_confirmed = function() {
+subscriberSchema.methods.set_subscription_confirmed = function(added_balance = 0) { // added_balance = total transfered amount
   expiry_date = new Date()
   if (this.subscription_expires_on && this.subscription_expires_on >= expiry_date) {
     // is currently subscribed
@@ -54,6 +55,7 @@ subscriberSchema.methods.set_subscription_confirmed = function() {
   } else {
     expiry_date.setDate(expiry_date.getDate()+30);
   }
+  this.balance += added_balance
   this.subscription_status = true
   this.subscription_expires_on = expiry_date
   this.save(function(err, subscriber){

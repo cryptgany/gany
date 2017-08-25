@@ -10,7 +10,7 @@ mongoose.connect('mongodb://localhost:27017/detektor');
 const PROCESS_MAXIMUM_INPUTS = 60 // maximum addresses into one transaction
 const CHECK_PAYMENTS_EVERY = 1 // hours
 const SATS_FEE_PER_BYTE = 25 // in satoshis
-const MIN_PAYMENTS_TO_PROCESS = 10 // minimum pending payments to start a transaction
+const MIN_PAYMENTS_TO_PROCESS = 2 // minimum pending payments to start a transaction
 
 var paymentSchema = mongoose.Schema({
   telegram_id: Number,
@@ -33,6 +33,7 @@ paymentSchema.statics.pending = function(callback) {
 
 paymentSchema.statics.process_payments = function() {
   console.log("running process_payments...")
+  setTimeout(() => { PaymentModel.process_payments() }, CHECK_PAYMENTS_EVERY * 60 * 60 * 1000) // 1 hour, should probably be every 1 day
   // checks every pending payment
   PaymentModel.pending((err, payments) => {
     if (payments.length >= MIN_PAYMENTS_TO_PROCESS) {
@@ -83,7 +84,6 @@ paymentSchema.statics.process_payments = function() {
       });
     }
   })
-  setTimeout(() => { PaymentModel.process_payments() }, CHECK_PAYMENTS_EVERY * 60 * 60 * 1000) // 1 hour, should probably be every 1 day
 }
 
 paymentSchema.statics.make_payment_transaction = function(tx_data) {

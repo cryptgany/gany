@@ -82,6 +82,14 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
+  this.telegram_bot.onText(/\/balance/, (msg, match) => {
+    if (this.is_subscribed(msg.chat.id)) {
+      subscriber = this.find_subscriber(msg.chat.id)
+      message = "Your balance is " + (subscriber.balance / 100000000).toFixed(8)
+      this.send_message(msg.chat.id, message)
+    }
+  })
+
   this.telegram_bot.onText(/\/configure/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
       if (this.is_subscribed(msg.chat.id))
@@ -288,7 +296,7 @@ GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse
 }
 
 GanyTheBot.prototype.notify_user_got_confirmed = function(subscriber) {
-  message = "Your payment got processed!"
+  message = "Your subscription got processed!"
   message += "\nYou will start receiving notifications from now on."
   message += "\nYou can check your subscription status on /subscription"
   this.send_message(subscriber.telegram_id, message)
