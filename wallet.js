@@ -37,23 +37,24 @@ Wallet.prototype.check_transactions = function() {
   this.subscriber_list.forEach((sub) => { addresses_sub_type[sub.btc_address] = sub.subscription_type })
   blockexplorer.getBalance(Object.keys(addresses_sub_type), this.options).then((addr_data) => {
     Object.keys(addr_data).forEach((addr) => {
-      if (addr_data[addr].final_balance >= this.subscription_price[addresses_sub_type[addr]]) { // now 0.003, should be 1000000
+      final_balance = addr_data[addr].final_balance
+      if (final_balance >= this.subscription_price[addresses_sub_type[addr]]) { // now 0.003, should be 1000000
         // detected address with enough money, mark subscriber as subscribed and schedule for withdrawal
-        this.mark_subscriber_paid_and_withdraw(addr, this.subscription_price[addresses_sub_type[addr]])
+        this.mark_subscriber_paid_and_withdraw(addr, this.subscription_price[addresses_sub_type[addr]], final_balance)
       }
     })
   }).catch((e) => { this.logger.error("Error on check_transactions", e) })
   setTimeout(() => { this.check_transactions() }, 5 * 60 * 1000)
 }
 
-Wallet.prototype.mark_subscriber_paid_and_withdraw = function(address, price) {
+Wallet.prototype.mark_subscriber_paid_and_withdraw = function(address, price, total) {
   subscriber = this.subscriber_list.filter((sub) => { return sub.btc_address == address })[0]
   if (subscriber) {
     // alert subscriber that we got his payment and until when he/she is subcribed
-    subscriber.set_subscription_confirmed()
+    subscriber.set_subscription_confirmed(total - price)
     this.gany_the_bot.notify_user_got_confirmed(subscriber)
 
-    this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, price)
+    this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, total)
   } else {
     this.logger.error("Could not find the subscriber of the address", address)
   }
