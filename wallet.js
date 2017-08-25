@@ -31,6 +31,15 @@ Wallet.prototype.refresh = function() { // update list of accounts to check
 }
 
 Wallet.prototype.check_transactions = function() {
+  setTimeout(() => { this.check_transactions() }, 5 * 60 * 1000)
+  // first of all, check if users already have enough balance
+  this.subscriber_list = this.subscriber_list.filter((sub) => {
+    if (sub.balance > this.subscription_price[sub.subscription_type]) {
+      sub.set_subscription_confirmed(-this.subscription_price[sub.subscription_type])
+      this.gany_the_bot.notify_user_got_confirmed(sub)
+      return false
+    } else { return true }
+  })
   // should check every subscriber's address for balance
   // if person has balance >= 0.01 then sechedule address for withdrawal and mark as subscribed
   addresses_sub_type = {}
@@ -44,7 +53,6 @@ Wallet.prototype.check_transactions = function() {
       }
     })
   }).catch((e) => { this.logger.error("Error on check_transactions", e) })
-  setTimeout(() => { this.check_transactions() }, 5 * 60 * 1000)
 }
 
 Wallet.prototype.mark_subscriber_paid_and_withdraw = function(address, price, total) {

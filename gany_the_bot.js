@@ -288,7 +288,7 @@ GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse
 }
 
 GanyTheBot.prototype.notify_user_got_confirmed = function(subscriber) {
-  message = "Your payment got processed!"
+  message = "Your subscription got processed!"
   message += "\nYou will start receiving notifications from now on."
   message += "\nYou can check your subscription status on /subscription"
   this.send_message(subscriber.telegram_id, message)
