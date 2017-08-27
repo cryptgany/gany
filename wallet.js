@@ -60,10 +60,10 @@ Wallet.prototype.add_balance_to_subscriber_and_withdraw = function(address, tota
   subscriber = this.subscriber_list.filter((sub) => { return sub.btc_address == address })[0]
   if (subscriber) {
     // add user balance
-    subscriber.add_balance(total)
+    // ONLY process if amount from user + balance is enough for subscription
+    if ((subscriber.balance + total) >= this.subscription_price[subscriber.subscription_type]) {
+      subscriber.add_balance(total)
 
-    // if user already has subscription amount then subscribe
-    if (subscriber.balance >= this.subscription_price[subscriber.subscription_type]) {
       subscriber.set_subscription_confirmed(-this.subscription_price[subscriber.subscription_type])
       this.gany_the_bot.notify_user_got_confirmed(subscriber)
     }
