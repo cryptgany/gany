@@ -32,7 +32,7 @@ Wallet.prototype.refresh = function() { // update list of accounts to check
 }
 
 Wallet.prototype.check_transactions = function() {
-  setTimeout(() => { this.check_transactions() }, 5 * 60 * 1000)
+  setTimeout(() => { this.check_transactions() }, 3 * 60 * 1000)
   // first of all, check if users already have enough balance
   this.subscriber_list = this.subscriber_list.filter((sub) => {
     if (sub.balance >= this.subscription_price[sub.subscription_type]) {
@@ -44,7 +44,7 @@ Wallet.prototype.check_transactions = function() {
   // should check every subscriber's address for balance
   // if person has balance >= 0.01 then sechedule address for withdrawal and mark as subscribed
   addresses_sub_type = {}
-  this.subscriber_list.forEach((sub) => { addresses_sub_type[sub.btc_address] = sub.subscription_type })
+  this.subscriber_list.forEach((sub) => { addresses_sub_type[sub.btc_address] = sub })
   blockexplorer.getBalance(Object.keys(addresses_sub_type), this.options).then((addr_data) => {
     Object.keys(addr_data).forEach((addr) => {
       final_balance = addr_data[addr].final_balance
@@ -61,6 +61,12 @@ Wallet.prototype.add_balance_to_subscriber_and_withdraw = function(address, tota
   if (subscriber) {
     // add user balance
     subscriber.add_balance(total)
+
+    // if user already has subscription amount then subscribe
+    if (subscriber.balance >= this.subscription_price[subscriber.subscription_type]) {
+      subscriber.set_subscription_confirmed(-this.subscription_price[subscriber.subscription_type])
+      this.gany_the_bot.notify_user_got_confirmed(subscriber)
+    }
 
     this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, total)
   } else {
