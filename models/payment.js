@@ -11,6 +11,7 @@ const PROCESS_MAXIMUM_INPUTS = 60 // maximum addresses into one transaction
 const CHECK_PAYMENTS_EVERY = 1 // hours
 const SATS_FEE_PER_BYTE = 25 // in satoshis
 const MIN_PAYMENTS_TO_PROCESS = 2 // minimum pending payments to start a transaction
+const MIN_CONFIRMATIONS_TO_PROCESS = 4 // tx confirmations
 
 var paymentSchema = mongoose.Schema({
   telegram_id: Number,
@@ -49,7 +50,7 @@ paymentSchema.statics.process_payments = function() {
           unspent = JSON.parse(body)
           data = []
           payments.forEach((payment) => {
-            utxos = unspent.filter((utxo) => { return utxo.address == payment.btc_address })
+            utxos = unspent.filter((utxo) => { return utxo.address == payment.btc_address && utxo.confirmations >= MIN_CONFIRMATIONS_TO_PROCESS })
             console.log("UTXOS =",utxos)
             if (utxos.length >= 1) {
               // get from first to last unspent and spend them until we have the entire payment.amount
@@ -70,13 +71,15 @@ paymentSchema.statics.process_payments = function() {
                 data.push({payment: payment, txs: txs, total: total})
               }
             } else {
-              console.error(Date.now(), "ERROR FETCHING UNSPENT FOR SPECIFIC ADDRESS", payment.btc_address)
-              payment.status = 'error'
-              payment.error = 'Utxos length was 0'
-              payment.save()
+              // this is not really an error, we are waiting on confirmations
+              // TODO implement some kind of "wait 48 hours or mark error"
+              // console.error(Date.now(), "ERROR FETCHING UNSPENT FOR SPECIFIC ADDRESS", payment.btc_address)
+              // payment.status = 'error'
+              // payment.error = 'Utxos length was 0'
+              // payment.save()
             }
           })
-          if (data != []) {
+          if (data.length >= 1) {
             console.log("ready for payment:",data)
             PaymentModel.make_payment_transaction(data)
           }
