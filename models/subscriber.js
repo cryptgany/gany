@@ -47,6 +47,13 @@ subscriberSchema.methods.generate_btc_address = function() {
   })
 }
 
+subscriberSchema.methods.add_balance = function(balance) {
+  this.balance += balance
+  this.save(function(err, subscriber){
+    if (err) { console.error(err); }
+  })
+}
+
 subscriberSchema.methods.set_subscription_confirmed = function(added_balance = 0) { // added_balance = total transfered amount
   expiry_date = new Date()
   if (this.subscription_expires_on && this.subscription_expires_on >= expiry_date) {

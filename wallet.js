@@ -8,6 +8,7 @@ function Wallet(logger, gany_the_bot) {
   this.subscriber_list = [] // address list to check
   this.days_for_subscription_ending = 2 // days
   this.gany_the_bot = gany_the_bot
+  this.minimal_btc_for_withdraw = 10000
   this.subscription_price = {
     basic:    1000000, // 0.01
     advanced: 3000000, // 0.03
@@ -47,20 +48,19 @@ Wallet.prototype.check_transactions = function() {
   blockexplorer.getBalance(Object.keys(addresses_sub_type), this.options).then((addr_data) => {
     Object.keys(addr_data).forEach((addr) => {
       final_balance = addr_data[addr].final_balance
-      if (final_balance >= this.subscription_price[addresses_sub_type[addr]]) { // now 0.003, should be 1000000
-        // detected address with enough money, mark subscriber as subscribed and schedule for withdrawal
-        this.mark_subscriber_paid_and_withdraw(addr, this.subscription_price[addresses_sub_type[addr]], final_balance)
+      if (final_balance >= this.minimal_btc_for_withdraw) { // add balance to subscriber
+        // subscriber paid money, schedule for withdrawing and next cycle will detect user subscription
+        this.add_balance_to_subscriber_and_withdraw(addr, final_balance)
       }
     })
   }).catch((e) => { this.logger.error("Error on check_transactions", e) })
 }
 
-Wallet.prototype.mark_subscriber_paid_and_withdraw = function(address, price, total) {
+Wallet.prototype.add_balance_to_subscriber_and_withdraw = function(address, total) {
   subscriber = this.subscriber_list.filter((sub) => { return sub.btc_address == address })[0]
   if (subscriber) {
-    // alert subscriber that we got his payment and until when he/she is subcribed
-    subscriber.set_subscription_confirmed(total - price)
-    this.gany_the_bot.notify_user_got_confirmed(subscriber)
+    // add user balance
+    subscriber.add_balance(total)
 
     this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, total)
   } else {
