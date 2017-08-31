@@ -377,7 +377,7 @@ GanyTheBot.prototype.update_user = function(data) {
     if (subscriber.username != data.from.username) { changed = true; subscriber.username = data.from.username }
     if (subscriber.language != data.from.language_code) { changed = true; subscriber.language = data.from.language_code }
     if (subscriber.full_name != full_name) { changed = true; subscriber.full_name = full_name }
-    if (changed) { subscriber.save(); console.log("had to store") } // if anything changed, store it
+    if (changed) { subscriber.save(); } // if anything changed, store it
   }
 }
 
