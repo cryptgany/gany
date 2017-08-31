@@ -240,6 +240,11 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
+  this.telegram_bot.onText(/\/whatsmyid/, (msg, match) => {
+    this.update_user(msg)
+    this.send_message(msg.from.id, "Your id is " + msg.from.id)
+  })
+
   this.telegram_bot.onText(/\/allcount/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
       this.send_message(msg.chat.id, this.subscribers.length + " subscribers.")
@@ -361,6 +366,19 @@ GanyTheBot.prototype.is_subscribed = function(telegram_id) {
 GanyTheBot.prototype.is_blocked = function(telegram_id) {
   sub = this.find_subscriber(telegram_id)
   return sub && sub.blocked
+}
+
+// TEMPORAL function to check for users
+GanyTheBot.prototype.update_user = function(data) {
+  if (subscriber = this.find_subscriber(data.from.id)) {
+    changed = false
+    full_name = data.from.first_name + (data.from.last_name ? " " + data.from.last_name : "")
+    if (data.chat.type == 'group' || data.chat.type == 'supergroup') { changed = true; subscriber.blocked = true }
+    if (subscriber.username != data.from.username) { changed = true; subscriber.username = data.from.username }
+    if (subscriber.language != data.from.language_code) { changed = true; subscriber.language = data.from.language_code }
+    if (subscriber.full_name != full_name) { changed = true; subscriber.full_name = full_name }
+    if (changed) { subscriber.save(); console.log("had to store") } // if anything changed, store it
+  }
 }
 
 GanyTheBot.prototype.subscribe_user = function(data, callback) {
