@@ -364,7 +364,7 @@ GanyTheBot.prototype.is_blocked = function(telegram_id) {
 }
 
 GanyTheBot.prototype.subscribe_user = function(data, callback) {
-  sub = new Subscriber({telegram_id: data.id, username: data.username, language: data.language_code})
+  sub = new Subscriber({telegram_id: data.id, name: data.first_name, username: data.username, language: data.language_code})
   sub.save((err) => {
     callback(err, sub)
   })
