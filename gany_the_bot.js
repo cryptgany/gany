@@ -52,7 +52,7 @@ GanyTheBot.prototype.start = function() {
           this.send_message(msg.chat.id, 'You are already subscribed. Do you need /help ?')
         }
       } else {
-        this.subscribe_user(msg.chat.id, (err, subscriber) => {
+        this.subscribe_user(msg.chat, (err, subscriber) => {
           if (err) {
             this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.chat.id)
           } else {
@@ -363,8 +363,8 @@ GanyTheBot.prototype.is_blocked = function(telegram_id) {
   return sub && sub.blocked
 }
 
-GanyTheBot.prototype.subscribe_user = function(telegram_id, callback) {
-  sub = new Subscriber({telegram_id: telegram_id})
+GanyTheBot.prototype.subscribe_user = function(data, callback) {
+  sub = new Subscriber({telegram_id: data.id, username: data.username, language: data.language_code})
   sub.save((err) => {
     callback(err, sub)
   })

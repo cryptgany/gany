@@ -5,6 +5,8 @@ mongoose.connect('mongodb://localhost:27017/detektor');
 
 var subscriberSchema = mongoose.Schema({
     telegram_id: Number,
+    language: String,
+    username: String,
     btc_address: String,
     btc_private_key: String,
     subscription_status: { type: Boolean, default: false },
