@@ -101,8 +101,8 @@ Detektor.prototype.store_signal_in_background = function(signal) {
   }, 0)
 }
 
-Detektor.prototype.rule_match = function(exchange, first_ticker, last_ticker) {
-  return _.find(this.rules[exchange], (rule) => { return rule(first_ticker, last_ticker, this.matcher) })
+Detektor.prototype.rule_match = function(exchange, first_ticker, last_ticker, time) {
+  return _.find(this.rules[exchange], (rule) => { return rule(first_ticker, last_ticker, time, this.matcher) })
 }
 
 Detektor.prototype.analyze_ticker = function(exchange, market, data) {
@@ -117,7 +117,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
           for(time = max_time; time > 1; time--) {
             first_ticker = tickers[tickers.length - time] || tickers.first()
             last_ticker = tickers.last()
-            if (this.rule_match(exchange, first_ticker, last_ticker)) {
+            if (this.rule_match(exchange, first_ticker, last_ticker, time * this.exchange_ticker_speed(exchange))) {
               volume = this.volume_change(first_ticker, last_ticker)
               signal = {exchange: exchange, market: market, change: volume, time: time * this.exchange_ticker_speed(exchange), first_ticker: first_ticker, last_ticker: last_ticker}
             }
