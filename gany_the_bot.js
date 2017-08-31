@@ -279,10 +279,10 @@ GanyTheBot.prototype.start = function() {
 }
 
 GanyTheBot.prototype.is_not_a_group = function(msg) {
-  if (msg.chat.type == 'group') {
+  if (msg.chat.type == 'group' || msg.chat.type == 'supergroup') {
     this.send_message(msg.chat.id, 'Hello group ' + msg.chat.title + '. I am sorry but I only work in 1 on 1 mode. Groups not implemented.\nYou can still use the /see coin feature.')
   }
-  return msg.chat.type != 'group'
+  return msg.chat.type != 'group' && msg.chat.type != 'supergroup'
 }
 
 GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse_mode: "Markdown", disable_web_page_preview: true }) {
