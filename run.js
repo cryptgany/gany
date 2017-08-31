@@ -48,7 +48,10 @@ rules = {
             (first_ticker, last_ticker, matcher) => { return (last_ticker.volume > 0.5 && matcher.volume_change(first_ticker, last_ticker) > 1.25) },
             (first_ticker, last_ticker, matcher) => { return (last_ticker.volume < 0.5 && matcher.volume_change(first_ticker, last_ticker) > 2) && matcher.bid_change(first_ticker, last_ticker) > 1.25 }
           ],
-  "Kraken": [ (first_ticker, last_ticker, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.1 } ]
+  "Kraken": [
+            (first_ticker, last_ticker, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.15 },
+            (first_ticker, last_ticker, matcher) => { return matcher.last_change(first_ticker, last_ticker) > 1.05 && matcher.volume_change(first_ticker, last_ticker) > 1.075 },
+          ]
 }
 
 detektor = new Detektor(logger, gany_the_bot, pump_events, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia, Kraken : kraken}, rules)
