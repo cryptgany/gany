@@ -314,12 +314,23 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
     if (client.exchange_name == 'Kraken') {
       this.message_gods(text); this.message_mods(text);
     } else {
+      send_free = this.random_number(1,4) == 4 // randomly pick if we should send it or not
       this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] && !sub.blocked }).forEach((sub) => {
-        this.send_message(sub.telegram_id, text)
+        if (sub.subscription_status == true) {
+          this.send_message(sub.telegram_id, text)
+        } else {
+          // free users
+          if (send_free)
+            this.send_message(sub.telegram_id, text)
+        }
       });
     }
     this.detektor.store_signal_in_background(signal)
   })
+}
+
+GanyTheBot.prototype.random_number = function(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive
 }
 
 GanyTheBot.prototype.previous_signal = async function(exchange, market, callback) {
@@ -357,6 +368,10 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
 
 GanyTheBot.prototype.find_subscriber = function(telegram_id) {
   return _.find(this.subscribers, (sub) => { return sub.telegram_id == telegram_id } )
+}
+
+GanyTheBot.prototype.is_paid_subscriber = function(telegram_id) {
+  return _.find(this.subscribers, (sub) => { return sub.telegram_id == telegram_id && sub.subscription_status == true } )
 }
 
 GanyTheBot.prototype.is_subscribed = function(telegram_id) {
