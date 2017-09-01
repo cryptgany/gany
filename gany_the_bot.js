@@ -280,7 +280,29 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.on('callback_query', (msg) => {
     if (this.is_subscribed(msg.from.id)) {
       if (msg.data == 'configure subscription')
-        this.send_message(msg.from.id, "Comming soon, you can take a look at /pricing")
+        if (this.is_subscribed(msg.from.id)) {
+          subscriber = this.find_subscriber(msg.from.id)
+          if (subscriber.subscription_status) { // subscription updated
+            message = "You are a paid user."
+            message += "\nYour subscription expires on " + subscriber.subscription_expires_on
+            message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
+            this.send_message(subscriber.telegram_id, message)
+          } else { // not subscribed
+            if (subscriber.btc_address) {
+              message = "You are a free user."
+              message += "\nYou must send 0.01 BTC to address " + subscriber.btc_address + " in order to start using the full service."
+              message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
+              this.send_message(subscriber.telegram_id, message)
+            } else {
+              subscriber.generate_btc_address().then((address) => {
+                message = "You are a free user."
+                message += "\nYou must send 0.01 BTC to address " + address + " in order to start using the full service."
+                message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
+                this.send_message(subscriber.telegram_id, message)
+              })
+            }
+          }
+        }
       if (msg.data == "configure")
         this.send_message(msg.from.id, "Configuration menu:", this.configuration_menu_options())
       if (msg.data == "configure exchanges")
@@ -439,7 +461,7 @@ GanyTheBot.prototype.configuration_menu_options = function() {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: 'Configure Exchanges', callback_data: 'configure exchanges' }, { text: 'Configure Subscription', callback_data: 'configure subscription' }],
+        [{ text: 'Configure Exchanges', callback_data: 'configure exchanges' }, { text: 'Subscription', callback_data: 'configure subscription' }],
       ]
     })
   };
