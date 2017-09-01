@@ -233,8 +233,8 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/\/pricing/, (msg, match) => {
     message = "Gany has both paid and free subscription:"
-    message += '\n*Paid User*: 0.01 BTC monthly fee. Receives *100%* of our notifications, receives *custom analysis made by experts* and can use current features.'
-    message += '\n*Free User*: Receives only 25% of notifications and can use /see and /configure commands. Wont receive custom analysis notifications and wont use any other feature.'
+    message += '\n*Paid User*: 0.01 BTC monthly fee. Receives all Gany notifications and can use current features.'
+    message += '\n*Free User*: Receives only 25% of notifications and can use /see and /configure commands.'
     message += "\n\nGany is an evolving product, there will be new exchanges added, mobile app (for which your subscription will work) and much more."
     message += "\nFor more information visit us at www.cryptowise.net"
     this.send_message(msg.chat.id, message)
