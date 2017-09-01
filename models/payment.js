@@ -10,8 +10,8 @@ mongoose.connect('mongodb://localhost:27017/detektor');
 const PROCESS_MAXIMUM_INPUTS = 60 // maximum addresses into one transaction
 const CHECK_PAYMENTS_EVERY = 1 // hours
 const SATS_FEE_PER_BYTE = 25 // in satoshis
-const MIN_PAYMENTS_TO_PROCESS = 2 // minimum pending payments to start a transaction
-const MIN_CONFIRMATIONS_TO_PROCESS = 4 // tx confirmations
+const MIN_PAYMENTS_TO_PROCESS = 5 // minimum pending payments to start a transaction
+const MIN_CONFIRMATIONS_TO_PROCESS = 3 // tx confirmations
 
 var paymentSchema = mongoose.Schema({
   telegram_id: Number,
