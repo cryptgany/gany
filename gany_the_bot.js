@@ -121,7 +121,7 @@ GanyTheBot.prototype.start = function() {
         options = { parse_mode: "Markdown" }
         if (subscriber.btc_address) {
           message = "Your BTC address for subscription fee is *" + subscriber.btc_address + "*"
-          message += "\nYou have to deposit 0.01 BTC monthly in order to use our full service."
+          message += "\nYou have to transfer 0.01 BTC monthly in order to use our full service."
           message += "\nThis address will not change, you can keep using it for your monthly subscription."
           message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
           message += "\nYou can check your current subscription on /subscription"
@@ -129,7 +129,7 @@ GanyTheBot.prototype.start = function() {
         } else {
           subscriber.generate_btc_address().then((address) => {
             message = "Your BTC address for subscription payments is *" + address + "*"
-            message += "\nYou have to deposit 0.01 BTC monthly in order to use our full service."
+            message += "\nYou have to transfer 0.01 BTC monthly in order to use our full service."
             message += "\nThis address will not change, you can keep using it for your monthly subscription."
             message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
             message += "\nYou can check your current subscription on /subscription"
