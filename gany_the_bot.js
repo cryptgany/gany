@@ -362,7 +362,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   this.previous_signal(signal.exchange, signal.market, (prev) => {
     text = this.telegram_post_signal(client, signal, prev)
     this.logger.log(text)
-    if (client.exchange_name == 'Kraken') {
+    if (client.exchange_name == 'Otherexchange') {
       this.message_gods(text); this.message_mods(text);
     } else {
       send_free = this.random_number(1,4) == 4 // randomly pick if we should send it or not
@@ -485,6 +485,7 @@ GanyTheBot.prototype.configuration_menu_exchanges = function() {
       inline_keyboard: [
         [{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }],
         [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }],
+        [{ text: 'Kraken', callback_data: 'configure exchange Kraken' }],
         [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })
