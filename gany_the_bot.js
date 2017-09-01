@@ -269,6 +269,12 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
+  this.telegram_bot.onText(/\/paidcount/, (msg, match) => {
+    if (this.is_mod(msg.chat.id)){ // only process vip chat requests
+      this.send_message(msg.chat.id, this.subscribers.filter((s) => { return s.subscription_status }).length + " paid subscribers.")
+    }
+  })
+
   this.telegram_bot.onText(/\/sendmessage/, (msg, match) => {
     if (this.is_mod(msg.chat.id))
       this.broadcast(msg.text.replace(/\/sendmessage\ /, ''))
