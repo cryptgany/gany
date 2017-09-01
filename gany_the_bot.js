@@ -274,6 +274,11 @@ GanyTheBot.prototype.start = function() {
       this.broadcast(msg.text.replace(/\/sendmessage\ /, ''))
   })
 
+  this.telegram_bot.onText(/\/sendpaidmessage/, (msg, match) => {
+    if (this.is_mod(msg.chat.id))
+      this.broadcast(msg.text.replace(/\/sendpaidmessage\ /, ''), true)
+  })
+
   // ************** //
   // CALLBACK QUERY //
   // ************** //
@@ -522,10 +527,11 @@ GanyTheBot.prototype.message_mods = function(text) {
   });
 }
 
-GanyTheBot.prototype.broadcast = function(text, vip_only = false) {
-  chats_for_broadcast = vip_only ? this.god_users : this.subscribers.map((sub) => { return sub.telegram_id });
-  chats_for_broadcast.forEach((chat_id) => {
-    this.send_message(chat_id, text)
+GanyTheBot.prototype.broadcast = function(text, only_paid = false) {
+  this.subscribers.forEach((sub) => {
+    if (only_paid) {
+      if (sub.subscription_status == true) { this.send_message(sub.telegram_id, text) }
+    } else { this.send_message(sub.telegram_id, text) }
   });
 }
 
