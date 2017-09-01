@@ -57,13 +57,13 @@ GanyTheBot.prototype.start = function() {
             this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.from.id)
           } else {
             this.subscribers.push(subscriber)
-            message = 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.'
-            message += '\nYou can also configure exchanges on /configure.'
-            message += '\nGany works with a monthly fee of 0.01 that you can pay on /pay.'
-            message += "\nOr you can stay as a *free user*. You will only receive 25% of all of Gany's notifications and you will be able to use /configure and /see commands."
+            message = 'You are now subscribed! You will start getting notifications soon. Please be patient, the process should be finalized within 10 minutes.'
+            message += '\nYou can also configure exchanges using the command: /configure.'
+            message += '\nThe full version of CryptGany works with a monthly subscription fee of 0.01 BTC that you can pay using the command /pay.'
+            message += "\nOr you can remain as a free user but you will only receive 25% of all of Gany's notifications. You will be able to use the /configure and /see commands."
             message += '\nGany paid version offers customized signal reviews, 100% notifications and will be implementing more features over time.'
-            message += '\nIf you have any doubt or comments that you want to ask, meet us at https://t.me/CryptoWarnings'
-            message += '\nYou can also see the /help'
+            message += '\nIf you have any doubts or comments that you would like to ask, join the discussion group at https://t.me/CryptoWarnings'
+            message += '\You can also use the /help command for further information'
             this.send_message(msg.chat.id, message)
           }
         })
@@ -214,7 +214,7 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/\/whatisgany/, (msg, match) => {
     if (this.is_subscribed(msg.chat.id)) {
-      message = "Gany is a CrytpoCurrency Analysis bot that monitors multiple exchanges and markets"
+      message = "Gany is a CryptoCurrency Trading Analysis bot that monitors multiple exchanges and markets"
       message += " 24/7, giving its subscribers notifications when certain conditions happen in a given market.\n\n"
       message += "It's information is not a direct buy or sell signal, it gives detailed information about changes during specific times"
       message += " so traders can analyse them and make wiser decisions about their investments."
