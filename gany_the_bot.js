@@ -54,10 +54,17 @@ GanyTheBot.prototype.start = function() {
       } else {
         this.subscribe_user(msg.chat, (err, subscriber) => {
           if (err) {
-            this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.chat.id)
+            this.send_message(msg.chat.id, 'Could not subscribe, please contact @frooks, your id is ' + msg.from.id)
           } else {
             this.subscribers.push(subscriber)
-            this.send_message(msg.chat.id, 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.\nYou can also configure exchanges on /configure.\nThis is a public beta, please any bug that you find or comments that you want to give us, meet us at https://t.me/CryptoWarnings\nYou can also see the /help')
+            message = 'You are now subscribed! You will start getting notifications soon. Please be patient and wait.'
+            message += '\nYou can also configure exchanges on /configure.'
+            message += '\nGany works with a monthly fee of 0.01 that you can pay on /pay.'
+            message += "\nOr you can stay as a *free user*. You will only receive 25% of all of Gany's notifications and you will be able to use /configure and /see commands."
+            message += '\nGany paid version offers customized signal reviews, 100% notifications and will be implementing more features over time.'
+            message += '\nIf you have any doubt or comments that you want to ask, meet us at https://t.me/CryptoWarnings'
+            message += '\nYou can also see the /help'
+            this.send_message(msg.chat.id, message)
           }
         })
       }
@@ -69,12 +76,12 @@ GanyTheBot.prototype.start = function() {
       if (this.is_subscribed(msg.chat.id)) {
         subscriber = this.find_subscriber(msg.chat.id)
         if (subscriber.subscription_status) { // subscription updated
-          message = "You are subscribed."
+          message = "You are a paid user."
           message += "\nYour subscription expires on " + subscriber.subscription_expires_on
           message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
         } else { // not subscribed
-          message = "You are not subscribed."
-          message += "\nYou must send 0.01 BTC to address " + subscriber.btc_address + " to start receiving notifications."
+          message = "You are a free user."
+          message += "\nYou must send 0.01 BTC to address " + subscriber.btc_address + " in order to start using the full service."
           message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
         }
         this.send_message(subscriber.telegram_id, message)
@@ -103,20 +110,18 @@ GanyTheBot.prototype.start = function() {
         subscriber = this.find_subscriber(msg.chat.id)
         options = { parse_mode: "Markdown" }
         if (subscriber.btc_address) {
-          message = "Your BTC address for subscription payments is *" + subscriber.btc_address + "*"
-          message += "\nYou should deposit 0.01 BTC monthly in order to receive our awesome notifications."
+          message = "Your BTC address for subscription fee is *" + subscriber.btc_address + "*"
+          message += "\nYou have to deposit 0.01 BTC monthly in order to use our full service."
           message += "\nThis address will not change, you can keep using it for your monthly subscription."
           message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
-          message += "\n*You will start receiving signals as soon as we get 3 confirmations of your payment*"
           message += "\nYou can check your current subscription on /subscription"
           this.send_message(subscriber.telegram_id, message, options)
         } else {
           subscriber.generate_btc_address().then((address) => {
             message = "Your BTC address for subscription payments is *" + address + "*"
-            message += "\nYou should deposit 0.01 BTC monthly in order to receive our awesome notifications."
+            message += "\nYou have to deposit 0.01 BTC monthly in order to use our full service."
             message += "\nThis address will not change, you can keep using it for your monthly subscription."
             message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
-            message += "\n*You will start receiving signals as soon as we get 3 confirmations of your payment*"
             message += "\nYou can check your current subscription on /subscription"
             this.send_message(subscriber.telegram_id, message, options)
           }).catch((e) => { this.logger.error("Error trying to generate btc address", e) })
@@ -186,6 +191,7 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/\/help/, (msg, match) => {
     message = "/whatisgany - What is this bot?"
     message += "\n/subscribe - Subscribe to Gany's notifications"
+    message += "\n/subscription - Information about your subscription"
     message += "\n/stop - Stop receiving notifications from Gany"
     message += "\n/configure - Configure the exchanges you want or don't want"
     message += "\n/see XXX - See information on all exchanges about XXX currency"
@@ -215,9 +221,10 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/\/pricing/, (msg, match) => {
-    message = "Gany starts with a trial period of two weeks, starting at the moment that you type /subscribe"
-    message += "\nAfter the trial period, a monthly fee of 0.01 BTC must be paid for receiving notifications."
-    message += "\nGany is an evolving product, there will be new exchanges added, mobile app (for which your subscription will work) and much more."
+    message = "Gany has both paid and free subscription:"
+    message += '\n*Paid User*: 0.01 BTC monthly fee. Receives *100%* of our notifications, receives customized analysis made by experts and can use all our features.'
+    message += '\n*Free User*: Receives only 25% of notifications and can use /see and /configure commands. Wont receive custom notifications from analysis and wont use any other feature.'
+    message += "\n\nGany is an evolving product, there will be new exchanges added, mobile app (for which your subscription will work) and much more."
     message += "\nFor more information visit us at www.cryptowise.net"
     this.send_message(msg.chat.id, message)
   })
