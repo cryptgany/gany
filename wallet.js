@@ -8,7 +8,7 @@ function Wallet(logger, gany_the_bot) {
   this.subscriber_list = [] // address list to check
   this.days_for_subscription_ending = 2 // days
   this.gany_the_bot = gany_the_bot
-  this.minimal_btc_for_withdraw = 10000
+  this.minimal_btc_for_withdraw = 1000000
   this.subscription_price = {
     basic:    1000000, // 0.01
     advanced: 3000000, // 0.03
