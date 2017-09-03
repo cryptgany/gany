@@ -102,7 +102,7 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/\/balance/, (msg, match) => {
     if (this.is_subscribed(msg.chat.id)) {
       subscriber = this.find_subscriber(msg.chat.id)
-      message = "Your balance is " + (subscriber.balance / 100000000).toFixed(8)
+      message = "Your balance is " + (subscriber.total_balance() / 100000000).toFixed(8)
       this.send_message(msg.chat.id, message)
     }
   })

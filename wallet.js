@@ -35,8 +35,8 @@ Wallet.prototype.check_transactions = function() {
   setTimeout(() => { this.check_transactions() }, 3 * 60 * 1000)
   // first of all, check if users already have enough balance
   this.subscriber_list = this.subscriber_list.filter((sub) => {
-    if (sub.balance >= this.subscription_price[sub.subscription_type]) {
-      sub.set_subscription_confirmed(-this.subscription_price[sub.subscription_type])
+    if (sub.total_balance() >= this.subscription_price[sub.subscription_type]) {
+      sub.set_subscription_confirmed(this.subscription_price[sub.subscription_type])
       this.gany_the_bot.notify_user_got_confirmed(sub)
       return false
     } else { return true }
@@ -44,34 +44,30 @@ Wallet.prototype.check_transactions = function() {
   // should check every subscriber's address for balance
   // if person has balance >= 0.01 then sechedule address for withdrawal and mark as subscribed
   addresses_sub_type = {}
-  this.subscriber_list.forEach((sub) => { addresses_sub_type[sub.btc_address] = sub })
+  this.subscriber_list.forEach((sub) => { addresses_sub_type[sub.btc_address] = {subscriber: sub, final_balance: sub.btc_final_balance} })
   blockexplorer.getBalance(Object.keys(addresses_sub_type), this.options).then((addr_data) => {
     Object.keys(addr_data).forEach((addr) => {
       final_balance = addr_data[addr].final_balance
-      if (final_balance >= this.minimal_btc_for_withdraw) { // add balance to subscriber
+      if (final_balance >= 0 && final_balance != addresses_sub_type[addr].final_balance) { // add balance to subscriber
         // subscriber paid money, schedule for withdrawing and next cycle will detect user subscription
-        this.add_balance_to_subscriber_and_withdraw(addr, final_balance)
+        this.add_balance_to_subscriber_and_withdraw(addresses_sub_type[addr].subscriber, addr, final_balance)
       }
     })
   }).catch((e) => { this.logger.error("Error on check_transactions", e) })
 }
 
-Wallet.prototype.add_balance_to_subscriber_and_withdraw = function(address, total) {
-  subscriber = this.subscriber_list.filter((sub) => { return sub.btc_address == address })[0]
-  if (subscriber) {
-    // add user balance
-    // ONLY process if amount from user + balance is enough for subscription
-    if ((subscriber.balance + total) >= this.subscription_price[subscriber.subscription_type]) {
-      subscriber.add_balance(total)
+Wallet.prototype.add_balance_to_subscriber_and_withdraw = function(subscriber, address, total) {
+  // add user balance
+  // ONLY process if amount from user + balance is enough for subscription
+  subscriber.set_final_balance(total)
+  if ((subscriber.total_balance()) >= this.subscription_price[subscriber.subscription_type]) {
+    // subscriber.add_balance(total)
 
-      subscriber.set_subscription_confirmed(-this.subscription_price[subscriber.subscription_type])
-      this.gany_the_bot.notify_user_got_confirmed(subscriber)
-    }
-
-    this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, total)
-  } else {
-    this.logger.error("Could not find the subscriber of the address", address)
+    subscriber.set_subscription_confirmed(this.subscription_price[subscriber.subscription_type])
+    this.gany_the_bot.notify_user_got_confirmed(subscriber)
   }
+
+  this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, total)
 }
 
 Wallet.prototype.schedule_for_withdrawal = function(subscriber_id, address, pkey, amount) {

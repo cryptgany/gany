@@ -10,11 +10,12 @@ var subscriberSchema = mongoose.Schema({
     username: String,
     btc_address: String,
     btc_private_key: String,
+    btc_final_balance: { type: Number, default: 0 }, // Current balance in btc address
     subscription_status: { type: Boolean, default: false },
     subscription_expires_on: Date,
     subscription_type: { type: String, default: 'basic', enum: ['basic', 'advanced', 'pro'] },
     blocked: { type: Boolean, default: false },
-    balance: { type: Number, default: 0 },
+    balance: { type: Number, default: 0 }, // Leftover after paying subscription
     exchanges: {
       Bittrex: { type: Boolean, default: true },
       Poloniex: { type: Boolean, default: true },
@@ -50,14 +51,16 @@ subscriberSchema.methods.generate_btc_address = function() {
   })
 }
 
-subscriberSchema.methods.add_balance = function(balance) {
-  this.balance += balance
-  this.save(function(err, subscriber){
-    if (err) { console.error(err); }
-  })
+subscriberSchema.methods.set_final_balance = function(amount) {
+  this.btc_final_balance = amount
+  this.save()
 }
 
-subscriberSchema.methods.set_subscription_confirmed = function(added_balance = 0) { // added_balance = total transfered amount
+subscriberSchema.methods.total_balance = function() {
+  return this.balance + this.btc_final_balance
+}
+
+subscriberSchema.methods.set_subscription_confirmed = function(price = 0) { // price is the price of subscription
   expiry_date = new Date()
   if (this.subscription_expires_on && this.subscription_expires_on >= expiry_date) {
     // is currently subscribed
@@ -65,11 +68,13 @@ subscriberSchema.methods.set_subscription_confirmed = function(added_balance = 0
   } else {
     expiry_date.setDate(expiry_date.getDate()+30);
   }
-  this.balance += added_balance
+  this.balance = this.btc_final_balance + this.balance
+  this.balance -= price
+  this.btc_final_balance = 0
   this.subscription_status = true
   this.subscription_expires_on = expiry_date
   this.save(function(err, subscriber){
-    if (err) { console.error(err); }
+    if (err) { console.error(this.telegram_id, err); }
   })
 }
 
