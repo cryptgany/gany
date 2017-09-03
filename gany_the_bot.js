@@ -33,7 +33,7 @@ GanyTheBot.prototype.start = function() {
     if (this.is_not_a_group(msg)) {
       message = 'Hello ' + msg.from.first_name + '. I am CryptGany, the Cryptocurrency Trading Analyst Bot.'
       if (this.is_subscribed(msg.chat.id)) {
-        message += "\nLooks like you are already subscribed. Do you need any /help ?"
+        message += "\nLooks like you are already subscribed as a free user. Do you need any /help ?"
       } else {
         message += '\nI will help you setup your configuration so you can start using me.'
         message += '\nFirst of all, you need to /subscribe to start getting notifications.'
@@ -49,7 +49,7 @@ GanyTheBot.prototype.start = function() {
           this.unblock_subscriber(msg.chat.id)
           this.send_message(msg.chat.id, 'You will now start receiving notifications again.')
         } else {
-          this.send_message(msg.chat.id, 'You are already subscribed. Do you need /help ?')
+          this.send_message(msg.chat.id, 'You are already subscribed as a free user. Do you need /help ?')
         }
       } else {
         this.subscribe_user(msg.chat, (err, subscriber) => {
@@ -59,7 +59,7 @@ GanyTheBot.prototype.start = function() {
             this.subscribers.push(subscriber)
             message = 'You are now subscribed! You will start getting notifications soon. Please be patient, the process should be finalized within 10 minutes.'
             message += '\nYou can also configure exchanges using the command: /configure.'
-            message += '\nThe full version of CryptGany works with a monthly subscription fee of 0.01 BTC that you can pay using the command /pay.'
+            message += '\nYou are currently a free user. The full version of CryptGany works with a monthly subscription fee of 0.01 BTC that you can pay using the command /pay.'
             message += "\nOr you can remain as a free user but you will only receive 25% of all of Gany's notifications. You will be able to use the /configure and /see commands."
             message += '\nGany paid version offers customized signal reviews, 100% notifications and will be implementing more features over time.'
             message += '\nIf you have any doubts or comments that you would like to ask, join the discussion group at https://t.me/CryptoWarnings'
