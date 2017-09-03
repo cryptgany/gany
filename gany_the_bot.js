@@ -33,7 +33,11 @@ GanyTheBot.prototype.start = function() {
     if (this.is_not_a_group(msg)) {
       message = 'Hello ' + msg.from.first_name + '. I am CryptGany, the Cryptocurrency Trading Analyst Bot.'
       if (this.is_subscribed(msg.chat.id)) {
-        message += "\nLooks like you are already subscribed as a free user. Do you need any /help ?"
+        if (this.is_paid_subscriber(msg.chat.id)) {
+          message += "\nLooks like you are already subscribed as a paid user. Do you need any /help ?"
+        } else {
+          message += "\nLooks like you are already subscribed as a free user. Do you need any /help ?"
+        }
       } else {
         message += '\nI will help you setup your configuration so you can start using me.'
         message += '\nFirst of all, you need to /subscribe to start getting notifications.'
@@ -49,7 +53,11 @@ GanyTheBot.prototype.start = function() {
           this.unblock_subscriber(msg.chat.id)
           this.send_message(msg.chat.id, 'You will now start receiving notifications again.')
         } else {
-          this.send_message(msg.chat.id, 'You are already subscribed as a free user. Do you need /help ?')
+          if (this.is_paid_subscriber(msg.chat.id)) {
+            this.send_message(msg.chat.id, 'You are already subscribed as a paid user. Do you need /help ?')
+          } else {
+            this.send_message(msg.chat.id, 'You are already subscribed as a free user. Do you need /help ?')
+          }
         }
       } else {
         this.subscribe_user(msg.chat, (err, subscriber) => {
