@@ -7,6 +7,8 @@ const _ = require('underscore')
 require('./protofunctions.js')
 var moment = require('moment');
 
+CHECK_EXPIRED_USERS = 1 // hours
+
 function GanyTheBot(logger) {
   this.logger = logger
   this.god_users = [parseInt(process.env.PERSONAL_CHANNEL)];
@@ -523,6 +525,19 @@ GanyTheBot.prototype.telegram_arrow = function(first_val, last_val) {
   if (first_val < last_val) return '\u2197'
   if (first_val > last_val) return '\u2198'
   return "\u27A1"
+}
+
+GanyTheBot.prototype.expire_expired_users = function() {
+  date = new Date();
+  setTimeout(() => { this.expire_expired_users() }, CHECK_EXPIRED_USERS * 60 * 60 * 1000) // 1 hour, should probably be every 1 day
+  this.subscribers.filter((subscriber) => {
+    return subscriber.subscription_status == true && subscriber.subscription_expires_on <= date
+  }).forEach((subscriber) => {
+    subscriber.subscription_status = false
+    subscriber.save()
+    message = "Looks like your subscription has expired :(\nPlease transfer again 0.01 BTC in order to continue receiving the service."
+    this.send_message(subscriber.telegram_id, message)
+  })
 }
 
 GanyTheBot.prototype._seconds_to_minutes = function(seconds) {

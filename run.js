@@ -39,6 +39,7 @@ poloniex.watch()
 cryptopia.watch()
 kraken.watch();
 Payment.process_payments()
+gany_the_bot.expire_expired_users()
 
 rules = {
   "Bittrex": [

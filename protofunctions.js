@@ -14,3 +14,7 @@ Array.prototype.last = function() {
 Date.prototype.toFileName = function() {
   return this.toJSON().replace(/(\-|\:|(\..*[A-Z]))/gi, "");
 }
+
+Date.prototype.addMinutes = function(minutes) {
+  return new Date(this.getTime() + minutes*60000);
+}
