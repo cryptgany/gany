@@ -4,6 +4,7 @@
 const PumpHandler = require('./pump_handler.js')
 const Signal = require('./models/signal')
 const _ = require('underscore')
+const TickerHandler = require('./ticker_handler')
 
 require('./protofunctions.js')
 var DateTime = require('node-datetime')
@@ -13,17 +14,12 @@ function Detektor(logger, telegram_bot, pump_events, database, api_clients, rule
   this.logger = logger
   this.telegram_bot = telegram_bot
   this.pump_events = pump_events
-  this.verbose = false
-  this.market_data = {}
-  this.pumps_bought = {}
-  this.trade_autotrader_enabled = false // based on TRADE info
-  this.ticker_autotrader_enabled = false // based on TICKER info
-  this.pumps = []
-  this.max_tickers_history = 60 // minutes of history to be kept
-  this.tickers_history_cleaning_time = 20 // clean ever X minutes
   this.database = database
+  this.api_clients = api_clients
+  this.rules = rules
+
   this.matcher = require('./matcher')
-  this.autotrader_btc_amount = 0.05
+  this.ticker_handler = new TickerHandler(this, logger)
 
   this.spam_detector = { // small spam detector so we don't send so many notifications when lags/delays happen in exchanges
     max_time: 1.5 * 1000, // minimum MS between notifications
@@ -32,32 +28,17 @@ function Detektor(logger, telegram_bot, pump_events, database, api_clients, rule
     muted: false
   }
 
-  this.api_clients = api_clients
-
-  this.market_data
-  this.tickers = {}
-  this.tickers_history = {}
-  this.trades = {}
-  this.rules = rules
-
   this.tickers_detected_blacklist = {}
 
   this.pump_events.on('marketupdate', (operation, exchange, market, data) => {
     if (market.match(/BTC/) || exchange == 'Kraken') { //NOTE: not so sure but think XXBT is the nomenclature given for BTC please check it
       if (operation == 'TICKER') {
-        this.update_ticker(exchange, market, data)
-        this.update_ticker_history(exchange, market, data)
+        this.ticker_handler.update_ticker(exchange, market, data)
         this.analyze_ticker(exchange, market, data)
       }
     }
   })
   this.store_snapshot_every_15_min()
-  setTimeout(() => { this.keep_tickers_limited() }, this.tickers_history_cleaning_time * 60 * 1000)
-}
-
-Detektor.prototype.update_ticker = function(exchange, market, data) {
-  this.tickers[exchange] = this.tickers[exchange] || {}
-  this.tickers[exchange][market] = data
 }
 
 Detektor.prototype.store_snapshot_every_15_min = function() {
@@ -78,19 +59,9 @@ Detektor.prototype.restore_snapshot = function() {
     this.database.get_tickers_blacklist((err, data) => {
       if (err) this.logger.error("Error trying to fetch tickers blacklist from database:", err)
       this.tickers_detected_blacklist = data[0] || {}
-      if (detektor.tickers_detected_blacklist) delete(detektor.tickers_detected_blacklist._id)
+      if (this.tickers_detected_blacklist) delete(this.tickers_detected_blacklist._id)
     })
   }, 0)
-}
-
-Detektor.prototype.update_ticker_history = function(exchange, market, data) {
-  this.tickers_history[exchange] = this.tickers_history[exchange] || {}
-  this.tickers_history[exchange][market] = this.tickers_history[exchange][market] || []
-  this.tickers_history[exchange][market].push(data)
-}
-
-Detektor.prototype.get_ticker_history = function(exchange, market) {
-  return this.tickers_history[exchange][market]
 }
 
 Detektor.prototype.volume_change = function(first_ticker, last_ticker) { return this.matcher.volume_change(first_ticker, last_ticker) }
@@ -110,7 +81,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
     if (this.tickers_detected_blacklist[exchange+market] && this.tickers_detected_blacklist[exchange+market] > 0) { // if blacklisted
         this.tickers_detected_blacklist[exchange+market] -= 1
       } else {
-        if (tickers = this.get_ticker_history(exchange, market)) {
+        if (tickers = this.ticker_handler.get_ticker_history(exchange, market)) {
           signal = false
           ticker_time = this.cycle_time(exchange)
           max_time = tickers.length <= ticker_time ? tickers.length : ticker_time
@@ -155,37 +126,12 @@ Detektor.prototype.exchange_ticker_speed = function(exchange) {
   return this.api_clients[exchange].ticker_speed
 }
 
-Detektor.prototype.keep_tickers_limited = function() { // will limit tickers history to not fill memory up
-  this.logger.log("RUNNING TICKERS CLEANER...")
-  Object.keys(this.tickers_history).forEach((exchange) => {
-    max_tickers = 60 / this.exchange_ticker_speed(exchange) * this.max_tickers_history // calculate ticker size for configured value
-    Object.keys(this.tickers_history[exchange]).forEach((market) => {
-      if (this.tickers_history[exchange][market].length > max_tickers) {
-        tickers = this.tickers_history[exchange][market]
-        this.tickers_history[exchange][market] = tickers.slice(tickers.length - max_tickers, tickers.length)
-      }
-    })
-  })
-  Object.keys(this.tickers_detected_blacklist).forEach((blacklisted) => {
-    if (this.tickers_detected_blacklist[blacklisted] == 0)
-      delete(this.tickers_detected_blacklist[blacklisted])
-  })
-  setTimeout(() => { this.keep_tickers_limited() }, this.tickers_history_cleaning_time * 60 * 1000) // clean every 30 minutes
-}
-
 Detektor.prototype.market_url = function(exchange, market) {
   return this.api_clients[exchange].market_url(market)
 }
 
 Detektor.prototype.get_market_data = function(market_name) {
-  markets = []
-  Object.keys(this.tickers).forEach((exchange) => {
-    Object.keys(this.tickers[exchange]).forEach((market) => {
-      if (market.split("-").includes(market_name))
-        markets.push({exchange: exchange, market: market, ticker: this.tickers[exchange][market]})
-    })
-  })
-  return markets
+  return this.ticker_handler.get_market_data(market_name)
 }
 
 module.exports = Detektor;
