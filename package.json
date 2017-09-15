@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "main": "detektor.js",
+  "engines": {
+    "node": "7.10.0",
+    "npm": "4.2.0"
+  },
   "dependencies": {
     "async": "^2.5.0",
     "bitcoinjs-lib": "^3.1.1",
     "blockchain.info": "^2.8.1",
-    "ccxt": "^1.1.91",
+    "ccxt": "=1.1.91",
     "dotenv": "^4.0.0",
     "express": "^4.15.3",
     "jsonfile": "^3.0.1",
@@ -23,8 +27,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "start": "node run.js",
-    "test": "node only_bot.js"
+    "start": "node run.js"
   },
   "author": "",
   "license": "ISC"

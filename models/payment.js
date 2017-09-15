@@ -5,7 +5,7 @@ var pushtx = require('blockchain.info/pushtx')
 var request = require('request');
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/detektor');
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
 
 const PROCESS_MAXIMUM_INPUTS = 60 // maximum addresses into one transaction
 const CHECK_PAYMENTS_EVERY = 1 // hours
