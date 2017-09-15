@@ -82,9 +82,8 @@ Wallet.prototype.add_balance_to_subscriber_and_withdraw = function(subscriber, a
 
     subscriber.set_subscription_confirmed(this.subscription_price[subscriber.subscription_type])
     this.gany_the_bot.notify_user_got_confirmed(subscriber)
+    this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, total)
   }
-
-  this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, total)
 }
 
 Wallet.prototype.schedule_for_withdrawal = function(subscriber_id, address, pkey, amount) {
