@@ -1,16 +1,7 @@
 require('dotenv').config();
+require('./protofunctions')
 var blockexplorer = require('blockchain.info/blockexplorer')
 var Payment = require('./models/payment')
-
-// REFACTOR LATER
-Object.defineProperty(Array.prototype, 'chunk', {
-    value: function(chunkSize) {
-        var R = [];
-        for (var i=0; i<this.length; i+=chunkSize)
-            R.push(this.slice(i,i+chunkSize));
-        return R;
-    }
-});
 
 function Wallet(logger, gany_the_bot) {
   this.logger = logger
