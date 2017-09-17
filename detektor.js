@@ -19,7 +19,7 @@ function Detektor(logger, telegram_bot, pump_events, database, api_clients, rule
   this.rules = rules
 
   this.matcher = require('./matcher')
-  this.ticker_handler = new TickerHandler(this, logger)
+  this.ticker_handler = new TickerHandler(this, logger, api_clients)
 
   this.spam_detector = { // small spam detector so we don't send so many notifications when lags/delays happen in exchanges
     max_time: 1.5 * 1000, // minimum MS between notifications

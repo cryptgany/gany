@@ -3,12 +3,13 @@
     Handles all the ticker related information through time.
 */
 class TickerHandler {
-    constructor(detektor, logger) {
+    constructor(detektor, logger, clients) {
         this.detektor = detektor // for handling tickers blacklist, refactor me
         this.logger = logger
         this.current_data = {} // current data (1 record per ticker)
         this.last_minute_data = {} // current minute of tickers
         this.minutes_data = {} // every minute data of ticker (1 per minute)
+        this.clients = clients
 
         // configurations
         this.last_minute_data_cleaning_time = 20 // clean ever X minutes
