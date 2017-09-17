@@ -81,17 +81,13 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
     if (this.tickers_detected_blacklist[exchange+market] && this.tickers_detected_blacklist[exchange+market] > 0) { // if blacklisted
         this.tickers_detected_blacklist[exchange+market] -= 1
       } else {
-        if (tickers = this.ticker_handler.get_ticker_history(exchange, market)) {
+        // should iteratively return time and data
+        last_ticker = data
+        this.ticker_handler.get_ticker_history(exchange, market, (time, first_ticker) => {
           signal = false
-          ticker_time = this.cycle_time(exchange)
-          max_time = tickers.length <= ticker_time ? tickers.length : ticker_time
-          for(time = max_time; time > 1; time--) {
-            first_ticker = tickers[tickers.length - time] || tickers.first()
-            last_ticker = tickers.last()
-            if (this.rule_match(exchange, first_ticker, last_ticker, time * this.exchange_ticker_speed(exchange))) {
-              volume = this.volume_change(first_ticker, last_ticker)
-              signal = {exchange: exchange, market: market, change: volume, time: time * this.exchange_ticker_speed(exchange), first_ticker: first_ticker, last_ticker: last_ticker}
-            }
+          if (this.rule_match(exchange, first_ticker, last_ticker, time)) {
+            volume = this.volume_change(first_ticker, last_ticker)
+            signal = {exchange: exchange, market: market, change: volume, time: time, first_ticker: first_ticker, last_ticker: last_ticker}
           }
           if (signal) {
             this.detect_spam()
@@ -100,7 +96,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             if (!this.muted())
               this.telegram_bot.send_signal(this.api_clients[exchange], signal)
           }
-        }
+        })
       }
   }, 0) // run async
 }
@@ -116,14 +112,6 @@ Detektor.prototype.detect_spam = function() {
     setTimeout(() => { this.spam_detector.muted = false }, this.spam_detector.mute_for)
   }
   this.spam_detector.last_signal = time
-}
-
-Detektor.prototype.cycle_time = function(exchange) {
-  return this.api_clients[exchange].cycle_time * 60 / this.exchange_ticker_speed(exchange)
-}
-
-Detektor.prototype.exchange_ticker_speed = function(exchange) {
-  return this.api_clients[exchange].ticker_speed
 }
 
 Detektor.prototype.market_url = function(exchange, market) {

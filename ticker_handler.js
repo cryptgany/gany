@@ -1,4 +1,5 @@
 'use strict';
+require('./protofunctions.js')
 /*
     Handles all the ticker related information through time.
 */
@@ -32,8 +33,17 @@ class TickerHandler {
         this.last_minute_data[exchange][market].push(data)
     }
 
-    get_ticker_history(exchange, market) {
-        return this.last_minute_data[exchange][market]
+    // should iteratively return time and data
+    get_ticker_history(exchange, market, callback) {
+        let tickers = this.last_minute_data[exchange][market]
+        let ticker_time = this.cycle_time(exchange)
+        let max_time = tickers.length <= ticker_time ? tickers.length : ticker_time
+        for(let time = max_time; time > 1; time--) {
+            let ticker = tickers[tickers.length - time] || tickers.first()
+            if (ticker) {
+                callback(time * this.exchange_ticker_speed(exchange), ticker)
+            }
+        }
     }
 
     keep_tickers_limited() { // will limit tickers history to not fill memory up
@@ -52,6 +62,14 @@ class TickerHandler {
                 delete(this.detektor.tickers_detected_blacklist[blacklisted])
         })
         setTimeout(() => { this.keep_tickers_limited() }, this.last_minute_data_cleaning_time * 60 * 1000) // clean every 30 minutes
+    }
+
+    cycle_time(exchange) {
+        return this.clients[exchange].cycle_time * 60 / this.exchange_ticker_speed(exchange)
+    }
+
+    exchange_ticker_speed(exchange) {
+        return this.clients[exchange].ticker_speed
     }
 
     get_market_data(market_name) {
