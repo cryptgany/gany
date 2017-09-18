@@ -2,6 +2,16 @@ require('dotenv').config();
 var blockexplorer = require('blockchain.info/blockexplorer')
 var Payment = require('./models/payment')
 
+// REFACTOR LATER
+Object.defineProperty(Array.prototype, 'chunk', {
+    value: function(chunkSize) {
+        var R = [];
+        for (var i=0; i<this.length; i+=chunkSize)
+            R.push(this.slice(i,i+chunkSize));
+        return R;
+    }
+});
+
 function Wallet(logger, gany_the_bot) {
   this.logger = logger
   this.options = { apiCode: process.env.BLOCKCHAIN_API_CODE }
@@ -43,17 +53,24 @@ Wallet.prototype.check_transactions = function() {
   })
   // should check every subscriber's address for balance
   // if person has balance >= 0.01 then sechedule address for withdrawal and mark as subscribed
-  addresses_sub_type = {}
-  this.subscriber_list.forEach((sub) => { addresses_sub_type[sub.btc_address] = {subscriber: sub, final_balance: sub.btc_final_balance} })
-  blockexplorer.getBalance(Object.keys(addresses_sub_type), this.options).then((addr_data) => {
-    Object.keys(addr_data).forEach((addr) => {
-      final_balance = addr_data[addr].final_balance
-      if (final_balance >= 0 && final_balance != addresses_sub_type[addr].final_balance) { // add balance to subscriber
-        // subscriber paid money, schedule for withdrawing and next cycle will detect user subscription
-        this.add_balance_to_subscriber_and_withdraw(addresses_sub_type[addr].subscriber, addr, final_balance)
-      }
-    })
-  }).catch((e) => { this.logger.error("Error on check_transactions", e) })
+  // This has to be done in 80 batches so blockexplorer doesn't complies
+  count = 0
+  this.subscriber_list.chunk(80).forEach((subs) => {
+    setTimeout(() => {
+      addresses_sub_type = {}
+      subs.forEach((sub) => { addresses_sub_type[sub.btc_address] = {subscriber: sub, final_balance: sub.btc_final_balance} })
+      blockexplorer.getBalance(Object.keys(addresses_sub_type), this.options).then((addr_data) => {
+        Object.keys(addr_data).forEach((addr) => {
+          final_balance = addr_data[addr].final_balance
+          if (final_balance >= 0 && final_balance != addresses_sub_type[addr].final_balance) { // add balance to subscriber
+            // subscriber paid money, schedule for withdrawing and next cycle will detect user subscription
+            this.add_balance_to_subscriber_and_withdraw(addresses_sub_type[addr].subscriber, addr, final_balance)
+          }
+        })
+      }).catch((e) => { this.logger.error("Error on check_transactions", e) })
+    },count * 11 * 1000)
+    count += 1
+  })
 }
 
 Wallet.prototype.add_balance_to_subscriber_and_withdraw = function(subscriber, address, total) {
@@ -65,9 +82,8 @@ Wallet.prototype.add_balance_to_subscriber_and_withdraw = function(subscriber, a
 
     subscriber.set_subscription_confirmed(this.subscription_price[subscriber.subscription_type])
     this.gany_the_bot.notify_user_got_confirmed(subscriber)
+    this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, total)
   }
-
-  this.schedule_for_withdrawal(subscriber.telegram_id, address, subscriber.btc_private_key, total)
 }
 
 Wallet.prototype.schedule_for_withdrawal = function(subscriber_id, address, pkey, amount) {
