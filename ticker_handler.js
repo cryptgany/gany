@@ -10,6 +10,7 @@ class TickerHandler {
         this.current_data = {} // current data (1 record per ticker)
         this.last_minute_data = {} // current minute of tickers
         this.minutes_data = {} // every minute data of ticker (1 per minute)
+        this.minute_counter_by_exchange_market = {} // counts 1 per ticker update per exchange per market, once equals to one minute data gets stored
         this.clients = clients
 
         // configurations
@@ -25,12 +26,28 @@ class TickerHandler {
         this.current_data[exchange][market] = data
 
         this.update_ticker_history(exchange, market, data)
+        this.update_minute_ticker(exchange, market)
     }
 
     update_ticker_history(exchange, market, data) {
         this.last_minute_data[exchange] = this.last_minute_data[exchange] || {}
         this.last_minute_data[exchange][market] = this.last_minute_data[exchange][market] || []
         this.last_minute_data[exchange][market].push(data)
+    }
+
+    update_minute_ticker(exchange, market) {
+        this.minute_counter_by_exchange_market[exchange+market] = this.minute_counter_by_exchange_market[exchange+market] || 0
+        this.minute_counter_by_exchange_market[exchange+market] += 1
+        if (this.minute_counter_by_exchange_market[exchange+market] == this.oneMinuteLength(exchange)) {
+            // if we already have one minute of data then store minute data
+            this.minutes_data[exchange] = this.minutes_data[exchange] || {}
+            this.minutes_data[exchange][market] = this.minutes_data[exchange][market] || []
+            this.minutes_data[exchange][market].push(this.last_minute_data[exchange][market].last())
+
+            this.minute_counter_by_exchange_market[exchange+market] = 0
+        }
+        // si ya tenemos 1 minuto de data, guardar en "minute_data" as minute data
+        // minute data debería guardar en DB
     }
 
     // should iteratively return time and data
@@ -70,6 +87,10 @@ class TickerHandler {
 
     exchange_ticker_speed(exchange) {
         return this.clients[exchange].ticker_speed
+    }
+
+    oneMinuteLength(exchange) {
+        return 60 / this.exchange_ticker_speed(exchange)
     }
 
     get_market_data(market_name) {
