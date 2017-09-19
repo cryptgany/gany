@@ -16,10 +16,13 @@ class TickerHandler {
 
         // configurations
         this.last_minute_data_cleaning_time = 20 // clean ever X minutes
-        this.max_tickers_history = 60 // minutes of history to be kept
+        this.minute_data_cleaning_time = 6 // clean ever X hours
+        this.max_tickers_history = 60 // minutes of history to be kept in ticker-speed data
+        this.max_minutes_tickers_history = 60 * 24 // minutes of history to be kept in minute-speed data
 
         // periodic functions
         setTimeout(() => { this.keep_tickers_limited() }, this.last_minute_data_cleaning_time * 60 * 1000)
+        setTimeout(() => { this.keep_minute_tickers_limited() }, this.minute_data_cleaning_time * 60 * 60 * 1000)
     }
 
     update_ticker(exchange, market, data) {
@@ -74,10 +77,10 @@ class TickerHandler {
     keep_tickers_limited() { // will limit tickers history to not fill memory up
         this.logger.log("RUNNING TICKERS CLEANER...")
         Object.keys(this.last_minute_data).forEach((exchange) => {
-            max_tickers = 60 / this.exchange_ticker_speed(exchange) * this.max_tickers_history // calculate ticker size for configured value
+            let max_tickers = 60 / this.exchange_ticker_speed(exchange) * this.max_tickers_history // calculate ticker size for configured value
             Object.keys(this.last_minute_data[exchange]).forEach((market) => {
                 if (this.last_minute_data[exchange][market].length > max_tickers) {
-                    tickers = this.last_minute_data[exchange][market]
+                    let tickers = this.last_minute_data[exchange][market]
                     this.last_minute_data[exchange][market] = tickers.slice(tickers.length - max_tickers, tickers.length)
                 }
             })
@@ -87,6 +90,19 @@ class TickerHandler {
                 delete(this.detektor.tickers_detected_blacklist[blacklisted])
         })
         setTimeout(() => { this.keep_tickers_limited() }, this.last_minute_data_cleaning_time * 60 * 1000) // clean every 30 minutes
+    }
+
+    keep_minute_tickers_limited() { // will limit tickers history to not fill memory up
+        this.logger.log("RUNNING MINUTE TICKERS CLEANER...")
+        Object.keys(this.minutes_data).forEach((exchange) => {
+            Object.keys(this.minutes_data[exchange]).forEach((market) => {
+                if (this.minutes_data[exchange][market].length > this.max_minutes_tickers_history) {
+                    let tickers = this.minutes_data[exchange][market]
+                    this.minutes_data[exchange][market] = tickers.slice(tickers.length - this.max_minutes_tickers_history, tickers.length)
+                }
+            })
+        })
+        setTimeout(() => { this.keep_minute_tickers_limited() }, this.minute_data_cleaning_time * 60 * 60 * 1000) // clean every 30 minutes
     }
 
     cycle_time(exchange) {
