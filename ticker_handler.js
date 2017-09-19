@@ -1,5 +1,6 @@
 'use strict';
 require('./protofunctions.js')
+const Ticker = require('./models/ticker')
 /*
     Handles all the ticker related information through time.
 */
@@ -43,6 +44,13 @@ class TickerHandler {
             this.minutes_data[exchange] = this.minutes_data[exchange] || {}
             this.minutes_data[exchange][market] = this.minutes_data[exchange][market] || []
             this.minutes_data[exchange][market].push(this.last_minute_data[exchange][market].last())
+
+            // create ticker data
+            let ticker = new Ticker({exchange: exchange, market: market, data: this.last_minute_data[exchange][market].last()})
+            ticker.save((err) => {
+                if (err)
+                    console.log("Error:", err)
+            })
 
             this.minute_counter_by_exchange_market[exchange+market] = 0
         }
