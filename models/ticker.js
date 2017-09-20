@@ -11,7 +11,7 @@ if (process.env.REDISTOGO_URL) { // production environment detected
 
 class Ticker {
     static store(exchange, market, data) {
-        client.lpush([exchange+'.'+market, JSON.stringify(data)], function(err, reply) { console.log(err, reply) });
+        client.lpush([exchange+'.'+market, JSON.stringify(data)], function(err, reply) { });
     }
 
     static getOne(exchange, market, number, callback) {
