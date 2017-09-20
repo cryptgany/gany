@@ -49,11 +49,7 @@ class TickerHandler {
             this.minutes_data[exchange][market].push(this.last_minute_data[exchange][market].last())
 
             // create ticker data
-            let ticker = new Ticker({exchange: exchange, market: market, data: this.last_minute_data[exchange][market].last()})
-            ticker.save((err) => {
-                if (err)
-                    console.log("Error:", err)
-            })
+            Ticker.store(exchange, market, this.last_minute_data[exchange][market].last())
 
             this.minute_counter_by_exchange_market[exchange+market] = 0
         }

@@ -1,22 +1,24 @@
 // Stores data for each minute. Should be cleaned for 30+ days old data
-require('dotenv').config();
-var mongoose = require('mongoose');
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
+var redis = require('redis');
+var client = redis.createClient();
 
-var tickerSchema = mongoose.Schema({
-    exchange: String,
-    market: String,
-    data: {
-        high: Number,
-        low: Number,
-        volume: Number,
-        last: Number,
-        ask: Number,
-        bid: Number
-    },
-    length: { type: String, enum: ['minute', 'hour'], default: 'minute' }, // in case we ever want to store more than that
-}, { timestamps: true });
+class Ticker {
+    static store(exchange, market, data) {
+        client.lpush([exchange+'.'+market, JSON.stringify(data)], function(err, reply) { console.log(err, reply) });
+    }
 
-TickerModel = mongoose.model('tickers', tickerSchema)
+    static getOne(exchange, market, number, callback) {
+        this.getRange(exchange, market, number, number, callback)
+    }
 
-module.exports = TickerModel;
+    static getRange(exchange, market, from = 0, to = 0, callback) {
+        client.lrange(exchange+'.'+market, from, to, function(err, reply) { callback(err, reply.map((e) => { return JSON.parse(e) })) })
+    }
+
+    static getExchangeMarkets(callback) {
+        client.keys('*', callback)
+    }
+}
+
+module.exports = Ticker;
+
