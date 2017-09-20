@@ -1,6 +1,13 @@
 // Stores data for each minute. Should be cleaned for 30+ days old data
 var redis = require('redis');
-var client = redis.createClient();
+
+if (process.env.REDISTOGO_URL) { // production environment detected
+    var rtg   = require("url").parse(process.env.REDISTOGO_URL);
+    var client = require("redis").createClient(rtg.port, rtg.hostname);
+    client.auth(rtg.auth.split(":")[1]);
+} else {
+    var client = require("redis").createClient();
+}
 
 class Ticker {
     static store(exchange, market, data) {
@@ -21,4 +28,3 @@ class Ticker {
 }
 
 module.exports = Ticker;
-
