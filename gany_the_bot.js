@@ -187,7 +187,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/see/, (msg, match) => {
+  this.telegram_bot.onText(/^\/see\ [a-zA-Z0-9]+$/i, (msg, match) => { // common users /see
     market = msg.text.toUpperCase().replace(/\/SEE\ /, '')
     markets = this.detektor.get_market_data(market)
     if (markets.length == 0)
@@ -199,6 +199,32 @@ GanyTheBot.prototype.start = function() {
         return this.telegram_post_price_check(market_info.exchange, market_info.market, market_info.ticker)
       }).join("\n\n")
     this.send_message(msg.chat.id, message)
+  })
+
+  this.telegram_bot.onText(/^\/see\ ([a-zA-Z0-9]{1,6})\ \d+$/i, (msg, match) => {
+    console.log("Here got", msg.text)
+    data = msg.text.toUpperCase().split(' ')
+    market = data[1]
+    time = parseInt(data[2])
+    if (time.toString() != data[2] || time < 1 || time > 60 * 2) {
+      console.log("ANSWERING 1")
+      this.send_message(msg.chat.id, 'Please enter a number between 1 and 120.')
+    } else {
+      console.log("producing getMarketDataWithTime")
+      this.detektor.getMarketDataWithTime(market, time).then((markets) => {
+        console.log("got ", markets)
+        if (markets.length == 0)
+          message = "Not found."
+        if (markets.length > 5)
+          message = "Too many markets found"
+        if (markets.length > 0 && markets.length <= 5)
+          message = markets.map((market_info) => {
+            return this.telegramPostPriceCheckWithTime(market_info.exchange, market_info.market, market_info.firstTicker, market_info.secondTicker, time)
+          }).join("\n\n")
+        console.log("ANSWERING 2")
+        this.send_message(msg.chat.id, message)
+      }).catch((err) => { this.logger.error("Error fetching market with data:", err)})
+    }
   })
 
   this.telegram_bot.onText(/\/(stop|block)/, (msg, match) => {
@@ -215,6 +241,7 @@ GanyTheBot.prototype.start = function() {
     message += "\n/stop - Stop receiving notifications from Gany"
     message += "\n/configure - Configure the exchanges you want or don't want"
     message += "\n/see XXX - See information on all exchanges about XXX currency"
+    message += "\n/see XXX 20 - See information on all exchanges with change over 20 minutes"
     message += "\n/pricing - See information about pricing of Gany"
     message += '\n/pay - See information required for paying monthly fee'
     message += "\n/whatisbal - What is B A L ?"
@@ -432,6 +459,20 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   message += "\nVolume: " + ticker_info.volume.toFixed(4) + " " + this.detektor.api_clients[exchange].volume_for(market)
   message += "\n24h Low: " + ticker_info.low.toFixed(8)
   message += "\n24h High: " + ticker_info.high.toFixed(8)
+  return message
+}
+
+GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market, firstTicker, secondTicker, time) {
+  console.log("arming", exchange,market,firstTicker, secondTicker, time)
+  diff = firstTicker.volume - secondTicker.volume
+  change = this.detektor.volume_change(secondTicker, firstTicker)
+  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ")"
+  message += "\nVol. up by *" + diff.toFixed(2) + "* " + this.detektor.api_clients[exchange].volume_for(market) + " since *" + time + "minutes*"
+  message += "\nVolume: " + firstTicker.volume.toFixed(4) + " (*" + ((change - 1) * 100).toFixed(2) + "%*)"
+  message += "\nB: " + secondTicker.bid.toFixed(8) + " " + this.telegram_arrow(secondTicker.bid, firstTicker.bid) + " " + firstTicker.bid.toFixed(8)
+  message += "\nA: " + secondTicker.ask.toFixed(8) + " " + this.telegram_arrow(secondTicker.ask, firstTicker.ask) + " " + firstTicker.ask.toFixed(8)
+  message += "\nL: " + secondTicker.last.toFixed(8) + " " + this.telegram_arrow(secondTicker.last, firstTicker.last) + " " + firstTicker.last.toFixed(8)
+  message += "\n24h Low: " + firstTicker.low.toFixed(8) + "\n24h High: " + firstTicker.high.toFixed(8)
   return message
 }
 

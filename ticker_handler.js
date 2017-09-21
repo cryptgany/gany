@@ -113,15 +113,41 @@ class TickerHandler {
         return 60 / this.exchange_ticker_speed(exchange)
     }
 
-    get_market_data(market_name) {
-        let markets = []
+    findMarketsByName(market_name, callback) {
         Object.keys(this.current_data).forEach((exchange) => {
             Object.keys(this.current_data[exchange]).forEach((market) => {
                 if (market.split("-").includes(market_name))
-                    markets.push({exchange: exchange, market: market, ticker: this.current_data[exchange][market]})
+                    callback(exchange, market, this.current_data[exchange][market])
             })
         })
+    }
+
+    get_market_data(market_name) {
+        let markets = []
+        this.findMarketsByName(market_name, (exchange, market, ticker) => {
+            markets.push({exchange: exchange, market: market, ticker: ticker})
+        })
         return markets
+    }
+
+    getMarketDataWithTime(marketName, time) {
+        return new Promise((resolve, reject) => {
+            let marketDatas = this.get_market_data(marketName)
+            let markets = []
+            marketDatas.forEach((marketData) => {
+                let exchange = marketData.exchange
+                let market = marketData.market
+                let ticker = marketData.ticker
+                Ticker.getOne(exchange, market, time, (err, secondTicker) => {
+                    markets.push({exchange: exchange, market: market, firstTicker: ticker, secondTicker: secondTicker})
+                    if (err)
+                        reject(err)
+                    else
+                        if (exchange == marketDatas.last().exchange && market == marketDatas.last().market) // we finished loading
+                            resolve(markets)
+                })
+            })
+        })
     }
 
 }
