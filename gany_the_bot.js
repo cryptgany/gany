@@ -202,17 +202,13 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/see\ ([a-zA-Z0-9]{1,6})\ \d+$/i, (msg, match) => {
-    console.log("Here got", msg.text)
     data = msg.text.toUpperCase().split(' ')
     market = data[1]
     time = parseInt(data[2])
     if (time.toString() != data[2] || time < 1 || time > 60 * 2) {
-      console.log("ANSWERING 1")
       this.send_message(msg.chat.id, 'Please enter a number between 1 and 120.')
     } else {
-      console.log("producing getMarketDataWithTime")
       this.detektor.getMarketDataWithTime(market, time).then((markets) => {
-        console.log("got ", markets)
         if (markets.length == 0)
           message = "Not found."
         if (markets.length > 5)
@@ -221,7 +217,6 @@ GanyTheBot.prototype.start = function() {
           message = markets.map((market_info) => {
             return this.telegramPostPriceCheckWithTime(market_info.exchange, market_info.market, market_info.firstTicker, market_info.lastTicker, time)
           }).join("\n\n")
-        console.log("ANSWERING 2")
         this.send_message(msg.chat.id, message)
       }).catch((err) => { this.logger.error("Error fetching market with data:", err)})
     }
