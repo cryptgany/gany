@@ -138,8 +138,8 @@ class TickerHandler {
                 let exchange = marketData.exchange
                 let market = marketData.market
                 let ticker = marketData.ticker
-                Ticker.getOne(exchange, market, time, (err, secondTicker) => {
-                    markets.push({exchange: exchange, market: market, firstTicker: ticker, secondTicker: secondTicker})
+                Ticker.getOne(exchange, market, time, (err, lastTicker) => {
+                    markets.push({exchange: exchange, market: market, firstTicker: lastTicker, lastTicker: ticker})
                     if (err)
                         reject(err)
                     else

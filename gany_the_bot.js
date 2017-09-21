@@ -219,7 +219,7 @@ GanyTheBot.prototype.start = function() {
           message = "Too many markets found"
         if (markets.length > 0 && markets.length <= 5)
           message = markets.map((market_info) => {
-            return this.telegramPostPriceCheckWithTime(market_info.exchange, market_info.market, market_info.firstTicker, market_info.secondTicker, time)
+            return this.telegramPostPriceCheckWithTime(market_info.exchange, market_info.market, market_info.firstTicker, market_info.lastTicker, time)
           }).join("\n\n")
         console.log("ANSWERING 2")
         this.send_message(msg.chat.id, message)
@@ -462,17 +462,16 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   return message
 }
 
-GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market, firstTicker, secondTicker, time) {
-  console.log("arming", exchange,market,firstTicker, secondTicker, time)
-  diff = firstTicker.volume - secondTicker.volume
-  change = this.detektor.volume_change(secondTicker, firstTicker)
+GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market, firstTicker, lastTicker, time) {
+  diff = lastTicker.volume - firstTicker.volume
+  change = this.detektor.volume_change(firstTicker, lastTicker)
   message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ")"
-  message += "\nVol. up by *" + diff.toFixed(2) + "* " + this.detektor.api_clients[exchange].volume_for(market) + " since *" + time + "minutes*"
-  message += "\nVolume: " + firstTicker.volume.toFixed(4) + " (*" + ((change - 1) * 100).toFixed(2) + "%*)"
-  message += "\nB: " + secondTicker.bid.toFixed(8) + " " + this.telegram_arrow(secondTicker.bid, firstTicker.bid) + " " + firstTicker.bid.toFixed(8)
-  message += "\nA: " + secondTicker.ask.toFixed(8) + " " + this.telegram_arrow(secondTicker.ask, firstTicker.ask) + " " + firstTicker.ask.toFixed(8)
-  message += "\nL: " + secondTicker.last.toFixed(8) + " " + this.telegram_arrow(secondTicker.last, firstTicker.last) + " " + firstTicker.last.toFixed(8)
-  message += "\n24h Low: " + firstTicker.low.toFixed(8) + "\n24h High: " + firstTicker.high.toFixed(8)
+  message += "\nVol. up by *" + diff.toFixed(2) + "* " + this.detektor.api_clients[exchange].volume_for(market) + " since *" + time + " minutes*"
+  message += "\nVolume: " + lastTicker.volume.toFixed(4) + " (*" + ((change - 1) * 100).toFixed(2) + "%*)"
+  message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
+  message += "\nA: " + firstTicker.ask.toFixed(8) + " " + this.telegram_arrow(firstTicker.ask, lastTicker.ask) + " " + lastTicker.ask.toFixed(8)
+  message += "\nL: " + firstTicker.last.toFixed(8) + " " + this.telegram_arrow(firstTicker.last, lastTicker.last) + " " + lastTicker.last.toFixed(8)
+  message += "\n24h Low: " + lastTicker.low.toFixed(8) + "\n24h High: " + lastTicker.high.toFixed(8)
   return message
 }
 
