@@ -15,7 +15,7 @@ class Ticker {
     }
 
     static getOne(exchange, market, number, callback) {
-        this.getRange(exchange, market, number, number, callback)
+        this.getRange(exchange, market, number, number, (err, reply) => { callback(err, reply[0])})
     }
 
     static getRange(exchange, market, from = 0, to = 0, callback) {
