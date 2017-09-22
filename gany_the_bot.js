@@ -209,8 +209,8 @@ GanyTheBot.prototype.start = function() {
     data = msg.text.toUpperCase().split(' ')
     market = data[1]
     time = parseInt(data[2])
-    if (time.toString() != data[2] || time < 1 || time > 60 * 2) {
-      this.send_message(msg.chat.id, 'Please enter a number between 1 and 120.')
+    if (time.toString() != data[2] || time < 1 || time > 60 * 6) {
+      this.send_message(msg.chat.id, 'Please enter a number between 1 and 360.')
     } else {
       this.detektor.getMarketDataWithTime(market, time-1).then((markets) => {
         if (markets.length == 0)
