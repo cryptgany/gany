@@ -10,6 +10,9 @@ if (process.env.REDISTOGO_URL) { // production environment detected
 }
 
 class Ticker {
+    static client(){
+        return client
+    }
     static store(exchange, market, data) {
         client.lpush([exchange+'.'+market, JSON.stringify(data)], function(err, reply) { });
     }

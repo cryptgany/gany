@@ -212,7 +212,7 @@ GanyTheBot.prototype.start = function() {
     if (time.toString() != data[2] || time < 1 || time > 60 * 2) {
       this.send_message(msg.chat.id, 'Please enter a number between 1 and 120.')
     } else {
-      this.detektor.getMarketDataWithTime(market, time).then((markets) => {
+      this.detektor.getMarketDataWithTime(market, time-1).then((markets) => {
         if (markets.length == 0)
           message = "Not found."
         if (markets.length > 5)
