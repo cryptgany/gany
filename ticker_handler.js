@@ -134,19 +134,22 @@ class TickerHandler {
         return new Promise((resolve, reject) => {
             let marketDatas = this.get_market_data(marketName)
             let markets = []
-            marketDatas.forEach((marketData) => {
-                let exchange = marketData.exchange
-                let market = marketData.market
-                let ticker = marketData.ticker
-                Ticker.getOne(exchange, market, time, (err, lastTicker) => {
-                    markets.push({exchange: exchange, market: market, firstTicker: lastTicker, lastTicker: ticker})
-                    if (err)
-                        reject(err)
-                    else
-                        if (exchange == marketDatas.last().exchange && market == marketDatas.last().market) // we finished loading
-                            resolve(markets)
+            if (marketDatas.length == 0)
+                resolve([])
+            else
+                marketDatas.forEach((marketData) => {
+                    let exchange = marketData.exchange
+                    let market = marketData.market
+                    let ticker = marketData.ticker
+                    Ticker.getOne(exchange, market, time, (err, lastTicker) => {
+                        markets.push({exchange: exchange, market: market, firstTicker: lastTicker, lastTicker: ticker})
+                        if (err)
+                            reject(err)
+                        else
+                            if (exchange == marketDatas.last().exchange && market == marketDatas.last().market) // we finished loading
+                                resolve(markets)
+                    })
                 })
-            })
         })
     }
 
