@@ -222,7 +222,12 @@ GanyTheBot.prototype.start = function() {
             return this.telegramPostPriceCheckWithTime(market_info.exchange, market_info.market, market_info.firstTicker, market_info.lastTicker, time)
           }).join("\n\n")
         this.send_message(msg.chat.id, message)
-      }).catch((err) => { this.logger.error("Error fetching market with data:", err)})
+      }).catch((err) => {
+        if (err == 'no_time_data') {
+          this.send_message(msg.chat.id, "Sorry, I still don't have " + time + " minutes of data for that pair.")
+        } else
+          this.logger.error("Error fetching market with data:", err)
+      })
     }
   })
 
