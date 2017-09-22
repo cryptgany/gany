@@ -187,6 +187,10 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
+  this.telegram_bot.onText(/^\/see+$/i, (msg, match) => {
+    this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth\n/see usdt')
+  })
+
   this.telegram_bot.onText(/^\/see\ [a-zA-Z0-9]+$/i, (msg, match) => { // common users /see
     market = msg.text.toUpperCase().replace(/\/SEE\ /, '')
     markets = this.detektor.get_market_data(market)
