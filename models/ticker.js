@@ -1,8 +1,8 @@
 // Stores data for each minute. Should be cleaned for 30+ days old data
 var redis = require('redis');
 
-if (process.env.REDISTOGO_URL) { // production environment detected
-    var rtg   = require("url").parse(process.env.REDISTOGO_URL);
+if (process.env.REDISCLOUD_URL) { // production environment detected
+    var rtg   = require("url").parse(process.env.REDISCLOUD_URL);
     var client = require("redis").createClient(rtg.port, rtg.hostname);
     client.auth(rtg.auth.split(":")[1]);
 } else {
