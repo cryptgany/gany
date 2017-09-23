@@ -73,7 +73,7 @@ GanyTheBot.prototype.start = function() {
             message += "\nOr you can remain as a free user but you will only receive 25% of all of Gany's notifications. You will be able to use the /configure and /see commands."
             message += '\nGany paid version offers customized signal reviews, 100% notifications and will be implementing more features over time.'
             message += '\nIf you have any doubts or comments that you would like to ask, join the discussion group at https://t.me/CryptoWarnings'
-            message += '\You can also use the /help command for further information'
+            message += '\nYou can also use the /help command for further information'
             this.send_message(msg.chat.id, message)
           }
         })
