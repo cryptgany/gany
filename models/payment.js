@@ -5,7 +5,7 @@ var pushtx = require('blockchain.info/pushtx')
 var request = require('request');
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/detektor');
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
 
 const PROCESS_MAXIMUM_INPUTS = 60 // maximum addresses into one transaction
 const CHECK_PAYMENTS_EVERY = 1 // hours
@@ -90,52 +90,57 @@ paymentSchema.statics.process_payments = function() {
 }
 
 paymentSchema.statics.make_payment_transaction = function(tx_data) {
-  var tx = new bitcoin.TransactionBuilder()
-  input_txs = 0
-  // add inputs
-  tx_data.forEach((data) => {
-    data.txs.forEach((tx_data) => {
-      tx_id = tx_data[0]; tx_vout = tx_data[1]
-      console.log("adding tx_id", tx_id, "as id", tx_vout)
-      tx.addInput(tx_id, tx_vout)
-      input_txs += 1
-    })
-  })
-  // calculate fees
-  tx_bytes = (input_txs * 181) + 34 + 10
-  tx_fee = tx_bytes * SATS_FEE_PER_BYTE // minimum fee
-  // inputs * 181 + outs * 34 + 10
-
-  // add output
-  total_amount = tx_data.map((d) => { return d.total }).sum();
-  console.log("adding output for ", total_amount, "minus fee of", tx_fee)
-  tx.addOutput(process.env.MAIN_BTC_ADDRESS, total_amount - tx_fee)
-
-  // sign tx
-  id = 0
-  tx_data.forEach((data) => {
-    pkey = data.payment.private_key
-    keyPair = bitcoin.ECPair.fromWIF(pkey)
-    data.txs.forEach((tx_data) => {
-      console.log("singing id", tx_data[0], "as id", id)
-      tx.sign(id, keyPair)
-      id += 1
-    })
-  })
-
-  // push
-  console.log("Pushing TX:", total_amount, tx_fee, tx.build().toHex())
-
-  pushtx.pushtx(tx.build().toHex(), { apiCode: process.env.BLOCKCHAIN_API_CODE }).then((res) => {
-    console.log("RESULT IS", res)
+  try {
+    var tx = new bitcoin.TransactionBuilder()
+    input_txs = 0
+    // add inputs
     tx_data.forEach((data) => {
-      payment = data.payment
-      payment.completed_at = Date.now()
-      payment.real_amount = data.total
-      payment.status = 'completed'
-      payment.save()
+      data.txs.forEach((tx_data) => {
+        tx_id = tx_data[0]; tx_vout = tx_data[1]
+        console.log("adding tx_id", tx_id, "as id", tx_vout)
+        tx.addInput(tx_id, tx_vout)
+        input_txs += 1
+      })
     })
-  })
+    // calculate fees
+    tx_bytes = (input_txs * 181) + 34 + 10
+    tx_fee = tx_bytes * SATS_FEE_PER_BYTE // minimum fee
+    // inputs * 181 + outs * 34 + 10
+
+    // add output
+    total_amount = tx_data.map((d) => { return d.total }).sum();
+    console.log("adding output for ", total_amount, "minus fee of", tx_fee)
+    tx.addOutput(process.env.MAIN_BTC_ADDRESS, total_amount - tx_fee)
+
+    // sign tx
+    id = 0
+    tx_data.forEach((data) => {
+      pkey = data.payment.private_key
+      keyPair = bitcoin.ECPair.fromWIF(pkey)
+      data.txs.forEach((tx_data) => {
+        console.log("singing id", tx_data[0], "as id", id)
+        tx.sign(id, keyPair)
+        id += 1
+      })
+    })
+
+    // push
+    console.log("Pushing TX:", total_amount, tx_fee, tx.build().toHex())
+
+    pushtx.pushtx(tx.build().toHex(), { apiCode: process.env.BLOCKCHAIN_API_CODE }).then((res) => {
+      console.log("RESULT IS", res)
+      tx_data.forEach((data) => {
+        payment = data.payment
+        payment.completed_at = Date.now()
+        payment.real_amount = data.total
+        payment.status = 'completed'
+        payment.save()
+      })
+    })
+  } catch(e) {
+    console.error('Error on payment creation!', e)
+    // we should also send an email notification here
+  }
 }
 
 PaymentModel = mongoose.model('payments', paymentSchema);

@@ -1,7 +1,8 @@
+require('dotenv').config();
 var MongoClient = require('mongodb').MongoClient;
 
 function Database(collection = "") {
-  this.url = "mongodb://localhost:27017/detektor";
+  this.url = process.env.MONGODB_URI || "mongodb://localhost:27017/detektor";
   this.collection = collection
   this.tickers_blacklist_collection = 'tickers_blacklist';
 }

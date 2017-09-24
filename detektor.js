@@ -19,7 +19,7 @@ function Detektor(logger, telegram_bot, pump_events, database, api_clients, rule
   this.rules = rules
 
   this.matcher = require('./matcher')
-  this.ticker_handler = new TickerHandler(this, logger)
+  this.ticker_handler = new TickerHandler(this, logger, api_clients)
 
   this.spam_detector = { // small spam detector so we don't send so many notifications when lags/delays happen in exchanges
     max_time: 1.5 * 1000, // minimum MS between notifications
@@ -81,17 +81,13 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
     if (this.tickers_detected_blacklist[exchange+market] && this.tickers_detected_blacklist[exchange+market] > 0) { // if blacklisted
         this.tickers_detected_blacklist[exchange+market] -= 1
       } else {
-        if (tickers = this.ticker_handler.get_ticker_history(exchange, market)) {
+        // should iteratively return time and data
+        last_ticker = data
+        this.ticker_handler.get_ticker_history(exchange, market, (time, first_ticker) => {
           signal = false
-          ticker_time = this.cycle_time(exchange)
-          max_time = tickers.length <= ticker_time ? tickers.length : ticker_time
-          for(time = max_time; time > 1; time--) {
-            first_ticker = tickers[tickers.length - time] || tickers.first()
-            last_ticker = tickers.last()
-            if (this.rule_match(exchange, first_ticker, last_ticker, time * this.exchange_ticker_speed(exchange))) {
-              volume = this.volume_change(first_ticker, last_ticker)
-              signal = {exchange: exchange, market: market, change: volume, time: time * this.exchange_ticker_speed(exchange), first_ticker: first_ticker, last_ticker: last_ticker}
-            }
+          if (this.rule_match(exchange, first_ticker, last_ticker, time)) {
+            volume = this.volume_change(first_ticker, last_ticker)
+            signal = {exchange: exchange, market: market, change: volume, time: time, first_ticker: first_ticker, last_ticker: last_ticker}
           }
           if (signal) {
             this.detect_spam()
@@ -100,7 +96,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
             if (!this.muted())
               this.telegram_bot.send_signal(this.api_clients[exchange], signal)
           }
-        }
+        })
       }
   }, 0) // run async
 }
@@ -118,14 +114,6 @@ Detektor.prototype.detect_spam = function() {
   this.spam_detector.last_signal = time
 }
 
-Detektor.prototype.cycle_time = function(exchange) {
-  return this.api_clients[exchange].cycle_time * 60 / this.exchange_ticker_speed(exchange)
-}
-
-Detektor.prototype.exchange_ticker_speed = function(exchange) {
-  return this.api_clients[exchange].ticker_speed
-}
-
 Detektor.prototype.market_url = function(exchange, market) {
   return this.api_clients[exchange].market_url(market)
 }
@@ -133,5 +121,8 @@ Detektor.prototype.market_url = function(exchange, market) {
 Detektor.prototype.get_market_data = function(market_name) {
   return this.ticker_handler.get_market_data(market_name)
 }
+
+Detektor.prototype.getMarketDataWithTime = function(market_name, time) {
+  return this.ticker_handler.getMarketDataWithTime(market_name, time)}
 
 module.exports = Detektor;
