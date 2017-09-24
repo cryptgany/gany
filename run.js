@@ -34,10 +34,12 @@ pump_events.setMaxListeners(50) // max 50 listeners
 setTimeout(() => { wallet.track_subscriptions() }, 1000*5)
 gany_the_bot.start()
 bittrex.watch()
-yobit.watch()
-poloniex.watch()
-cryptopia.watch()
-kraken.watch();
+if (process.env.ENVIRONMENT == 'production') {
+  yobit.watch()
+  poloniex.watch()
+  cryptopia.watch()
+  kraken.watch();
+}
 Payment.process_payments()
 gany_the_bot.expire_expired_users()
 

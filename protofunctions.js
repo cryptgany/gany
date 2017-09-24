@@ -18,3 +18,12 @@ Date.prototype.toFileName = function() {
 Date.prototype.addMinutes = function(minutes) {
   return new Date(this.getTime() + minutes*60000);
 }
+
+Object.defineProperty(Array.prototype, 'chunk', {
+    value: function(chunkSize) {
+        var R = [];
+        for (var i=0; i<this.length; i+=chunkSize)
+            R.push(this.slice(i,i+chunkSize));
+        return R;
+    }
+});
