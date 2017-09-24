@@ -12,12 +12,6 @@ class TickerHandler {
         this.last_minute_data = {} // current minute of tickers
         this.minutes_data = {} // every minute data of ticker (1 per minute)
 
-        // configurations
-        this.last_minute_data_cleaning_time = 20 // clean ever X minutes
-        this.max_tickers_history = 60 // minutes of history to be kept
-
-        // periodic functions
-        setTimeout(() => { this.keep_tickers_limited() }, this.last_minute_data_cleaning_time * 60 * 1000)
         this.minute_counter_by_exchange_market = {} // counts 1 per ticker update per exchange per market, once equals to one minute data gets stored
         this.clients = clients
 

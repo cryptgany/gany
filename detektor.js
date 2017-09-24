@@ -123,6 +123,7 @@ Detektor.prototype.get_market_data = function(market_name) {
 }
 
 Detektor.prototype.getMarketDataWithTime = function(market_name, time) {
-  return this.ticker_handler.getMarketDataWithTime(market_name, time)}
+  return this.ticker_handler.getMarketDataWithTime(market_name, time)
+}
 
 module.exports = Detektor;
