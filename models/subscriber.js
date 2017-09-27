@@ -79,6 +79,21 @@ subscriberSchema.methods.set_subscription_confirmed = function(price = 0) { // p
   })
 }
 
+subscriberSchema.methods.add_subscription_time = function(days) {
+  expiry_date = new Date()
+  if (this.subscription_expires_on && this.subscription_expires_on >= expiry_date) {
+    // is currently subscribed
+    expiry_date.setDate(this.subscription_expires_on.getDate()+days)
+  } else {
+    expiry_date.setDate(expiry_date.getDate()+days);
+  }
+  this.subscription_status = true
+  this.subscription_expires_on = expiry_date
+  this.save(function(err, subscriber){
+    if (err) { console.error(this.telegram_id, err); }
+  })
+}
+
 subscriberSchema.statics.unpaid_or_almost_expired = function(days, callback) {
   date = new Date();
   date.setDate(date.getDate()+days);

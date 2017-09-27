@@ -105,7 +105,6 @@ Detektor.prototype.muted = function() { return this.spam_detector.muted }
 
 Detektor.prototype.detect_spam = function() {
   time = Date.now()
-  console.log("HERE",!this.muted(), time,this.spam_detector.last_signal,this.spam_detector.max_time,(time - this.spam_detector.last_signal))
   if (!this.muted() && (time - this.spam_detector.last_signal) <= this.spam_detector.max_time) {
     this.spam_detector.muted = true
     this.spam_detector.muted_since = time
