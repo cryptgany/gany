@@ -83,20 +83,20 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
       } else {
         // should iteratively return time and data
         last_ticker = data
+        signal = false
         this.ticker_handler.get_ticker_history(exchange, market, (time, first_ticker) => {
-          signal = false
           if (this.rule_match(exchange, first_ticker, last_ticker, time)) {
             volume = this.volume_change(first_ticker, last_ticker)
             signal = {exchange: exchange, market: market, change: volume, time: time, first_ticker: first_ticker, last_ticker: last_ticker}
           }
-          if (signal) {
-            this.detect_spam()
-
-            this.tickers_detected_blacklist[exchange+market] = 360 * 3 // blacklist for 3 hour, each "1" is 10 seconds
-            if (!this.muted())
-              this.telegram_bot.send_signal(this.api_clients[exchange], signal)
-          }
         })
+        if (signal) {
+          this.detect_spam()
+
+          this.tickers_detected_blacklist[exchange+market] = 360 * 3 // blacklist for 3 hour, each "1" is 10 seconds
+          if (!this.muted())
+            this.telegram_bot.send_signal(this.api_clients[exchange], signal)
+        }
       }
   }, 0) // run async
 }
@@ -105,6 +105,7 @@ Detektor.prototype.muted = function() { return this.spam_detector.muted }
 
 Detektor.prototype.detect_spam = function() {
   time = Date.now()
+  console.log("HERE",!this.muted(), time,this.spam_detector.last_signal,this.spam_detector.max_time,(time - this.spam_detector.last_signal))
   if (!this.muted() && (time - this.spam_detector.last_signal) <= this.spam_detector.max_time) {
     this.spam_detector.muted = true
     this.spam_detector.muted_since = time
