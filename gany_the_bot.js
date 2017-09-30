@@ -187,8 +187,9 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/^\/see+$/i, (msg, match) => {
-    this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth\n/see usdt')
+  this.telegram_bot.onText(/\/see/i, (msg, match) => {
+    if (!msg.text.match(/^\/see\ [a-zA-Z0-9]+$/i) && !(msg.text.match(/^\/see\ ([a-zA-Z0-9]{1,6})\ \d+$/i)))
+      this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth\n/see usdt\n/see neo 30')
   })
 
   this.telegram_bot.onText(/^\/see\ [a-zA-Z0-9]+$/i, (msg, match) => { // common users /see
@@ -385,7 +386,7 @@ GanyTheBot.prototype.start = function() {
 
 GanyTheBot.prototype.is_not_a_group = function(msg) {
   if (msg.chat.type == 'group' || msg.chat.type == 'supergroup') {
-    this.send_message(msg.chat.id, 'Hello group ' + msg.chat.title + '. I am sorry but I only work in 1 on 1 mode. Groups not implemented.\nYou can still use the /see coin feature.')
+    this.send_message(msg.chat.id, 'Hello ' + msg.from.first_name + '. You need to talk to me directly in a private chat.\nGroups can only use the /see currency feature.')
   }
   return msg.chat.type != 'group' && msg.chat.type != 'supergroup'
 }
