@@ -11,6 +11,7 @@ class TickerHandler {
         this.current_data = {} // current data (1 record per ticker)
         this.last_minute_data = {} // current minute of tickers
         this.minutes_data = {} // every minute data of ticker (1 per minute)
+        this.high_low = {} // High Low of last minute
 
         this.minute_counter_by_exchange_market = {} // counts 1 per ticker update per exchange per market, once equals to one minute data gets stored
         this.clients = clients
@@ -32,12 +33,22 @@ class TickerHandler {
 
         this.update_ticker_history(exchange, market, data)
         this.update_minute_ticker(exchange, market)
+        this.updateHighLow(exchange, market, data)
     }
 
     update_ticker_history(exchange, market, data) {
         this.last_minute_data[exchange] = this.last_minute_data[exchange] || {}
         this.last_minute_data[exchange][market] = this.last_minute_data[exchange][market] || []
         this.last_minute_data[exchange][market].push(data)
+    }
+
+    updateHighLow(exchange, market, data) {
+        this.high_low[exchange] = this.high_low[exchange] || {}
+        this.high_low[exchange][market] = this.high_low[exchange][market] || {minuteHigh: data.last, minuteLow: data.last}
+        if (data.last > this.high_low[exchange][market].minuteHigh)
+            this.high_low[exchange][market].minuteHigh = data.last
+        if (data.last < this.high_low[exchange][market].minuteLow)
+            this.high_low[exchange][market].minuteLow = data.last
     }
 
     update_minute_ticker(exchange, market) {
@@ -47,15 +58,26 @@ class TickerHandler {
             // if we already have one minute of data then store minute data
             this.minutes_data[exchange] = this.minutes_data[exchange] || {}
             this.minutes_data[exchange][market] = this.minutes_data[exchange][market] || []
-            this.minutes_data[exchange][market].push(this.last_minute_data[exchange][market].last())
+            let handled_data = this.last_minute_data[exchange][market].last()
+            handled_data.open = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange)).last
+            handled_data.close = handled_data.last
+            handled_data.minuteHigh = this.high_low[exchange][market].minuteHigh
+            handled_data.minuteLow = this.high_low[exchange][market].minuteLow
+            this.high_low[exchange][market] = {minuteHigh: handled_data.last, minuteLow: handled_data.last}
+            this.minutes_data[exchange][market].push(handled_data)
 
             // create ticker data
-            Ticker.store(exchange, market, this.last_minute_data[exchange][market].last())
+            Ticker.store(exchange, market, handled_data)
 
             this.minute_counter_by_exchange_market[exchange+market] = 0
         }
         // si ya tenemos 1 minuto de data, guardar en "minute_data" as minute data
         // minute data debería guardar en DB
+    }
+
+    getLastMinuteThElement(exchange, market, time) {
+        let length = this.last_minute_data[exchange][market].length
+        return this.last_minute_data[exchange][market][length - time]
     }
 
     // should iteratively return time and data
