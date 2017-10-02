@@ -282,7 +282,7 @@ GanyTheBot.prototype.start = function() {
     this.send_message(msg.chat.id, message)
   })
 
-  this.telegram_bot.onText(/\/grant/, (msg, match) => {
+  this.telegram_bot.onText(/\/granttime/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
       command = msg.text.split(' ')
       subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
@@ -313,6 +313,7 @@ GanyTheBot.prototype.start = function() {
         message += "\nBTC Address: " + subscriber.btc_address
         message += "\nSubscription status: " + (subscriber.subscription_status ? "Expires on " + subscriber.subscription_expires_on : "Free user")
         message += "\nBalance: " + (subscriber.total_balance() / 100000000).toFixed(8)
+        message += "\nSubscriber since: " + subscriber.createdAt
 
         this.send_message(msg.chat.id, message)
       }
