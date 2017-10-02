@@ -285,10 +285,10 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/\/grant/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
       command = msg.text.split(' ')
-      subscriber = this.find_subscriber(parseInt(command[1]))
+      subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
       time = parseInt(command[2])
       if (command.length != 3 || time <= 0) {
-        this.send_message(msg.chat.id, 'Usage: /grant [telegram_id] [time]')
+        this.send_message(msg.chat.id, 'Usage: /grant telegram_id time')
       } else {
         if (subscriber == undefined) {
           this.send_message(msg.chat.id, 'User ' + command[1] + ' not found')
@@ -296,6 +296,25 @@ GanyTheBot.prototype.start = function() {
           subscriber.add_subscription_time(time)
           this.send_message(msg.chat.id, time + ' days applied to user ' + command[1])
         }
+      }
+    }
+  })
+
+  this.telegram_bot.onText(/\/finduser/, (msg, match) => {
+    if (this.is_mod(msg.chat.id)){ // only process vip chat requests
+      command = msg.text.split(' ')
+      subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
+      if (subscriber == undefined) {
+        this.send_message(msg.chat.id, 'User ' + command[1] + ' not found')
+      } else {
+        message = "\nID: " + subscriber.telegram_id
+        message += "\nName: " + subscriber.full_name
+        message += "\nUsername: " + subscriber.username
+        message += "\nBTC Address: " + subscriber.btc_address
+        message += "\nSubscription status: " + (subscriber.subscription_status ? "Expires on " + subscriber.subscription_expires_on : "Free user")
+        message += "\nBalance: " + (subscriber.total_balance() / 100000000).toFixed(8)
+
+        this.send_message(msg.chat.id, message)
       }
     }
   })
@@ -500,6 +519,10 @@ GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market,
 
 GanyTheBot.prototype.find_subscriber = function(telegram_id) {
   return _.find(this.subscribers, (sub) => { return sub.telegram_id == telegram_id } )
+}
+
+GanyTheBot.prototype.find_subscriber_by_username = function(username) {
+  return _.find(this.subscribers, (sub) => { return sub.username == username } )
 }
 
 GanyTheBot.prototype.is_paid_subscriber = function(telegram_id) {

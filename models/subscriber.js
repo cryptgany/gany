@@ -83,7 +83,9 @@ subscriberSchema.methods.add_subscription_time = function(days) {
   expiry_date = new Date()
   if (this.subscription_expires_on && this.subscription_expires_on >= expiry_date) {
     // is currently subscribed
-    expiry_date.setDate(this.subscription_expires_on.getDate()+days)
+    expiry_date = new Date(this.subscription_expires_on)
+    expiry_date.setDate(expiry_date.getDate()+days)
+    console.log("Date was", this.subscription_expires_on + ", and now is", expiry_date)
   } else {
     expiry_date.setDate(expiry_date.getDate()+days);
   }
