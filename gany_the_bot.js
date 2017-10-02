@@ -282,6 +282,24 @@ GanyTheBot.prototype.start = function() {
     this.send_message(msg.chat.id, message)
   })
 
+  this.telegram_bot.onText(/\/grant/, (msg, match) => {
+    if (this.is_mod(msg.chat.id)){ // only process vip chat requests
+      command = msg.text.split(' ')
+      subscriber = this.find_subscriber(parseInt(command[1]))
+      time = parseInt(command[2])
+      if (command.length != 3 || time <= 0) {
+        this.send_message(msg.chat.id, 'Usage: /grant [telegram_id] [time]')
+      } else {
+        if (subscriber == undefined) {
+          this.send_message(msg.chat.id, 'User ' + command[1] + ' not found')
+        } else {
+          subscriber.add_subscription_time(time)
+          this.send_message(msg.chat.id, time + ' days applied to user ' + command[1])
+        }
+      }
+    }
+  })
+
   this.telegram_bot.onText(/\/detektor/, (msg, match) => {
     command = msg.text
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
