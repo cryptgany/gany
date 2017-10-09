@@ -66,9 +66,9 @@ subscriberSchema.methods.set_subscription_confirmed = function(price = 0) { // p
   expiry_date = new Date()
   if (this.subscription_expires_on && this.subscription_expires_on >= expiry_date) {
     // is currently subscribed
-    expiry_date.setDate(this.subscription_expires_on.getDate()+30)
+    expiry_date.setMonth(this.subscription_expires_on.getMonth()+1)
   } else {
-    expiry_date.setDate(expiry_date.getDate()+30);
+    expiry_date.setMonth(expiry_date.getMonth()+1);
   }
   this.balance = this.btc_final_balance + this.balance
   this.balance -= price
