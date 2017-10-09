@@ -214,13 +214,17 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/see\ ([a-zA-Z0-9]{1,6})\ \d+$/i, (msg, match) => {
+    subscriber = undefined
+    if (this.is_subscribed(msg.chat.id)) {
+      subscriber = this.find_subscriber(msg.chat.id)
+    }
     data = msg.text.toUpperCase().split(' ')
     market = data[1]
     time = parseInt(data[2])
     if (time.toString() != data[2] || time < 1 || time > 60 * 6) {
       this.send_message(msg.chat.id, 'Please enter a number between 1 and 360.')
     } else {
-      this.detektor.getMarketDataWithTime(market, time-1).then((markets) => {
+      this.detektor.getMarketDataWithTime(market, time-1, subscriber).then((markets) => {
         if (markets.length == 0)
           message = "Not found."
         if (markets.length > 5)

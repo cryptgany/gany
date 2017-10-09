@@ -155,9 +155,9 @@ class TickerHandler {
         return markets
     }
 
-    getMarketDataWithTime(marketName, time) {
+    getMarketDataWithTime(marketName, time, subscriber) {
         return new Promise((resolve, reject) => {
-            let marketDatas = this.get_market_data(marketName)
+            let marketDatas = this.get_market_data(marketName, subscriber)
             let markets = []
             if (marketDatas.length == 0)
                 resolve([])
