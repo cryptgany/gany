@@ -145,11 +145,13 @@ class TickerHandler {
         })
     }
 
-    get_market_data(market_name) {
+    get_market_data(market_name, subscriber) { // subscriber config
         let markets = []
         this.findMarketsByName(market_name, (exchange, market, ticker) => {
             markets.push({exchange: exchange, market: market, ticker: ticker})
         })
+        if (subscriber)
+            markets = markets.filter((market) => { return subscriber.exchanges[market.exchange]})
         return markets
     }
 

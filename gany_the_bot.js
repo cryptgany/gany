@@ -119,8 +119,11 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/\/configure/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
-      if (this.is_subscribed(msg.chat.id))
+      if (this.is_subscribed(msg.chat.id)) {
         this.send_message(msg.chat.id, "Configuration menu:", this.configuration_menu_options())
+      } else {
+        this.send_message(msg.chat.id, "You are not subscribed.\nType /subscribe to start receiving notifications and configure the information you see.")
+      }
     }
   })
 
@@ -193,8 +196,12 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/see\ [a-zA-Z0-9]+$/i, (msg, match) => { // common users /see
+    subscriber = undefined
+    if (this.is_subscribed(msg.chat.id)) {
+      subscriber = this.find_subscriber(msg.chat.id)
+    }
     market = msg.text.toUpperCase().replace(/\/SEE\ /, '')
-    markets = this.detektor.get_market_data(market)
+    markets = this.detektor.get_market_data(market, subscriber)
     if (markets.length == 0)
       message = "Not found."
     if (markets.length > 5)
@@ -589,7 +596,7 @@ GanyTheBot.prototype.configuration_menu_exchanges = function() {
       inline_keyboard: [
         [{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }],
         [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }],
-        [{ text: 'Kraken', callback_data: 'configure exchange Kraken' }],
+        [{ text: 'Kraken', callback_data: 'configure exchange Kraken' }, { text: 'Binance', callback_data: 'configure exchange Binance' }],
         [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })

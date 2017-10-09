@@ -118,8 +118,8 @@ Detektor.prototype.market_url = function(exchange, market) {
   return this.api_clients[exchange].market_url(market)
 }
 
-Detektor.prototype.get_market_data = function(market_name) {
-  return this.ticker_handler.get_market_data(market_name)
+Detektor.prototype.get_market_data = function(market_name, subscriber) {
+  return this.ticker_handler.get_market_data(market_name, subscriber)
 }
 
 Detektor.prototype.getMarketDataWithTime = function(market_name, time) {
