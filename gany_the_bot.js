@@ -294,7 +294,7 @@ GanyTheBot.prototype.start = function() {
           this.send_message(msg.chat.id, 'User ' + command[1] + ' not found')
         } else {
           subscriber.add_subscription_time(time)
-          this.send_message(msg.chat.id, time + ' days applied to user ' + command[1])
+          this.send_message(msg.chat.id, time + ' days applied to user ' + command[1], {parse_mode: 'HTML'})
         }
       }
     }
@@ -314,8 +314,7 @@ GanyTheBot.prototype.start = function() {
         message += "\nSubscription status: " + (subscriber.subscription_status ? "Expires on " + subscriber.subscription_expires_on : "Free user")
         message += "\nBalance: " + (subscriber.total_balance() / 100000000).toFixed(8)
         message += "\nSubscriber since: " + subscriber.createdAt
-
-        this.send_message(msg.chat.id, message)
+        this.send_message(msg.chat.id, message, {parse_mode: 'HTML'})
       }
     }
   })
