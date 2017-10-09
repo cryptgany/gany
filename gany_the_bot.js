@@ -469,7 +469,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
           this.send_message(sub.telegram_id, text)
         } else {
           // free users
-          if (send_free)
+          if (send_free && !client.premiumOnly)
             this.send_message(sub.telegram_id, text)
         }
       });
