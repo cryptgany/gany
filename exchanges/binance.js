@@ -23,6 +23,7 @@ function Binance(logger, pump_events) {
   this.cycle_time = 20 // minutes
 
   this.pump_events = pump_events; // push updates
+  this.premiumOnly = true // this is only seen by paid
 }
 
 Binance.prototype.watch = function() {

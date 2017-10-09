@@ -15,6 +15,7 @@ class TickerHandler {
 
         this.minute_counter_by_exchange_market = {} // counts 1 per ticker update per exchange per market, once equals to one minute data gets stored
         this.clients = clients
+        this.premiumClients = Object.keys(clients).filter((name)=>{ return clients[name].premiumOnly }).map((name) => { return clients[name].code })
 
         // configurations
         this.last_minute_data_cleaning_time = 20 // clean ever X minutes
@@ -73,6 +74,10 @@ class TickerHandler {
         }
         // si ya tenemos 1 minuto de data, guardar en "minute_data" as minute data
         // minute data debería guardar en DB
+    }
+
+    isPremiumExchange(exchange) {
+        return this.premiumClients.indexOf(exchange) != -1
     }
 
     getLastMinuteThElement(exchange, market, time) {
@@ -150,8 +155,10 @@ class TickerHandler {
         this.findMarketsByName(market_name, (exchange, market, ticker) => {
             markets.push({exchange: exchange, market: market, ticker: ticker})
         })
-        if (subscriber)
+        if (subscriber) // filter by configuration
             markets = markets.filter((market) => { return subscriber.exchanges[market.exchange]})
+        if (subscriber && subscriber.subscription_status == false) // filter premium exchanges
+            markets = markets.filter((market) => { return !this.isPremiumExchange(market.exchange)}) // only non prem
         return markets
     }
 
