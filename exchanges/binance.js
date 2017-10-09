@@ -68,7 +68,7 @@ Binance.prototype._normalize_ticker_data = function(data) {
   return {
     high: parseFloat(data.highPrice),
     low: parseFloat(data.lowPrice),
-    volume: parseFloat(data.volume),
+    volume: parseFloat(data.quoteVolume),
     last: parseFloat(data.lastPrice),
     ask: parseFloat(data.askPrice),
     bid: parseFloat(data.bidPrice),
