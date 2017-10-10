@@ -20,8 +20,8 @@ class TickerHandler {
         // configurations
         this.last_minute_data_cleaning_time = 20 // clean ever X minutes
         this.minute_data_cleaning_time = 5 // clean ever X minutes
-        this.max_tickers_history = 60 // minutes of history to be kept in ticker-speed data
-        this.max_minutes_tickers_history = 60 * 24 // minutes of history to be kept in minute-speed data
+        this.max_tickers_history = 40 // minutes of history to be kept in ticker-speed data
+        this.max_minutes_tickers_history = 60 * 2 // minutes of history to be kept in minute-speed data
 
         // periodic functions
         setTimeout(() => { this.keep_tickers_limited() }, this.last_minute_data_cleaning_time * 60 * 1000)
