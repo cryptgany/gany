@@ -204,7 +204,7 @@ GanyTheBot.prototype.start = function() {
     markets = this.detektor.get_market_data(market, subscriber)
     if (markets.length == 0)
       message = "Not found."
-    if (markets.length > 5)
+    if (markets.length > 6)
       message = "Too many markets found"
     if (markets.length > 0 && markets.length <= 5)
       message = markets.map((market_info) => {
@@ -227,7 +227,7 @@ GanyTheBot.prototype.start = function() {
       this.detektor.getMarketDataWithTime(market, time-1, subscriber).then((markets) => {
         if (markets.length == 0)
           message = "Not found."
-        if (markets.length > 5)
+        if (markets.length > 6)
           message = "Too many markets found"
         if (markets.length > 0 && markets.length <= 5)
           message = markets.map((market_info) => {

@@ -62,7 +62,7 @@ rules = {
     (first_ticker, last_ticker, time, matcher) => { return matcher.last_change(first_ticker, last_ticker) > 1.05 && matcher.volume_change(first_ticker, last_ticker) > 1.075 },
   ],
   "Binance": [
-    (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.25 }
+    (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.125 }
   ]
 }
 
