@@ -171,7 +171,7 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/\/see/i, (msg, match) => {
     if (!msg.text.match(SEE_REGEX_WITH_ONE_PARAM) && !(msg.text.match(SEE_REGEX_WITH_TWO_PARAMS)))
-      this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth\n/see usdt\n/see neo 30')
+      this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30')
   })
 
   this.telegram_bot.onText(SEE_REGEX_WITH_ONE_PARAM, (msg, match) => { // common users /see

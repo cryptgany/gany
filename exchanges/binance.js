@@ -36,22 +36,29 @@ Binance.prototype.volume_for = function(pair) {
 }
 
 Binance.prototype._watch_tickers = function() { // watches markets every 10 seconds
-  this.markets.forEach((market) => {
-    this.client.ticker24hr(market.key, (err, data)=>{
-      if (data.volume > 0)
-        this.pump_events.emit('marketupdate', 'TICKER', this.code, market.name, this._normalize_ticker_data(data));
+  try {
+    this.markets.forEach((market) => {
+      this.client.ticker24hr(market.key, (err, data)=>{
+        if (data.volume > 0)
+          this.pump_events.emit('marketupdate', 'TICKER', this.code, market.name, this._normalize_ticker_data(data));
+      })
     })
-  })
+  } catch(e) {
+    this.logger.error("Error on binance watch ticker (catched):", e)
+  }
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
 }
 
 Binance.prototype._refreshMarkets = function() {
-  this.client._makeRequest({}, (err, data)=>{
-    if (err)
-      this.logger.error("Error refreshing binance markets", err)
-    this.markets = this._normalizeMarketNames(data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)})) // only ETH/BTC markets
-  }, 'ticker/allPrices');
-
+  try {
+    this.client._makeRequest({}, (err, data)=>{
+      if (err)
+        this.logger.error("Error refreshing binance markets", err)
+      this.markets = this._normalizeMarketNames(data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)})) // only ETH/BTC markets
+    }, 'ticker/allPrices');
+  } catch(e) {
+    this.logger.error("Error on binance refresh markets (catched):", e)
+  }
   setTimeout(() => { this._refreshMarkets() }, 5 * 60 * 1000) // update markets every 5 mins
 }
 
