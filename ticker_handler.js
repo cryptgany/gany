@@ -142,10 +142,18 @@ class TickerHandler {
     }
 
     findMarketsByName(market_name, callback) {
+        let market_name_ary = []
+        if (market_name.match(/\-/))
+            market_name_ary = [market_name, market_name.split(/\-/).reverse().join('-')]
         Object.keys(this.current_data).forEach((exchange) => {
             Object.keys(this.current_data[exchange]).forEach((market) => {
-                if (market.split("-").includes(market_name))
-                    callback(exchange, market, this.current_data[exchange][market])
+                if (market_name.match(/\-/)) { // for when using /see with a pair like /see eth-btc
+                    if (market_name_ary.indexOf(market) != -1)
+                        callback(exchange, market, this.current_data[exchange][market])
+                } else {
+                    if (market.split("-").includes(market_name))
+                        callback(exchange, market, this.current_data[exchange][market])
+                }
             })
         })
     }

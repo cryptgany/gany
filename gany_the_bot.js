@@ -9,6 +9,9 @@ var moment = require('moment');
 
 CHECK_EXPIRED_USERS = 1 // hours
 
+SEE_REGEX_WITH_ONE_PARAM=/^\/see\ ([a-zA-Z0-9]|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))+$/i // /see neo | /see neo-btc
+SEE_REGEX_WITH_TWO_PARAMS=/^\/see\ (([a-zA-Z0-9]{1,6})|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))\ \d+$/i // /see neo 20 | /see neo-btc 20
+
 function GanyTheBot(logger) {
   this.logger = logger
   this.god_users = [parseInt(process.env.PERSONAL_CHANNEL)];
@@ -204,11 +207,11 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/\/see/i, (msg, match) => {
-    if (!msg.text.match(/^\/see\ [a-zA-Z0-9]+$/i) && !(msg.text.match(/^\/see\ ([a-zA-Z0-9]{1,6})\ \d+$/i)))
+    if (!msg.text.match(SEE_REGEX_WITH_ONE_PARAM) && !(msg.text.match(SEE_REGEX_WITH_TWO_PARAMS)))
       this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth\n/see usdt\n/see neo 30')
   })
 
-  this.telegram_bot.onText(/^\/see\ [a-zA-Z0-9]+$/i, (msg, match) => { // common users /see
+  this.telegram_bot.onText(SEE_REGEX_WITH_ONE_PARAM, (msg, match) => { // common users /see
     subscriber = undefined
     if (this.is_subscribed(msg.chat.id)) {
       subscriber = this.find_subscriber(msg.chat.id)
@@ -226,7 +229,7 @@ GanyTheBot.prototype.start = function() {
     this.send_message(msg.chat.id, message)
   })
 
-  this.telegram_bot.onText(/^\/see\ ([a-zA-Z0-9]{1,6})\ \d+$/i, (msg, match) => {
+  this.telegram_bot.onText(SEE_REGEX_WITH_TWO_PARAMS, (msg, match) => {
     subscriber = undefined
     if (this.is_subscribed(msg.chat.id)) {
       subscriber = this.find_subscriber(msg.chat.id)
