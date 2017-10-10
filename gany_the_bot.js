@@ -479,7 +479,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
       this.message_gods(text); this.message_mods(text);
     } else {
       send_free = this.random_number(1,4) == 4 // randomly pick if we should send it or not
-      this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] && !sub.blocked }).forEach((sub) => {
+      this.subscribers.filter((sub) => { return sub.exchanges[signal.exchange] && sub.markets[this._signalMarketType(signal)] && !sub.blocked }).forEach((sub) => {
         if (sub.subscription_status == true) {
           this.send_message(sub.telegram_id, text)
         } else {
@@ -669,6 +669,18 @@ GanyTheBot.prototype._seconds_to_minutes = function(seconds) {
   var minutes = Math.floor(seconds / 60);
   var seconds = seconds - minutes * 60;
   return minutes == 0 ? (seconds + " seconds") : minutes + (minutes > 1 ? " minutes" : " minute")
+}
+
+GanyTheBot.prototype._signalMarketType = function(signal) {
+  return this._isBTCMarket(signal) ? 'BTC' : 'ETH'
+}
+
+GanyTheBot.prototype._isBTCMarket = function(signal) {
+  return signal.market.match(/BTC/)
+}
+
+GanyTheBot.prototype._isETHMarket = function(signal) {
+  return signal.market.match(/ETH/)
 }
 
 GanyTheBot.prototype.is_god = function(subscriber_id) {
