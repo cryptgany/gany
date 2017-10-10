@@ -181,7 +181,7 @@ GanyTheBot.prototype.start = function() {
     }
     market = msg.text.toUpperCase().replace(/\/SEE\ /, '')
     if (market == 'ETH')
-      market = 'ETH-USDT'
+      market = 'ETH-BTC'
     if (market == 'BTC')
       market = 'BTC-USDT'
     markets = this.detektor.get_market_data(market, subscriber)
@@ -189,7 +189,7 @@ GanyTheBot.prototype.start = function() {
       message = "Not found."
     if (markets.length > 6)
       message = "Too many markets found"
-    if (markets.length > 0 && markets.length <= 5)
+    if (markets.length > 0 && markets.length <= 6)
       message = markets.map((market_info) => {
         return this.telegram_post_price_check(market_info.exchange, market_info.market, market_info.ticker)
       }).join("\n\n")
@@ -202,9 +202,9 @@ GanyTheBot.prototype.start = function() {
       subscriber = this.find_subscriber(msg.chat.id)
     }
     data = msg.text.toUpperCase().split(' ')
-    market = data[1]
+    let market = data[1]
     if (market == 'ETH')
-      market = 'ETH-USDT'
+      market = 'ETH-BTC'
     if (market == 'BTC')
       market = 'BTC-USDT'
     time = parseInt(data[2])
@@ -216,7 +216,7 @@ GanyTheBot.prototype.start = function() {
           message = "Not found."
         if (markets.length > 6)
           message = "Too many markets found"
-        if (markets.length > 0 && markets.length <= 5)
+        if (markets.length > 0 && markets.length <= 6)
           message = markets.map((market_info) => {
             return this.telegramPostPriceCheckWithTime(market_info.exchange, market_info.market, market_info.firstTicker, market_info.lastTicker, time)
           }).join("\n\n")
