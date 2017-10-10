@@ -176,8 +176,8 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(SEE_REGEX_WITH_ONE_PARAM, (msg, match) => { // common users /see
     subscriber = undefined
-    if (this.is_subscribed(msg.chat.id)) {
-      subscriber = this.find_subscriber(msg.chat.id)
+    if (this.is_subscribed(msg.from.id)) {
+      subscriber = this.find_subscriber(msg.from.id)
     }
     market = msg.text.toUpperCase().replace(/\/SEE\ /, '')
     if (market == 'ETH')
@@ -198,8 +198,8 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(SEE_REGEX_WITH_TWO_PARAMS, (msg, match) => {
     subscriber = undefined
-    if (this.is_subscribed(msg.chat.id)) {
-      subscriber = this.find_subscriber(msg.chat.id)
+    if (this.is_subscribed(msg.from.id)) {
+      subscriber = this.find_subscriber(msg.from.id)
     }
     data = msg.text.toUpperCase().split(' ')
     let market = data[1]
