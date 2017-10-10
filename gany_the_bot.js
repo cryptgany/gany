@@ -415,31 +415,32 @@ GanyTheBot.prototype.start = function() {
       if (msg.data == "configure")
         this.send_message(msg.from.id, "Configuration menu:", this.configuration_menu_options())
       if (msg.data == "configure exchanges")
-        this.send_message(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges())
+        this.send_message(msg.from.id, "Configure which exchanges you want to keep track of:", this.configuration_menu_exchanges())
       if (msg.data == "configure markets")
-        this.send_message(msg.from.id, "Configure Markets:", this.configuration_menu_markets())
+        this.send_message(msg.from.id, "Configure which markets you want to keep track of:", this.configuration_menu_markets())
+
       if (msg.data.match(/configure exchange\ /)) {
         commands = msg.data.split(" ")
         if (commands.length == 3) { // show exchange options
           exchange_status = this.find_subscriber(msg.from.id).exchange_status(commands[2])
-          this.send_message(msg.from.id, "Configure " + commands[2] + " (currently " + exchange_status + "):", this.configuration_menu_enable_disable("configure exchange " + commands[2]))
+          this.send_message(msg.from.id, "Receive info about " + commands[2] + " exchange? (currently " + exchange_status + "):", this.configuration_menu_enable_disable("configure exchange " + commands[2]))
         }
         if (commands.length == 4) { // was enabled/disabled, show exchanges
           this.telegram_bot.answerCallbackQuery(msg.id, 'Exchange ' + commands[2] + " " + commands[3]);
           _.find(this.subscribers, (s) => {return s.telegram_id == msg.from.id}).change_exchange_status(commands[2], commands[3])
-          this.send_message(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges())
+          this.send_message(msg.from.id, "Configure which exchanges you want to keep track of:", this.configuration_menu_exchanges())
         }
       }
       if (msg.data.match(/configure market\ /)) {
         commands = msg.data.split(" ")
         if (commands.length == 3) { // show market options
           market_status = this.find_subscriber(msg.from.id).market_status(commands[2])
-          this.send_message(msg.from.id, "Configure " + commands[2] + " (currently " + market_status + "):", this.configuration_menu_enable_disable("configure market " + commands[2]))
+          this.send_message(msg.from.id, "Receive info about " + commands[2] + " markets? (currently " + market_status + "):", this.configuration_menu_enable_disable("configure market " + commands[2]))
         }
         if (commands.length == 4) { // was enabled/disabled, show exchanges
           this.telegram_bot.answerCallbackQuery(msg.id, 'Market ' + commands[2] + " " + commands[3]);
           _.find(this.subscribers, (s) => {return s.telegram_id == msg.from.id}).change_market_status(commands[2], commands[3])
-          this.send_message(msg.from.id, "Configure Markets:", this.configuration_menu_markets())
+          this.send_message(msg.from.id, "Configure which markets you want to keep track of:", this.configuration_menu_markets())
         }
       }
     }
@@ -639,7 +640,7 @@ GanyTheBot.prototype.configuration_menu_enable_disable = function(menu_str) {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: 'Enable', callback_data: menu_str + " enabled" }, { text: 'Disable', callback_data: menu_str + " disabled" }],
+        [{ text: 'Yes', callback_data: menu_str + " enabled" }, { text: 'No', callback_data: menu_str + " disabled" }],
       ]
     })
   };
