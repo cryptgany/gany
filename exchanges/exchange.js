@@ -17,6 +17,7 @@ class AbstractExchange {
         this.cycle_time = cycleTime;
         this._code = code;
         this._skipVolumes = skipVolumes;
+        this.markets = []
     }
 
     /*

@@ -194,7 +194,6 @@ class TickerHandler {
                 })
         })
     }
-
 }
 
 module.exports = TickerHandler;

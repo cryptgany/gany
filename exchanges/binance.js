@@ -59,6 +59,10 @@ Binance.prototype.market_url = function(market) {
   return "https://www.binance.com/trade.html?symbol=" + market.replace(/\-/,'_')
 }
 
+Binance.prototype.marketList = function() {
+  return this.markets.map((e) => { return e.name })
+}
+
 Binance.prototype._normalizeMarketNames = function(data) { // NEOBTC => NEO-BTC
   return data.map((val) => {
     return {name: val.symbol.split(/(ETH|BTC)$/i).slice(0,2).join('-'), key: val.symbol}

@@ -127,6 +127,19 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
+  this.telegram_bot.onText(/\/listmarkets\ /i, (msg, match) => {
+    exchange = msg.text.toLowerCase().replace(/\/listmarkets\ /, '')
+    exchange = exchange.substr(0, 1).toUpperCase() + exchange.substr(1)
+    markets = this.detektor.getMarketList(exchange)
+    if (markets.length > 0) {
+      message = exchange + " has " + markets.length + " markets:\n"
+      message += markets.join("\n")
+    } else {
+      message = 'Exchange ' + exchange + ' not found.'
+    }
+    this.send_message(msg.chat.id, message)
+  })
+
   this.telegram_bot.onText(/\/pay/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
       if (this.is_subscribed(msg.chat.id)) {

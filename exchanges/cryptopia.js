@@ -23,6 +23,7 @@ Cryptopia.prototype._watch_tickers = function() {
     if (err) {
       this.logger.error('Failed to retrieve Cryptopia data: ', err)
     } else {
+      this.markets = tickers.map((e) => { return e.Label.replace(/\//, '-') })
       tickers.forEach((ticker) => {
         if (this._filter_market(ticker)) {
           market = ticker.Label
@@ -96,6 +97,10 @@ Cryptopia.prototype._filter_market = function(data) {
 
 Cryptopia.prototype.market_url = function(market) {
   return "https://www.cryptopia.co.nz/Exchange/?market=" + market.replace(/\-/, "_")
+}
+
+Cryptopia.prototype.marketList = function() {
+  return this.markets
 }
 
 Cryptopia.prototype._normalize_ticker_data = function(data) {

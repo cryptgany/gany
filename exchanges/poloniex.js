@@ -23,11 +23,16 @@ Poloniex.prototype.volume_for = function(pair) {
   return pair.split("-")[0]
 }
 
+Poloniex.prototype.marketList = function() {
+  return this.markets.map((e)=>{return e.replace(/\_/, '-')})
+}
+
 Poloniex.prototype._watch_tickers = function() {
   this.client.returnTicker((err, tickers) => {
     if (err) {
       this.logger.error('Failed to retrieve poloniex data: ', err)
     } else {
+      this.markets = Object.keys(tickers)
       Object.keys(tickers).forEach((market) => {
         if (this._filter_market(tickers[market])) {
           this.pump_events.emit('marketupdate', 'TICKER', this.code, market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));

@@ -77,8 +77,14 @@ class Kraken extends AbstractExchange {
         return "https://www.kraken.com/charts"
     }
 
+    marketList() {
+        return this.markets.filter((e)=>{ return e != 'USDTZUSD' && e.match(/(XBT|XXBT|ETH)/) && !e.match(/\.d$/) }).map((e)=>{ return this.mapName(e) })
+    }
+
     fetchTicker(assetPairs){
         let pairs = Object.keys(assetPairs).join();
+        this.markets = Object.keys(assetPairs)
+
         let that = this;
         return new Promise(function (resolve, reject){
             that.client.api('Ticker', {pair:pairs},(err,data) => {
@@ -93,7 +99,7 @@ class Kraken extends AbstractExchange {
     emitData(data){
         var that = this;
         Object.keys(data).forEach(key => {
-            if (key != 'USDTZUSD' && key.match(/(XBT|XXBT)/))
+            if (key != 'USDTZUSD' && key.match(/(XBT|XXBT|ETH)/))
             that._pumpEvents.emit('marketupdate', 'TICKER', this._code, this.mapName(key), this.mapData(data[key]));
         });
     }

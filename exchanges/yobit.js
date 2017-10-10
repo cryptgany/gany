@@ -76,6 +76,10 @@ Yobit.prototype.market_url = function(market) {
   return "http://yobit.net/en/trade/" + cur + "/BTC"
 }
 
+Yobit.prototype.marketList = function() {
+  return this.markets.map((e)=>{ return e.toUpperCase().replace(/\_/, '-') })
+}
+
 // Implement standard functions
 Yobit.prototype.balance = function(callback) {
   this.client.fetchBalance().then(callback) // implement later
