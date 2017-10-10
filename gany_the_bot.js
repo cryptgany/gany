@@ -416,6 +416,8 @@ GanyTheBot.prototype.start = function() {
         this.send_message(msg.from.id, "Configuration menu:", this.configuration_menu_options())
       if (msg.data == "configure exchanges")
         this.send_message(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges())
+      if (msg.data == "configure markets")
+        this.send_message(msg.from.id, "Configure Markets:", this.configuration_menu_markets())
       if (msg.data.match(/configure exchange\ /)) {
         commands = msg.data.split(" ")
         if (commands.length == 3) { // show exchange options
@@ -426,6 +428,18 @@ GanyTheBot.prototype.start = function() {
           this.telegram_bot.answerCallbackQuery(msg.id, 'Exchange ' + commands[2] + " " + commands[3]);
           _.find(this.subscribers, (s) => {return s.telegram_id == msg.from.id}).change_exchange_status(commands[2], commands[3])
           this.send_message(msg.from.id, "Configure Exchanges:", this.configuration_menu_exchanges())
+        }
+      }
+      if (msg.data.match(/configure market\ /)) {
+        commands = msg.data.split(" ")
+        if (commands.length == 3) { // show market options
+          market_status = this.find_subscriber(msg.from.id).market_status(commands[2])
+          this.send_message(msg.from.id, "Configure " + commands[2] + " (currently " + market_status + "):", this.configuration_menu_enable_disable("configure market " + commands[2]))
+        }
+        if (commands.length == 4) { // was enabled/disabled, show exchanges
+          this.telegram_bot.answerCallbackQuery(msg.id, 'Market ' + commands[2] + " " + commands[3]);
+          _.find(this.subscribers, (s) => {return s.telegram_id == msg.from.id}).change_market_status(commands[2], commands[3])
+          this.send_message(msg.from.id, "Configure Markets:", this.configuration_menu_markets())
         }
       }
     }
@@ -587,7 +601,8 @@ GanyTheBot.prototype.configuration_menu_options = function() {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: 'Configure Exchanges', callback_data: 'configure exchanges' }, { text: 'Subscription', callback_data: 'configure subscription' }],
+        [{ text: 'Configure Exchanges', callback_data: 'configure exchanges' }],
+        [{ text: 'Configure Markets', callback_data: 'configure markets' }, { text: 'Subscription', callback_data: 'configure subscription' }]
       ]
     })
   };
@@ -601,6 +616,18 @@ GanyTheBot.prototype.configuration_menu_exchanges = function() {
         [{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }],
         [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }],
         [{ text: 'Kraken', callback_data: 'configure exchange Kraken' }, { text: 'Binance', callback_data: 'configure exchange Binance' }],
+        [{ text: 'Go Back', callback_data: 'configure' }]
+      ]
+    })
+  };
+}
+
+GanyTheBot.prototype.configuration_menu_markets = function() {
+  return {
+    parse_mode: "Markdown",
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: 'BTC', callback_data: 'configure market BTC' }, { text: 'ETH', callback_data: 'configure market ETH' }],
         [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })

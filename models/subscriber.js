@@ -25,12 +25,26 @@ var subscriberSchema = mongoose.Schema({
       Kraken: { type: Boolean, default: true },
       Binance: { type: Boolean, default: true }
     },
+    markets: {
+      BTC: { type: Boolean, default: true },
+      ETH: { type: Boolean, default: true }
+    }
 }, { timestamps: true });
 
 subscriberSchema.methods.change_exchange_status = function (exchange, decision) {
   decision = decision == 'enabled' ? true : false
   if (this.exchanges[exchange] != decision) {
     this.exchanges[exchange] = decision
+    this.save(function (err, subscriber) {
+      if (err) return console.error(err);
+    });
+  }
+}
+
+subscriberSchema.methods.change_market_status = function (market, decision) {
+  decision = decision == 'enabled' ? true : false
+  if (this.markets[market] != decision) {
+    this.markets[market] = decision
     this.save(function (err, subscriber) {
       if (err) return console.error(err);
     });
@@ -110,6 +124,10 @@ subscriberSchema.statics.unpaid_or_almost_expired = function(days, callback) {
 
 subscriberSchema.methods.exchange_status = function(exchange) {
   return this.exchanges[exchange] ? "enabled" : "disabled"
+}
+
+subscriberSchema.methods.market_status = function(market) {
+  return this.markets[market] ? "enabled" : "disabled"
 }
 
 SubscriberModel = mongoose.model('subscribers', subscriberSchema)
