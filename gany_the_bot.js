@@ -89,9 +89,9 @@ GanyTheBot.prototype.start = function() {
       if (this.is_subscribed(msg.chat.id)) {
         subscriber = this.find_subscriber(msg.chat.id)
         if (subscriber.subscription_status) { // subscription updated
-          message = "You are a paid user."
+          message = "You are a paid user. Expiration: " + subscriber.subscriptionDaysLeft() + " days left."
           message += "\nYour subscription expires on " + subscriber.subscription_expires_on
-          message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
+          message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions.\nIf you already have /balance your subscription will be auto renewed."
           this.send_message(subscriber.telegram_id, message)
         } else { // not subscribed
           if (subscriber.btc_address) {

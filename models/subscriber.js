@@ -130,6 +130,18 @@ subscriberSchema.methods.market_status = function(market) {
   return this.markets[market] ? "enabled" : "disabled"
 }
 
+subscriberSchema.methods.subscriptionDaysLeft = function() {
+  if (this.subscription_status) {
+    var date1 = new Date();
+    var date2 = this.subscription_expires_on
+    var timeDiff = Math.abs(date2.getTime() - date1.getTime());
+    var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    return diffDays
+  } else {
+    return 0
+  }
+}
+
 SubscriberModel = mongoose.model('subscribers', subscriberSchema)
 
 module.exports = SubscriberModel;
