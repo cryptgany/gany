@@ -180,6 +180,10 @@ GanyTheBot.prototype.start = function() {
       subscriber = this.find_subscriber(msg.chat.id)
     }
     market = msg.text.toUpperCase().replace(/\/SEE\ /, '')
+    if (market == 'ETH')
+      market = 'ETH-USDT'
+    if (market == 'BTC')
+      market = 'BTC-USDT'
     markets = this.detektor.get_market_data(market, subscriber)
     if (markets.length == 0)
       message = "Not found."
@@ -199,6 +203,10 @@ GanyTheBot.prototype.start = function() {
     }
     data = msg.text.toUpperCase().split(' ')
     market = data[1]
+    if (market == 'ETH')
+      market = 'ETH-USDT'
+    if (market == 'BTC')
+      market = 'BTC-USDT'
     time = parseInt(data[2])
     if (time.toString() != data[2] || time < 1 || time > 60 * 6) {
       this.send_message(msg.chat.id, 'Please enter a number between 1 and 360.')
