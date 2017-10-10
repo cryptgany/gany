@@ -66,7 +66,7 @@ Bittrex.prototype._select_good_volume_markets = function() {
   this.get_markets((info) => {
     if (info.result) {
       info.result.forEach((market_info) => {
-        if (market_info.MarketName.match(/^(BTC|ETH|USDT)/) && !market_info.MarketName.match(/BITCNY/) && market_info.BaseVolume >= this.skip_volumes)
+        if (market_info.MarketName.match(/^(BTC|ETH|(USDT\-ETH|USDT\-BTC))/) && !market_info.MarketName.match(/BITCNY/) && market_info.BaseVolume >= this.skip_volumes)
           this.markets.push(market_info.MarketName);
       });
     } else {

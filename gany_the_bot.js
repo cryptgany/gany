@@ -169,43 +169,6 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  // private, personal autotrader
-  this.telegram_bot.onText(/\/autotrader/, (msg, match) => {
-    if (this.is_god(msg.chat.id)) {
-      if (msg.text == '/autotrader status') { this.send_message(msg.chat.id, this.detektor.ticker_autotrader_enabled) }
-      if (msg.text == '/autotrader enable') { this.detektor.ticker_autotrader_enabled = true; this.send_message(msg.chat.id, 'Done') }
-      if (msg.text == '/autotrader disable') { this.detektor.ticker_autotrader_enabled = false; this.send_message(msg.chat.id, 'Done') }
-      if (msg.text == '/autotrader rate') { this.send_message(msg.chat.id, 'Current btc for orders: ' + this.detektor.autotrader_btc_amount) }
-      if (msg.text.match(/\/autotrader\ set\ rate/)) {
-        this.detektor.autotrader_btc_amount = parseFloat(msg.text.split(" ")[3])
-        this.send_message(msg.chat.id, 'Btc for orders changed to: ' + this.detektor.autotrader_btc_amount)
-      }
-      if (msg.text == '/autotrader profit') {
-        if (this.detektor.pumps.length > 0) {
-          profit = this.detektor.pumps.map((pmp) => { return pmp.profit }).sum()
-        } else {
-          profit = 0
-        }
-        this.send_message(msg.chat.id, profit + " in profits so far.")
-      }
-      if (msg.text == '/autotrader open orders') {
-        count = this.detektor.pumps.filter((pump) => { return !pump.pump_ended }).length
-        messages = []
-        this.detektor.pumps.filter((pump) => { return !pump.pump_ended }).forEach((pump) => {
-          buy_price = pump.buy_order ? pump.buy_order.price_per_unit : pump.buy_rate
-          current_price = this.detektor.tickers[pump.exchange][pump.market].ask
-          message = pump.exchange + "/" + pump.market + "(" + pump.buy_order.quantity + ") [IN:" + buy_price.toFixed(8) + "][NOW:" + current_price.toFixed(8) + "] (" + (((current_price / buy_price) - 1) * 100).toFixed(2) + "%)"
-          messages.push(message)
-        })
-        this.send_message(msg.chat.id, count + " opened orders at the moment.\n" + messages.join("\n"))
-      }
-      if (msg.text == '/autotrader closed orders') {
-        count = this.detektor.pumps.filter((pump) => { return pump.pump_ended }).length
-        this.send_message(msg.chat.id, count + " closed orders at the moment.")
-      }
-    }
-  })
-
   this.telegram_bot.onText(/\/see/i, (msg, match) => {
     if (!msg.text.match(SEE_REGEX_WITH_ONE_PARAM) && !(msg.text.match(SEE_REGEX_WITH_TWO_PARAMS)))
       this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth\n/see usdt\n/see neo 30')
@@ -274,6 +237,7 @@ GanyTheBot.prototype.start = function() {
     message += "\n/configure - Configure the exchanges you want or don't want"
     message += "\n/see XXX - See information on all exchanges about XXX currency"
     message += "\n/see XXX 20 - See information on all exchanges with change over 20 minutes"
+    message += "\n/listmarkets exchange - See which markets are watched on exchange"
     message += "\n/pricing - See information about pricing of Gany"
     message += '\n/pay - See information required for paying monthly fee'
     message += "\n/whatisbal - What is B A L ?"
