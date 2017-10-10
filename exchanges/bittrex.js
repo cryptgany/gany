@@ -38,7 +38,8 @@ Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seco
     if (data.success) {
       tickers = data.result
       tickers.forEach((data) => {
-        self.pump_events.emit('marketupdate', 'TICKER', self.code, data.MarketName, self._normalize_ticker_data(data));
+        if (this.markets.indexOf(data.MarketName) != -1)
+          self.pump_events.emit('marketupdate', 'TICKER', self.code, data.MarketName, self._normalize_ticker_data(data));
       });
     } else {
       this.logger.error("Error getting Bittrex tickers: ", data)
@@ -80,6 +81,10 @@ Bittrex.prototype._select_good_volume_markets = function() {
 
 Bittrex.prototype.market_url = function(market) {
   return "https://bittrex.com/Market/Index?MarketName=" + market
+}
+
+Bittrex.prototype.marketList = function() {
+  return this.markets
 }
 
 Bittrex.prototype.get_markets = function(callback) {
