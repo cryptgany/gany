@@ -4,6 +4,11 @@ const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./models/subscriber');
 const Signal = require('./models/signal')
 const _ = require('underscore')
+var moment = require('moment')
+
+// require('./node_modules/chart.js/dist/Chart.bundle.js');
+const genChart = require('./charts')
+
 require('./protofunctions.js')
 var moment = require('moment');
 
@@ -369,6 +374,12 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/\/sendpaidmessage/, (msg, match) => {
     if (this.is_mod(msg.chat.id))
       this.broadcast(msg.text.replace(/\/sendpaidmessage\ /, ''), true)
+  })
+
+  this.telegram_bot.onText(/\/genchart/, (msg, match) => {
+    genChart().then(() => {
+      this.telegram_bot.sendPhoto(msg.chat.id, './testimage.png')
+    })
   })
 
   // ************** //
