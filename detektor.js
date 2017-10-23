@@ -118,12 +118,20 @@ Detektor.prototype.market_url = function(exchange, market) {
   return this.api_clients[exchange].market_url(market)
 }
 
+Detektor.prototype.getMarketDataForChart = function(market) { // returns first 30 mins of data for most-used to least-used exchange data
+  return this.ticker_handler.getMarketDataForChart(market_name)
+}
+
 Detektor.prototype.get_market_data = function(market_name, subscriber) {
   return this.ticker_handler.get_market_data(market_name, subscriber)
 }
 
 Detektor.prototype.getMarketDataWithTime = function(market_name, time, subscriber) {
   return this.ticker_handler.getMarketDataWithTime(market_name, time, subscriber)
+}
+
+Detektor.prototype.getMinuteMarketData = function(exchange, market, time) {
+  return this.ticker_handler.getMinuteMarketData(exchange, market, time)
 }
 
 Detektor.prototype.getMarketList = function(exchange) {

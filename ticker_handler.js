@@ -170,6 +170,11 @@ class TickerHandler {
         return markets
     }
 
+    getMarketDataForChart(market_name) {
+        markets = this.get_market_data(market_name, false)
+        
+    }
+
     getMarketType(marketData) {
         return marketData.market.match(/BTC/) ? 'BTC' : 'ETH'
     }
@@ -200,6 +205,20 @@ class TickerHandler {
                             }
                     })
                 })
+        })
+    }
+
+    getMinuteMarketData(exchange, market, time) {
+        return new Promise((resolve, reject) => {
+            Ticker.getRange(exchange, market, 0, time, (err, data) => {
+                if (err)
+                    reject(err)
+                else
+                    if (data.length == 0)
+                        reject('no_time_data')
+                    else
+                        resolve(data)
+            })
         })
     }
 }
