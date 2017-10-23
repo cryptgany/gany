@@ -407,7 +407,7 @@ GanyTheBot.prototype.start = function() {
         this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, 60).then((data) => {
           genChart(exchange_market.exchange, exchange_market.market, data, 'minute').then((img_path) => {
             this.telegram_bot.sendPhoto(msg.chat.id, img_path)
-          })
+          }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
         })
       } else {
         this.send_message(msg.chat.id, message)
