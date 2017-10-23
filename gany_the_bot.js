@@ -390,7 +390,8 @@ GanyTheBot.prototype.start = function() {
       if (this.is_subscribed(msg.from.id)) {
         subscriber = this.find_subscriber(msg.from.id)
       }
-      market = msg.text.toUpperCase().replace(/\/CHART\ /, '')
+      data = msg.text.split(' ')
+      market = data[1].toUpperCase().replace(/\/CHART\ /, '')
       if (market == 'ETH')
         market = 'ETH-BTC'
       if (market == 'BTC')
@@ -404,7 +405,8 @@ GanyTheBot.prototype.start = function() {
         message = "Too many markets found"
       if (markets.length > 0 && markets.length <= 6) {
         exchange_market = markets.sort((a,b) => { return EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange] })[0]
-        this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, 60).then((data) => {
+        time = data[2] ? parseInt(data[2]) : 60
+        this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, time).then((data) => {
           genChart(exchange_market.exchange, exchange_market.market, data, 'minute').then((img_path) => {
             this.telegram_bot.sendPhoto(msg.chat.id, img_path)
           }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
