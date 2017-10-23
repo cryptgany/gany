@@ -62,3 +62,7 @@ typings/
 .DS_Store
 package-lock.json
 .vscode
+
+
+# Temporal images generation
+tmp/images/

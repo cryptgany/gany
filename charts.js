@@ -1,17 +1,12 @@
-
 const ChartjsNode = require('chartjs-node');
 require('./vendor/Chart.Financial');
 var moment = require('moment')
 
-function randomNumber(min, max) {
+function randomNumber(min = 0, max = 999999999) {
     return Math.random() * (max - min) + min;
 }
 
 function randomBar(date, lastClose) {
-    var open = randomNumber(lastClose * .95, lastClose * 1.05);
-    var close = randomNumber(open * .95, open * 1.05);
-    var high = randomNumber(Math.max(open, close), Math.max(open, close) * 1.1);
-    var low = randomNumber(Math.min(open, close) * .9, Math.min(open, close));
     return {
         t: date.valueOf(),
         o: open,
@@ -21,16 +16,14 @@ function randomBar(date, lastClose) {
     };
 }
 
-function genChart() {
-    var dateFormat = 'MMMM DD YYYY';
-    var date = moment('April 01 2017', dateFormat);
-    var data = [randomBar(date, 30)];
-    while (data.length < 60) {
-        date = date.clone().add(1, 'd');
-        if (date.isoWeekday() <= 5) {
-            data.push(randomBar(date, data[data.length - 1].c));
-        }
-    }
+function genChart(data, type = 'minute') {// type = minute/hour/day
+    var name = randomNumber() + "_chart.png"
+    var dateFormat = 'hh mm';
+    var date = moment(new Date(), dateFormat);
+    data.forEach((d) => {
+        d.t = date.format('hh mm')
+        date.add(1, 'm');
+    })
 
     chartJsOptions = {
         type: 'financial',
@@ -62,8 +55,9 @@ function genChart() {
         streamResult.stream // => Stream object
         streamResult.length // => Integer length of stream
         // write to a file
-        return chartNode.writeImageToFile('image/png', './testimage.png');
+        return chartNode.writeImageToFile('image/png', './tmp/images/' + name);
     }).then(() => {
+        return './tmp/images/' + name
         // chart is now written to the file path
         // ./testimage.png
     });

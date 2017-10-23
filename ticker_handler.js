@@ -170,6 +170,11 @@ class TickerHandler {
         return markets
     }
 
+    getMarketDataForChart(market_name) {
+        markets = this.get_market_data(market_name, false)
+        
+    }
+
     getMarketType(marketData) {
         return marketData.market.match(/BTC/) ? 'BTC' : 'ETH'
     }
