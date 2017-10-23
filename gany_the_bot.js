@@ -385,32 +385,33 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/\/chart/, (msg, match) => {
-
-    subscriber = undefined
-    if (this.is_subscribed(msg.from.id)) {
-      subscriber = this.find_subscriber(msg.from.id)
-    }
-    market = msg.text.toUpperCase().replace(/\/CHART\ /, '')
-    if (market == 'ETH')
-      market = 'ETH-BTC'
-    if (market == 'BTC')
-      market = 'BTC-USDT'
-    if (market.match(/^[^\-]+$/))
-      market = market + "-BTC"
-    markets = this.detektor.get_market_data(market, subscriber)
-    if (markets.length == 0)
-      message = "Not found."
-    if (markets.length > 6)
-      message = "Too many markets found"
-    if (markets.length > 0 && markets.length <= 6) {
-      exchange_market = markets.sort((a,b) => { return EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange] })[0]
-      this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, 60).then((data) => {
-        genChart(exchange_market.exchange, exchange_market.market, data, 'minute').then((img_path) => {
-          this.telegram_bot.sendPhoto(msg.chat.id, img_path)
+    if (this.is_mod(msg.chat.id)){
+      subscriber = undefined
+      if (this.is_subscribed(msg.from.id)) {
+        subscriber = this.find_subscriber(msg.from.id)
+      }
+      market = msg.text.toUpperCase().replace(/\/CHART\ /, '')
+      if (market == 'ETH')
+        market = 'ETH-BTC'
+      if (market == 'BTC')
+        market = 'BTC-USDT'
+      if (market.match(/^[^\-]+$/))
+        market = market + "-BTC"
+      markets = this.detektor.get_market_data(market, subscriber)
+      if (markets.length == 0)
+        message = "Not found."
+      if (markets.length > 6)
+        message = "Too many markets found"
+      if (markets.length > 0 && markets.length <= 6) {
+        exchange_market = markets.sort((a,b) => { return EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange] })[0]
+        this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, 60).then((data) => {
+          genChart(exchange_market.exchange, exchange_market.market, data, 'minute').then((img_path) => {
+            this.telegram_bot.sendPhoto(msg.chat.id, img_path)
+          })
         })
-      })
-    } else {
-      this.send_message(msg.chat.id, message)
+      } else {
+        this.send_message(msg.chat.id, message)
+      }
     }
   })
 
