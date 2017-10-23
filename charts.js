@@ -6,16 +6,6 @@ function randomNumber(min = 0, max = 999999999) {
     return Math.random() * (max - min) + min;
 }
 
-function randomBar(date, lastClose) {
-    return {
-        t: date.valueOf(),
-        o: open,
-        h: high,
-        l: low,
-        c: close
-    };
-}
-
 function genChart(exchange, market, data, type = 'minute') {// type = minute/hour/day
     var name = randomNumber() + "_chart.png"
     var dateFormat = 'hh mm';
@@ -44,7 +34,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
 
 
     // 600x600 canvas size
-    var chartNode = new ChartjsNode(600, 600);
+    var chartNode = new ChartjsNode(800, 500);
     return chartNode.drawChart(chartJsOptions).then(() => {
         // chart is created
 
