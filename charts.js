@@ -16,21 +16,27 @@ function randomBar(date, lastClose) {
     };
 }
 
-function genChart(data, type = 'minute') {// type = minute/hour/day
+function genChart(exchange, market, data, type = 'minute') {// type = minute/hour/day
     var name = randomNumber() + "_chart.png"
     var dateFormat = 'hh mm';
     var date = moment(new Date(), dateFormat);
+    var formattedData = []
     data.forEach((d) => {
-        d.t = date.format('hh mm')
-        date.add(1, 'm');
+        formattedData.push({
+            t: date,
+            o: d.open,
+            h: d.minuteHigh,
+            l: d.minuteLow,
+            c: d.close
+        })
+        date = date.clone().add(1, 'm');
     })
-
     chartJsOptions = {
         type: 'financial',
         data: {
             datasets: [{
-                label: "CHRT - Chart.js Corporation",
-                data: data
+                label: exchange + " - " + market + " | CryptGany ~ CryptoWise.net",
+                data: formattedData
             }]
         },
         options: {}

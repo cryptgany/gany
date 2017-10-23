@@ -404,12 +404,11 @@ GanyTheBot.prototype.start = function() {
       message = "Too many markets found"
     if (markets.length > 0 && markets.length <= 6) {
       exchange_market = markets.sort((a,b) => { return EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange] })[0]
-      console.log(exchange_market)
-      this.send_message(msg.chat.id, exchange_market.exchange)
-
-      // genChart(data, 'minute').then((img_path) => {
-      //   this.telegram_bot.sendPhoto(msg.chat.id, img_path)
-      // })
+      this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, 60).then((data) => {
+        genChart(exchange_market.exchange, exchange_market.market, data, 'minute').then((img_path) => {
+          this.telegram_bot.sendPhoto(msg.chat.id, img_path)
+        })
+      })
     } else {
       this.send_message(msg.chat.id, message)
     }

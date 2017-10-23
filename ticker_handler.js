@@ -207,6 +207,20 @@ class TickerHandler {
                 })
         })
     }
+
+    getMinuteMarketData(exchange, market, time) {
+        return new Promise((resolve, reject) => {
+            Ticker.getRange(exchange, market, 0, time, (err, data) => {
+                if (err)
+                    reject(err)
+                else
+                    if (data.length == 0)
+                        reject('no_time_data')
+                    else
+                        resolve(data)
+            })
+        })
+    }
 }
 
 module.exports = TickerHandler;

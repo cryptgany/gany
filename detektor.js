@@ -130,6 +130,10 @@ Detektor.prototype.getMarketDataWithTime = function(market_name, time, subscribe
   return this.ticker_handler.getMarketDataWithTime(market_name, time, subscriber)
 }
 
+Detektor.prototype.getMinuteMarketData = function(exchange, market, time) {
+  return this.ticker_handler.getMinuteMarketData(exchange, market, time)
+}
+
 Detektor.prototype.getMarketList = function(exchange) {
   return this.api_clients[exchange].marketList() || []
 }
