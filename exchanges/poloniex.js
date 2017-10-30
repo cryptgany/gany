@@ -28,18 +28,14 @@ Poloniex.prototype.marketList = function() {
 }
 
 Poloniex.prototype._watch_tickers = function() {
-  this.client.returnTicker((err, tickers) => {
-    if (err) {
-      this.logger.error('Failed to retrieve poloniex data: ', err)
-    } else {
-      this.markets = Object.keys(tickers)
-      Object.keys(tickers).forEach((market) => {
-        if (this._filter_market(tickers[market])) {
-          this.pump_events.emit('marketupdate', 'TICKER', this.code, market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));
-        }
-      })
-    }
-  })
+  this.client.returnTicker().then((tickers) => {
+    this.markets = Object.keys(tickers)
+    Object.keys(tickers).forEach((market) => {
+      if (this._filter_market(tickers[market])) {
+        this.pump_events.emit('marketupdate', 'TICKER', this.code, market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));
+      }
+    })
+  }).catch((e) => { this.logger.error("Error trying to fetch POLONIEX:", e) })
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
 }
 

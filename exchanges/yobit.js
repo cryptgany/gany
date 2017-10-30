@@ -47,7 +47,7 @@ Yobit.prototype._watch_tickers = function() {
           this.pump_events.emit('marketupdate', 'TICKER', this.code, market.toUpperCase().replace(/\_/, '-'), this._normalize_ticker_data(data[market]));
         })
       }
-    })
+    }).catch((e) => { this.logger.error("Error fetching YOBIT data:", e) })
   }
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
 }

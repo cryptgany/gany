@@ -38,10 +38,10 @@ Binance.prototype.volume_for = function(pair) {
 Binance.prototype._watch_tickers = function() { // watches markets every 10 seconds
   try {
     this.markets.forEach((market) => {
-      this.client.ticker24hr(market.key, (err, data)=>{
+      this.client.ticker24hr(market.key).then((data)=>{
         if (data.volume > 0)
           this.pump_events.emit('marketupdate', 'TICKER', this.code, market.name, this._normalize_ticker_data(data));
-      })
+      }).catch((e) => { this.logger.error("Error fetching data from BINANCE:", e)})
     })
   } catch(e) {
     this.logger.error("Error on binance watch ticker (catched):", e)
