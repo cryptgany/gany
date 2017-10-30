@@ -417,6 +417,13 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
+  this.telegram_bot.onText(/\/listpaidusers/, (msg, match) => {
+    if (this.is_mod(msg.chat.id)){
+      message = this.subscribers.filter((e) => { return e.subscription_status == true }).map((e) => { return e.telegram_id + ", " + e.full_name + ", " + e.username })
+      this.send_message(msg.chat.id, message.join("\n"))
+    }
+  })
+
   // ************** //
   // CALLBACK QUERY //
   // ************** //
