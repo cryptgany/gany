@@ -32,15 +32,15 @@ class Ticker {
         return new Promise((resolve, reject) => {
             try {
                 let high = 0
-                let low = data[0].last
+                let low = data[0]
                 data.forEach((d) => {
-                    if (d.last > high)
-                        high = d.last
-                    if (d.last < low)
-                        low = d.last
+                    if (d > high)
+                        high = d
+                    if (d < low)
+                        low = d
                 })
 
-                resolve({open: data[0].last, high: high, low: low, close: data[data.length-1].last})
+                resolve({open: data[0], high: high, low: low, close: data[data.length-1]})
             } catch (e) { reject(e) }
         })
     }

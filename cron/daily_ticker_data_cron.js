@@ -6,27 +6,28 @@ var TickerData = require('../models/ticker_data')
 
 var logger = new Logger();
 
-var hourlyTickerDataJob = new CronJob('00 00 */1 * * *', function() {
-  logger.log("Starting Hourly Ticker Data Job")
+var dailyTickerDataJob = new CronJob('00 30 00 */1 * *', function() { // run at 12:30 so we don't interfere with hourly cron workers
+  logger.log("Starting Daily Ticker Data Job")
   let count = 0
   Ticker.getExchangeMarkets((err,exchangeMarkets) => {
     exchangeMarkets.forEach((exchangeMarket) => {
       setTimeout(() => {
         spt = exchangeMarket.split('.')
-        logger.log("Saving hourly data for", spt[0], spt[1])
-        Ticker.getRange(spt[0], spt[1], 0, 59, (err, data) => {
-          Ticker.getHighLowResume(data.map((e) => {return e.last})).then((tdata) => {
+        logger.log("Saving daily data for", spt[0], spt[1])
+
+        TickerData.find({exchange: spt[0], market: spt[1]}).limit(24).sort([['createdAt', 'descending']]).exec((err, data) => {
+          Ticker.getHighLowResume(data.map((e) => {return e.close})).then((tdata) => {
             tickerData = new TickerData()
             tickerData.exchange = spt[0]
             tickerData.market = spt[1]
-            tickerData.ticker_type = 'hour'
+            tickerData.ticker_type = 'day'
             tickerData.open = tdata.open
             tickerData.high = tdata.high
             tickerData.low = tdata.low
             tickerData.close = tdata.close
             return tickerData.save()
 
-          }).catch((e) => { logger.error("Error generating hourly data:", e)})
+          }).catch((e) => { logger.error("Error generating daily data:", e)})
         })
       }, count * 30) // very small delay for not fucking up mongo/redis
       count += 1
