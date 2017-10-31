@@ -16,7 +16,7 @@ var dailyTickerDataJob = new CronJob('00 30 00 */1 * *', function() { // run at 
         logger.log("Saving daily data for", spt[0], spt[1])
 
         TickerData.find({exchange: spt[0], market: spt[1]}).limit(24).sort([['createdAt', 'descending']]).exec((err, data) => {
-          Ticker.getHighLowResume(data.map((e) => {return e.close})).then((tdata) => {
+          Ticker.getDailyHighLowResume(data).then((tdata) => {
             tickerData = new TickerData()
             tickerData.exchange = spt[0]
             tickerData.market = spt[1]
