@@ -1,6 +1,7 @@
 'use strict';
 require('./protofunctions.js')
 const Ticker = require('./models/ticker')
+const TickerData = require('./models/ticker_data')
 /*
     Handles all the ticker related information through time.
 */
@@ -211,6 +212,20 @@ class TickerHandler {
     getMinuteMarketData(exchange, market, time) {
         return new Promise((resolve, reject) => {
             Ticker.getRange(exchange, market, 0, time, (err, data) => {
+                if (err)
+                    reject(err)
+                else
+                    if (data.length == 0)
+                        reject('no_time_data')
+                    else
+                        resolve(data.reverse())
+            })
+        })
+    }
+
+    getHourMarketData(exchange, market, ticker_type, time) {
+        return new Promise((resolve, reject) => {
+            TickerData.find({exchange: exchange, market: market, ticker_type: ticker_type}).limit(time).sort([['createdAt', 'descending']]).exec((err, data) => {
                 if (err)
                     reject(err)
                 else

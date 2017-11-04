@@ -392,6 +392,7 @@ GanyTheBot.prototype.start = function() {
       }
       data = msg.text.split(' ')
       market = data[1].toUpperCase().replace(/\/CHART\ /, '')
+      chart_type = (data[3] == 'minute' || data[3] == 'minutes') ? 'minute' : 'hour'
       if (market == 'ETH')
         market = 'ETH-BTC'
       if (market == 'BTC')
@@ -405,12 +406,21 @@ GanyTheBot.prototype.start = function() {
         message = "Too many markets found"
       if (markets.length > 0 && markets.length <= 6) {
         exchange_market = markets.sort((a,b) => { return EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange] })[0]
-        time = data[2] ? parseInt(data[2]) : 60
-        this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, time).then((data) => {
-          genChart(exchange_market.exchange, exchange_market.market, data, 'minute').then((img_path) => {
-            this.telegram_bot.sendPhoto(msg.chat.id, img_path)
-          }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
-        })
+        time = data[2] ? parseInt(data[2]) : 24*5 // 5 days
+        if (chart_type == 'minute') {
+          this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, time).then((data) => {
+            genChart(exchange_market.exchange, exchange_market.market, data, 'minute').then((img_path) => {
+              this.telegram_bot.sendPhoto(msg.chat.id, img_path)
+            }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
+          })
+        }
+        if (chart_type == 'hour') {
+          this.detektor.getHourMarketData(exchange_market.exchange, exchange_market.market, 'hour', time).then((data) => {
+            genChart(exchange_market.exchange, exchange_market.market, data, 'hour').then((img_path) => {
+              this.telegram_bot.sendPhoto(msg.chat.id, img_path)
+            }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
+          })
+        }
       } else {
         this.send_message(msg.chat.id, message)
       }

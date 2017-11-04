@@ -8,18 +8,32 @@ function randomNumber(min = 0, max = 999999999) {
 
 function genChart(exchange, market, data, type = 'minute') {// type = minute/hour/day
     var name = randomNumber() + "_chart.png"
-    var dateFormat = 'hh mm';
+    if (type == 'minute')
+        var dateFormat = 'hh:mm';
+    if (type == 'hour')
+        var dateFormat = 'MMM Do hh:mm';
     var date = moment(new Date(), dateFormat);
     var formattedData = []
     data.forEach((d) => {
-        formattedData.push({
-            t: date,
-            o: d.open,
-            h: d.minuteHigh,
-            l: d.minuteLow,
-            c: d.close
-        })
-        date = date.clone().add(1, 'm');
+        if (type == 'minute') {
+            formattedData.push({
+                t: date,
+                o: d.open,
+                h: d.minuteHigh,
+                l: d.minuteLow,
+                c: d.close
+            })
+            date = date.clone().add(1, 'm');
+        } else {
+            formattedData.push({
+                t: date,
+                o: d.open,
+                h: d.high,
+                l: d.low,
+                c: d.close
+            })
+            date = date.clone().add(1, 'h');
+        }
     })
     chartJsOptions = {
         type: 'financial',
