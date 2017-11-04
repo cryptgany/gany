@@ -14,6 +14,9 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
         var dateFormat = 'MMM Do hh:mm';
     var date = moment(new Date(), dateFormat);
     var formattedData = []
+    if (data.length > 35) {
+        [data, time] = reduceDataSize(data);
+    }
     data.forEach((d) => {
         if (type == 'minute') {
             formattedData.push({
@@ -71,6 +74,36 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
         // chart is now written to the file path
         // ./testimage.png
     });
+}
+
+function reduceDataSize(data) {
+    var length = parseInt(data.length() / 35)
+    var newData = []
+    data.eachPair(length, (e) => {
+
+    })
+}
+
+function sumFinancialValues(data) {
+    var o,h,l,c = 0;
+    data.forEach((e) => {
+        
+    })
+    return [o,h,l,c].map((e) => { return e / data.length })
+}
+
+Array.prototype.eachPair = function(n, callback) { // return in groups of n
+    var count = 0; var idx = 0; var lgt = this.length
+    var cache = []
+    this.forEach((e) => {
+        cache.push(e)
+        count += 1; idx += 1
+        if (count >= n || idx == lgt) {
+            callback(cache)
+            cache = []
+            count = 0
+        }
+    })
 }
 
 module.exports = genChart;
