@@ -110,10 +110,10 @@ function reduceDataSize(data) {
 }
 
 function sumFinancialValues(data) {
-    var o = 0; var h = 0; var l = 0; var c = 0;
-    o = data[0].open
-    l = data[0].low
-    c = data[data.length - 1].close
+    var o = data[0].open
+    var h = data[0].high
+    var l = data[0].low
+    var c = data[data.length - 1].close
     data.forEach((e) => {
         if (e.high > h)
             h = e.high;
