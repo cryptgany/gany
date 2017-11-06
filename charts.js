@@ -11,11 +11,15 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
     if (type == 'minute')
         var dateFormat = 'hh:mm';
     if (type == 'hour')
-        var dateFormat = 'MMM Do hh:mm';
+        var dateFormat = 'MMM Do hh:00';
     var date = moment(new Date(), dateFormat);
+    date.format(dateFormat)
     var formattedData = []
-    if (data.length > 35) {
-        [data, time] = reduceDataSize(data);
+    var time = 1
+    if (data.length >= 60) {
+        returned = reduceDataSize(data);
+        data = returned[0]
+        time = returned[1]
     }
     data.forEach((d) => {
         if (type == 'minute') {
@@ -26,7 +30,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
                 l: d.minuteLow,
                 c: d.close
             })
-            date = date.clone().add(1, 'm');
+            date = date.clone().add(time, 'm');
         } else {
             formattedData.push({
                 t: date,
@@ -35,7 +39,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
                 l: d.low,
                 c: d.close
             })
-            date = date.clone().add(1, 'h');
+            date = date.clone().add(time, 'h');
         }
     })
     chartJsOptions = {
@@ -46,7 +50,26 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
                 data: formattedData
             }]
         },
-        options: {}
+        options: {
+            scales: {
+                xAxes: [{
+                type: 'time',
+                    time: {
+                        displayFormats: {
+                           'millisecond': dateFormat,
+                           'second': dateFormat,
+                           'minute': dateFormat,
+                           'hour': dateFormat,
+                           'day': dateFormat,
+                           'week': dateFormat,
+                           'month': dateFormat,
+                           'quarter': dateFormat,
+                           'year': dateFormat,
+                        }
+                    }
+                }]
+            }
+        }
     }
 
 
@@ -77,19 +100,28 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
 }
 
 function reduceDataSize(data) {
-    var length = parseInt(data.length() / 35)
+    var newSize = parseInt(data.length / 30)
     var newData = []
-    data.eachPair(length, (e) => {
-
+    data.eachPair(newSize, (e) => {
+        newData.push(sumFinancialValues(e))
     })
+
+    return [newData, newSize]
 }
 
 function sumFinancialValues(data) {
-    var o,h,l,c = 0;
+    var o = 0; var h = 0; var l = 0; var c = 0;
+    o = data[0].open
+    l = data[0].low
+    c = data[data.length - 1].close
     data.forEach((e) => {
-        
+        if (e.high > h)
+            h = e.high;
+        if (e.low < l)
+            l = e.low;
     })
-    return [o,h,l,c].map((e) => { return e / data.length })
+
+    return {open: o, high: h, low: l, close: c}
 }
 
 Array.prototype.eachPair = function(n, callback) { // return in groups of n
