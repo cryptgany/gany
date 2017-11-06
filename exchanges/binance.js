@@ -19,7 +19,7 @@ function Binance(logger, pump_events) {
 
   this.markets = [];
   // this.skip_volumes = 0.5 // not supported in binance
-  this.ticker_speed = 5 // seconds
+  this.ticker_speed = 10 // seconds
   this.cycle_time = 20 // minutes
 
   this.pump_events = pump_events; // push updates
