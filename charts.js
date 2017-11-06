@@ -11,7 +11,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
     if (type == 'minute')
         var dateFormat = 'hh:mm';
     if (type == 'hour')
-        var dateFormat = 'MMM Do hh:00';
+        var dateFormat = 'MMM Do HH:00';
     var date = moment(new Date(), dateFormat);
     date.format(dateFormat)
     var formattedData = []
