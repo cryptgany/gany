@@ -30,7 +30,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
                 l: d.minuteLow,
                 c: d.close
             })
-            date = date.clone().add(time, 'm');
+            date = date.clone().substract(time, 'm');
         } else {
             formattedData.push({
                 t: date,
@@ -39,7 +39,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
                 l: d.low,
                 c: d.close
             })
-            date = date.clone().add(time, 'h');
+            date = date.clone().substract(time, 'h');
         }
     })
     chartJsOptions = {

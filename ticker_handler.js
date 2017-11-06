@@ -232,7 +232,7 @@ class TickerHandler {
                     if (data.length == 0)
                         reject('no_time_data')
                     else
-                        resolve(data.reverse())
+                        resolve(data)
             })
         })
     }
