@@ -16,7 +16,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
     date.format(dateFormat)
     var formattedData = []
     var time = 1
-    if (data.length >= 60) {
+    if (data.length >= 80) {
         returned = reduceDataSize(data);
         data = returned[0]
         time = returned[1]
@@ -101,7 +101,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
 }
 
 function reduceDataSize(data) {
-    var newSize = parseInt(data.length / 30)
+    var newSize = parseInt(data.length / 40)
     var newData = []
     data.eachPair(newSize, (e) => {
         newData.push(sumFinancialValues(e))
