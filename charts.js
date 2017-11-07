@@ -21,6 +21,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
         data = returned[0]
         time = returned[1]
     }
+    // data = data.reverse()
     data.forEach((d) => {
         if (type == 'minute') {
             formattedData.push({
@@ -34,10 +35,10 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
         } else {
             formattedData.push({
                 t: date,
-                o: d.open,
+                o: d.close, // TODO: FIX ME, open and close is inversed
                 h: d.high,
                 l: d.low,
-                c: d.close
+                c: d.open
             })
             date = date.clone().subtract(time, 'h');
         }
@@ -47,7 +48,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
         data: {
             datasets: [{
                 label: exchange + " - " + market + " | CryptGany ~ CryptoWise.net",
-                data: formattedData.reverse()
+                data: formattedData
             }]
         },
         options: {
