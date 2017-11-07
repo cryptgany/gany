@@ -16,7 +16,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
     date.format(dateFormat)
     var formattedData = []
     var time = 1
-    if (data.length >= 80) {
+    if (data.length >= 72) {
         returned = reduceDataSize(data);
         data = returned[0]
         time = returned[1]
@@ -68,7 +68,16 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
                            'year': dateFormat,
                         }
                     }
-                }]
+                }],
+                yAxes: [
+                    {
+                        ticks: {
+                            callback: function(label, index, labels) {
+                                return label.toFixed(8);
+                            }
+                        },
+                    }
+                ]
             }
         }
     }
@@ -101,7 +110,7 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
 }
 
 function reduceDataSize(data) {
-    var newSize = parseInt(data.length / 40)
+    var newSize = parseInt(data.length / 36)
     var newData = []
     data.eachPair(newSize, (e) => {
         newData.push(sumFinancialValues(e))
