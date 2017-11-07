@@ -385,7 +385,7 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/\/chart/, (msg, match) => {
-    if (this.is_mod(msg.chat.id)){
+    if (this.is_paid_subscriber(msg.chat.id)) {
       subscriber = undefined
       if (this.is_subscribed(msg.from.id)) {
         subscriber = this.find_subscriber(msg.from.id)
@@ -424,6 +424,8 @@ GanyTheBot.prototype.start = function() {
       } else {
         this.send_message(msg.chat.id, message)
       }
+    } else {
+      this.send_message(msg.chat.id, "Sorry, this feature is only for paid members.")
     }
   })
 
