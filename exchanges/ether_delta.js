@@ -6,7 +6,7 @@ class EtherDelta extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
         super(logger, pumpEvents, 'EtherDelta', 10, 20, 'EtherDelta', skipVolumes)
         this.client = io.connect(BASE_URL, { transports: ['websocket'] })
-        this.lastData = {} // for when however it fails
+        this.lastData = {}
 
 	    this.client.on('connect', () => {
 	        this._logger.log('EtherDelta socket connected');
@@ -16,15 +16,6 @@ class EtherDelta extends AbstractExchange {
 	        this._logger.log('EtherDelta socket disconnected, reconnecting...');
             this.client = io.connect(BASE_URL, { transports: ['websocket'] })
 	    });
-
-	    this.client.on('market', (returnTicker, orders, trades, myOrders, myTrades, myFunds) => {
-            if (returnTicker.returnTicker) {
-                this.lastData = returnTicker.returnTicker
-            } else {
-                this._logger.error("EtherDelta fetch failed, emitting last stored data", Object.keys(this.lastData))
-            }
-            this.emitData(this.lastData) // failsafe for when fetching fails
-	    })
     }
 
     watch(){
@@ -34,6 +25,14 @@ class EtherDelta extends AbstractExchange {
 
   	getMarkets () {
     	this.client.emit('getMarket', {});
+        this.client.once('market', (returnTicker, orders, trades, myOrders, myTrades, myFunds) => {
+            if (returnTicker.returnTicker) {
+                this.lastData = returnTicker.returnTicker
+            } else {
+                this._logger.error("EtherDelta fetch failed, emitting last stored data")
+            }
+            this.emitData(this.lastData) // failsafe for when fetching fails
+        })
   	};
 
     emitData(data) {
