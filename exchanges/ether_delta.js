@@ -51,6 +51,10 @@ class EtherDelta extends AbstractExchange {
     	return market.replace(/\_/, '-')
     }
 
+    marketList() {
+        return Object.keys(this.lastData).filter((key) => {return (!key.match(/\_0x/) && this.lastData[key].baseVolume >= this._skipVolumes)}).map((e)=>{ return this.mapName(e) })
+    }
+
 
     volume_for(pair) {
         return 'ETH'

@@ -144,16 +144,16 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/\/listmarkets\ /i, (msg, match) => {
-    exchange = msg.text.toLowerCase().replace(/\/listmarkets\ /, '')
-    exchange = exchange.substr(0, 1).toUpperCase() + exchange.substr(1)
+    exchange = msg.text.replace(/\/listmarkets\ /, '')
     markets = this.detektor.getMarketList(exchange)
     if (markets.length > 0) {
       message = exchange + " has " + markets.length + " markets:\n"
-      message += markets.join("\n")
+      message += markets.join(", ")
     } else {
       message = 'Exchange ' + exchange + ' not found.'
     }
-    this.send_message(msg.chat.id, message)
+    console.log(message)
+    this.send_message(msg.chat.id, message, {parse_mode: 'HTML'})
   })
 
   this.telegram_bot.onText(/\/pay/, (msg, match) => {
@@ -670,6 +670,7 @@ GanyTheBot.prototype.configuration_menu_exchanges = function() {
         [{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }],
         [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }],
         [{ text: 'Kraken', callback_data: 'configure exchange Kraken' }, { text: 'Binance', callback_data: 'configure exchange Binance' }],
+        [{ text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' }],
         [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })
