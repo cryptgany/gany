@@ -43,8 +43,8 @@ class EtherDelta extends AbstractExchange {
         });
     }
 
-    market_url(market){
-        return "https://etherdelta.com/#" + market
+    market_url(market) {
+        return "https://etherdelta.com/#" + market.split(/\-/).reverse().join('-')
     }
 
     mapName(market) {
