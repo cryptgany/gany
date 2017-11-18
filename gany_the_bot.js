@@ -22,7 +22,8 @@ EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart firs
   Kraken: 3,
   Poloniex: 4,
   Cryptopia: 5,
-  Yobit: 6
+  Yobit: 6,
+  EtherDelta: 7
 }
 
 function GanyTheBot(logger) {
