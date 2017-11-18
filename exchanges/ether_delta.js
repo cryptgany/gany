@@ -6,7 +6,7 @@ class EtherDelta {
     //     super(logger, pumpEvents, 'EtherDelta', 10, 20, 'EtherDelta', skipVolumes)
     constructor(){
         this.client = io.connect(BASE_URL, { transports: ['websocket'] })
-        this.x = []
+        this.lastData = {} // for when however it fails
 
 	    this.client.on('connect', () => {
 	        console.log('socket connected');
@@ -17,8 +17,13 @@ class EtherDelta {
 	    });
 
 	    this.client.on('market', (returnTicker, orders, trades, myOrders, myTrades, myFunds) => {
-            console.log(returnTicker, orders, trades, myOrders, myTrades, myFunds)
-            // this.emitData(returnTicker.returnTicker)
+            if (returnTicker.returnTicker) {
+                this.lastData = returnTicker.returnTicker
+                console.log("WORKED")
+                // this.emitData(returnTicker.returnTicker)
+            } else {
+                console.log("FAILED", Object.keys(this.lastData))
+            }
 	    })
     }
 
