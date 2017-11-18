@@ -9,11 +9,11 @@ class EtherDelta extends AbstractExchange {
         this.lastData = {} // for when however it fails
 
 	    this.client.on('connect', () => {
-	        this.logger.log('EtherDelta socket connected');
+	        this._logger.log('EtherDelta socket connected');
 	    });
 
 	    this.client.on('disconnect', () => {
-	        this.logger.log('EtherDelta socket disconnected, reconnecting...');
+	        this._logger.log('EtherDelta socket disconnected, reconnecting...');
             this.client = io.connect(BASE_URL, { transports: ['websocket'] })
 	    });
 
@@ -21,7 +21,7 @@ class EtherDelta extends AbstractExchange {
             if (returnTicker.returnTicker) {
                 this.lastData = returnTicker.returnTicker
             } else {
-                this.logger.error("EtherDelta fetch failed, emitting last stored data", Object.keys(this.lastData))
+                this._logger.error("EtherDelta fetch failed, emitting last stored data", Object.keys(this.lastData))
             }
             this.emitData(this.lastData) // failsafe for when fetching fails
 	    })
