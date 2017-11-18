@@ -16,6 +16,7 @@ const Payment = require("./models/payment")
 const GanyTheBot = require('./gany_the_bot')
 const Kraken = require('./exchanges/kraken');
 const Binance = require('./exchanges/binance');
+const EtherDelta = require('./exchanges/ether_delta');
 
 // Initializers
 class PumpEvents extends EventEmitter {}
@@ -28,6 +29,7 @@ var poloniex = new Poloniex(logger, pump_events);
 var cryptopia = new Cryptopia(logger, pump_events);
 let kraken = new Kraken(logger,pump_events);
 let binance = new Binance(logger,pump_events);
+let etherDelta = new EtherDelta(logger,pump_events);
 var database = new Database();
 var wallet = new Wallet(logger, gany_the_bot);
 
@@ -40,8 +42,9 @@ if (process.env.ENVIRONMENT == 'production' || process.env.ENVIRONMENT == 'testi
   yobit.watch()
   poloniex.watch()
   cryptopia.watch()
-  kraken.watch();
-  binance.watch();
+  kraken.watch()
+  binance.watch()
+  etherDelta.watch()
 }
 Payment.process_payments()
 gany_the_bot.expire_expired_users()
@@ -63,9 +66,12 @@ rules = {
   ],
   "Binance": [
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.125 }
+  ],
+  "EtherDelta": [
+    (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.001 }
   ]
 }
 
-detektor = new Detektor(logger, gany_the_bot, pump_events, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia, Kraken : kraken, Binance: binance}, rules)
+detektor = new Detektor(logger, gany_the_bot, pump_events, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia, Kraken : kraken, Binance: binance, EtherDelta: etherDelta}, rules)
 gany_the_bot.detektor = detektor
 detektor.restore_snapshot()
