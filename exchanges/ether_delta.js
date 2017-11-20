@@ -14,8 +14,10 @@ class EtherDelta extends AbstractExchange {
 
 	    this.client.on('disconnect', () => {
 	        this._logger.log('EtherDelta socket disconnected, reconnecting...');
+            this.client.close()
             this.client = io.connect(BASE_URL, { transports: ['websocket'] })
 	    });
+
     }
 
     watch(){
@@ -24,6 +26,7 @@ class EtherDelta extends AbstractExchange {
     }
 
   	getMarkets () {
+        this.client.off('market')
     	this.client.emit('getMarket', {});
         this.client.once('market', (returnTicker, orders, trades, myOrders, myTrades, myFunds) => {
             if (returnTicker.returnTicker) {
