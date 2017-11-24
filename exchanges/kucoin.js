@@ -23,7 +23,7 @@ class Kucoin extends AbstractExchange {
     emitData(data) {
         data.forEach((record) => {
             if (record.volValue >= this._skipVolumes)
-                this._pumpEvents.emit('marketupdate', 'TICKER', this._code, record.symbol, this.mapData(data[key]))
+                this._pumpEvents.emit('marketupdate', 'TICKER', this._code, record.symbol, this.mapData(record))
         })
     }
 
@@ -32,7 +32,7 @@ class Kucoin extends AbstractExchange {
     }
 
     marketList() {
-        return Object.keys(this.lastData).filter((key) => {return (!key.match(/\_0x/) && this.lastData[key].baseVolume >= this._skipVolumes)}).map((e)=>{ return this.mapName(e) })
+        return lastData.map((e) => { return e.symbol })
     }
 
 
