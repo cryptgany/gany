@@ -16,7 +16,7 @@ const Payment = require("./models/payment")
 const GanyTheBot = require('./gany_the_bot')
 const Kraken = require('./exchanges/kraken');
 const Binance = require('./exchanges/binance');
-const EtherDelta = require('./exchanges/ether_delta');
+// const EtherDelta = require('./exchanges/ether_delta');
 const Kucoin = require('./exchanges/kucoin');
 
 // Initializers
@@ -30,7 +30,7 @@ var poloniex = new Poloniex(logger, pump_events);
 var cryptopia = new Cryptopia(logger, pump_events);
 let kraken = new Kraken(logger,pump_events);
 let binance = new Binance(logger,pump_events);
-let etherDelta = new EtherDelta(logger,pump_events);
+// let etherDelta = new EtherDelta(logger,pump_events);
 let kucoin = new Kucoin(logger,pump_events);
 var database = new Database();
 var wallet = new Wallet(logger, gany_the_bot);
@@ -72,9 +72,12 @@ rules = {
   ],
   "EtherDelta": [
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.25 }
+  ],
+  "Kucoin": [
+    (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.25 }
   ]
 }
 
-detektor = new Detektor(logger, gany_the_bot, pump_events, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia, Kraken : kraken, Binance: binance, EtherDelta: etherDelta}, rules)
+detektor = new Detektor(logger, gany_the_bot, pump_events, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia, Kraken : kraken, Binance: binance, Kucoin: kucoin}, rules)
 gany_the_bot.detektor = detektor
 detektor.restore_snapshot()

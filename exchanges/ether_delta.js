@@ -4,19 +4,19 @@ const BASE_URL = 'https://socket.etherdelta.com'
 
 class EtherDelta extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-     //    super(logger, pumpEvents, 'EtherDelta', 10, 20, 'EtherDelta', skipVolumes)
-     //    this.client = io.connect(BASE_URL, { transports: ['websocket'] })
-     //    this.lastData = {}
+        super(logger, pumpEvents, 'EtherDelta', 10, 20, 'EtherDelta', skipVolumes)
+        this.client = io.connect(BASE_URL, { transports: ['websocket'] })
+        this.lastData = {}
 
-	    // this.client.on('connect', () => {
-	    //     this._logger.log('EtherDelta socket connected');
-	    // });
+	    this.client.on('connect', () => {
+	        this._logger.log('EtherDelta socket connected');
+	    });
 
-	    // this.client.on('disconnect', () => {
-	    //     this._logger.log('EtherDelta socket disconnected, reconnecting...');
-     //        this.client.close()
-     //        this.client = io.connect(BASE_URL, { transports: ['websocket'] })
-	    // });
+	    this.client.on('disconnect', () => {
+	        this._logger.log('EtherDelta socket disconnected, reconnecting...');
+            this.client.close()
+            this.client = io.connect(BASE_URL, { transports: ['websocket'] })
+	    });
 
     }
 
