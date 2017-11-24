@@ -48,7 +48,7 @@ GanyTheBot.prototype.start = function() {
   // ***************** //
   // MESSAGE CALLBACKS //
   // ***************** //
-  this.telegram_bot.onText(/\/start/, (msg, match) => {
+  this.telegram_bot.onText(/^\/start/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
       message = 'Hello ' + msg.from.first_name + '. I am CryptGany, the Cryptocurrency Trading Analyst Bot.'
       if (this.is_subscribed(msg.chat.id)) {
@@ -65,7 +65,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/subscribe/, (msg, match) => {
+  this.telegram_bot.onText(/^\/subscribe/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
       if (this.is_subscribed(msg.chat.id)) {
         if (this.is_blocked(msg.chat.id)) {
@@ -98,7 +98,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/subscription/, (msg, match) => {
+  this.telegram_bot.onText(/^\/subscription/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
       if (this.is_subscribed(msg.chat.id)) {
         subscriber = this.find_subscriber(msg.chat.id)
@@ -126,7 +126,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/balance/, (msg, match) => {
+  this.telegram_bot.onText(/^\/balance/, (msg, match) => {
     if (this.is_subscribed(msg.chat.id)) {
       subscriber = this.find_subscriber(msg.chat.id)
       message = "Your balance is " + (subscriber.total_balance() / 100000000).toFixed(8)
@@ -134,7 +134,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/configure/, (msg, match) => {
+  this.telegram_bot.onText(/^\/configure/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
       if (this.is_subscribed(msg.chat.id)) {
         this.send_message(msg.chat.id, "Configuration menu:", this.configuration_menu_options())
@@ -144,7 +144,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/listmarkets\ /i, (msg, match) => {
+  this.telegram_bot.onText(/^\/listmarkets\ /i, (msg, match) => {
     exchange = msg.text.replace(/\/listmarkets\ /, '')
     markets = this.detektor.getMarketList(exchange)
     if (markets.length > 0) {
@@ -157,7 +157,7 @@ GanyTheBot.prototype.start = function() {
     this.send_message(msg.chat.id, message, {parse_mode: 'HTML'})
   })
 
-  this.telegram_bot.onText(/\/pay/, (msg, match) => {
+  this.telegram_bot.onText(/^\/pay/, (msg, match) => {
     if (this.is_not_a_group(msg)) {
       if (this.is_subscribed(msg.chat.id)) {
         subscriber = this.find_subscriber(msg.chat.id)
@@ -183,7 +183,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/see/i, (msg, match) => {
+  this.telegram_bot.onText(/^\/see/i, (msg, match) => {
     if (!msg.text.match(SEE_REGEX_WITH_ONE_PARAM) && !(msg.text.match(SEE_REGEX_WITH_TWO_PARAMS)))
       this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30')
   })
@@ -244,14 +244,14 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/(stop|block)/, (msg, match) => {
+  this.telegram_bot.onText(/^\/(stop|block)/, (msg, match) => {
     if (this.is_subscribed(msg.chat.id)) {
       this.block_subscriber(msg.chat.id)
     }
     this.send_message(msg.chat.id, 'You wont receive my notifications anymore. To change that, you can type /subscribe')
   })
 
-  this.telegram_bot.onText(/\/help/, (msg, match) => {
+  this.telegram_bot.onText(/^\/help/, (msg, match) => {
     message = "/whatisgany - What is this bot?"
     message += "\n/subscribe - Subscribe to Gany's notifications"
     message += "\n/subscription - Information about your subscription"
@@ -267,7 +267,7 @@ GanyTheBot.prototype.start = function() {
     this.send_message(msg.chat.id, message)
   })
 
-  this.telegram_bot.onText(/\/whatisgany/, (msg, match) => {
+  this.telegram_bot.onText(/^\/whatisgany/, (msg, match) => {
     if (this.is_subscribed(msg.chat.id)) {
       message = "Gany is a CryptoCurrency Trading Analysis bot that monitors multiple exchanges and markets"
       message += " 24/7, giving its subscribers notifications when certain conditions happen in a given market.\n\n"
@@ -277,7 +277,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/whatisbal/, (msg, match) => {
+  this.telegram_bot.onText(/^\/whatisbal/, (msg, match) => {
     if (this.is_subscribed(msg.chat.id)) {
       message = "\nB: Bid"
       message += "\nA: Ask"
@@ -286,7 +286,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/pricing/, (msg, match) => {
+  this.telegram_bot.onText(/^\/pricing/, (msg, match) => {
     message = "Gany has both paid and free subscription:"
     message += '\n*Paid User*: 0.01 BTC monthly fee. Receives all Gany notifications and can use current features.'
     message += '\n*Free User*: Receives only 25% of notifications and can use /see and /configure commands.'
@@ -295,7 +295,7 @@ GanyTheBot.prototype.start = function() {
     this.send_message(msg.chat.id, message)
   })
 
-  this.telegram_bot.onText(/\/granttime/, (msg, match) => {
+  this.telegram_bot.onText(/^\/granttime/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
       command = msg.text.split(' ')
       subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
@@ -313,7 +313,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/finduser/, (msg, match) => {
+  this.telegram_bot.onText(/^\/finduser/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
       command = msg.text.split(' ')
       subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
@@ -332,7 +332,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/detektor/, (msg, match) => {
+  this.telegram_bot.onText(/^\/detektor/, (msg, match) => {
     command = msg.text
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
       this.logger.log("Receiving request from MOD", msg.chat.id, "'" + msg.text + "'")
@@ -340,14 +340,14 @@ GanyTheBot.prototype.start = function() {
         this.detektor.store_snapshot()
         this.send_message(msg.chat.id, "Snapshot stored.")
       }
-      if (command.match(/\/detektor see/)) {
+      if (command.match(/^\/detektor see/)) {
         pair = command.replace(/\/detektor see\ /, '').split(" ")
         exchange = pair[0]; market = pair[1]
         ticker_info = this.detektor.tickers[exchange][market]
         message = this.telegram_post_price_check(exchange, market, ticker_info)
         this.send_message(msg.chat.id, message)
       }
-      if (command.match(/\/detektor update users/)) {
+      if (command.match(/^\/detektor update users/)) {
         Subscriber.find({}, (err, subscribers) => {
           if (err)
             this.logger.error("Could not get subscribers! fatal error", err)
@@ -358,34 +358,34 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/whatsmyid/, (msg, match) => {
+  this.telegram_bot.onText(/^\/whatsmyid/, (msg, match) => {
     this.update_user(msg)
     this.send_message(msg.from.id, "Your id is " + msg.from.id)
   })
 
-  this.telegram_bot.onText(/\/allcount/, (msg, match) => {
+  this.telegram_bot.onText(/^\/allcount/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
       this.send_message(msg.chat.id, this.subscribers.length + " subscribers.")
     }
   })
 
-  this.telegram_bot.onText(/\/paidcount/, (msg, match) => {
+  this.telegram_bot.onText(/^\/paidcount/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
       this.send_message(msg.chat.id, this.subscribers.filter((s) => { return s.subscription_status }).length + " paid subscribers.")
     }
   })
 
-  this.telegram_bot.onText(/\/sendmessage/, (msg, match) => {
+  this.telegram_bot.onText(/^\/sendmessage/, (msg, match) => {
     if (this.is_mod(msg.chat.id))
       this.broadcast(msg.text.replace(/\/sendmessage\ /, ''))
   })
 
-  this.telegram_bot.onText(/\/sendpaidmessage/, (msg, match) => {
+  this.telegram_bot.onText(/^\/sendpaidmessage/, (msg, match) => {
     if (this.is_mod(msg.chat.id))
       this.broadcast(msg.text.replace(/\/sendpaidmessage\ /, ''), true)
   })
 
-  this.telegram_bot.onText(/\/chart/, (msg, match) => {
+  this.telegram_bot.onText(/^\/chart/, (msg, match) => {
     if (this.is_paid_subscriber(msg.chat.id)) {
       subscriber = undefined
       if (this.is_subscribed(msg.from.id)) {
@@ -430,7 +430,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/\/listpaidusers/, (msg, match) => {
+  this.telegram_bot.onText(/^\/listpaidusers/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){
       message = this.subscribers.filter((e) => { return e.subscription_status == true }).map((e) => { return e.telegram_id + ", " + e.full_name + ", " + e.username })
       this.send_message(msg.chat.id, message.join("\n"), {parse_mode: 'HTML'})
