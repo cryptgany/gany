@@ -44,7 +44,7 @@ if (process.env.ENVIRONMENT == 'production' || process.env.ENVIRONMENT == 'testi
   cryptopia.watch()
   kraken.watch()
   binance.watch()
-  etherDelta.watch()
+  // etherDelta.watch()
 }
 Payment.process_payments()
 gany_the_bot.expire_expired_users()
