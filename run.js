@@ -17,6 +17,7 @@ const GanyTheBot = require('./gany_the_bot')
 const Kraken = require('./exchanges/kraken');
 const Binance = require('./exchanges/binance');
 const EtherDelta = require('./exchanges/ether_delta');
+const Kucoin = require('./exchanges/kucoin');
 
 // Initializers
 class PumpEvents extends EventEmitter {}
@@ -30,6 +31,7 @@ var cryptopia = new Cryptopia(logger, pump_events);
 let kraken = new Kraken(logger,pump_events);
 let binance = new Binance(logger,pump_events);
 let etherDelta = new EtherDelta(logger,pump_events);
+let kucoin = new Kucoin(logger,pump_events);
 var database = new Database();
 var wallet = new Wallet(logger, gany_the_bot);
 
@@ -45,6 +47,7 @@ if (process.env.ENVIRONMENT == 'production' || process.env.ENVIRONMENT == 'testi
   kraken.watch()
   binance.watch()
   // etherDelta.watch()
+  kucoin.watch()
 }
 Payment.process_payments()
 gany_the_bot.expire_expired_users()
