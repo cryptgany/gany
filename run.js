@@ -39,13 +39,13 @@ var wallet = new Wallet(logger, gany_the_bot);
 pump_events.setMaxListeners(50) // max 50 listeners
 setTimeout(() => { wallet.track_subscriptions() }, 1000*5)
 gany_the_bot.start()
-bittrex.watch()
+// bittrex.watch()
 if (process.env.ENVIRONMENT == 'production' || process.env.ENVIRONMENT == 'testing') {
-  yobit.watch()
-  poloniex.watch()
-  cryptopia.watch()
-  kraken.watch()
-  binance.watch()
+  // yobit.watch()
+  // poloniex.watch()
+  // cryptopia.watch()
+  // kraken.watch()
+  // binance.watch()
   etherDelta.watch()
   kucoin.watch()
 }
