@@ -32,7 +32,7 @@ class Kucoin extends AbstractExchange {
     }
 
     marketList() {
-        return lastData.map((e) => { return e.symbol })
+        return this.lastData.map((e) => { return e.symbol })
     }
 
 
