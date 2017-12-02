@@ -11,7 +11,7 @@ function Wallet(logger, gany_the_bot) {
   this.gany_the_bot = gany_the_bot
   this.minimal_btc_for_withdraw = 1000000
   this.subscription_price = {
-    basic:    1000000, // 0.01
+    basic:    600000, // 0.006
     advanced: 3000000, // 0.03
     pro:      5000000, // 0.05
   }
