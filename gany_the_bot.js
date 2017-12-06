@@ -41,6 +41,7 @@ function GanyTheBot(logger) {
     this.subscribers = subscribers
   })
   this.telegram_bot = new TelegramBot(this.token, {polling: true});
+  this.photo = {photo_id:undefined, caption:undefined};
 }
 
 GanyTheBot.prototype.start = function() {
@@ -383,6 +384,23 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/^\/sendpaidmessage/, (msg, match) => {
     if (this.is_mod(msg.chat.id))
       this.broadcast(msg.text.replace(/\/sendpaidmessage\ /, ''), true)
+  })
+
+    this.telegram_bot.on("photo", (msg, match) => {
+    if (this.is_mod(msg.chat.id))
+      console.log(msg)
+      this.photo["photo_id"] = msg.photo[0].file_id;
+      this.photo["caption"] = msg.caption;
+  })
+
+    this.telegram_bot.onText(/^\/sendimage/, (msg, match) => {
+    if (this.is_mod(msg.chat.id))
+       this.broadcastimg(this.photo["photo_id"], this.photo["caption"], '')
+  })
+
+    this.telegram_bot.onText(/^\/sendpaidimage/, (msg, match) => {
+    if (this.is_mod(msg.chat.id))
+       this.broadcastimg(this.photo["photo_id"], this.photo["caption"], true)
   })
 
   this.telegram_bot.onText(/^\/chart/, (msg, match) => {
@@ -760,8 +778,16 @@ GanyTheBot.prototype.message_mods = function(text) {
 GanyTheBot.prototype.broadcast = function(text, only_paid = false) {
   this.subscribers.forEach((sub) => {
     if (only_paid) {
-      if (sub.subscription_status == true) { this.send_message(sub.telegram_id, text, {parse_mode: 'HTML'}) }
-    } else { this.send_message(sub.telegram_id, text, {parse_mode: 'HTML'}) }
+      if (sub.subscription_status == true && sub.blocked == false) { this.send_message(sub.telegram_id, text, {parse_mode: 'HTML'}) }
+    } else { if (sub.blocked == false) {this.send_message(sub.telegram_id, text, {parse_mode: 'HTML'})} }
+  });
+}
+
+GanyTheBot.prototype.broadcastimg = function(photoid, caption, only_paid = false) {
+  this.subscribers.forEach((sub) => {
+    if (only_paid) {
+      if (sub.subscription_status == true && sub.blocked == false) { this.telegram_bot.sendPhoto(sub.telegram_id, photoid, caption) }
+    } else { if (sub.blocked == false) {this.telegram_bot.sendPhoto(sub.telegram_id, photoid, caption)} }
   });
 }
 
