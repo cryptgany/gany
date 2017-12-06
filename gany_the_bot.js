@@ -760,8 +760,8 @@ GanyTheBot.prototype.message_mods = function(text) {
 GanyTheBot.prototype.broadcast = function(text, only_paid = false) {
   this.subscribers.forEach((sub) => {
     if (only_paid) {
-      if (sub.subscription_status == true) { this.send_message(sub.telegram_id, text, {parse_mode: 'HTML'}) }
-    } else { this.send_message(sub.telegram_id, text, {parse_mode: 'HTML'}) }
+      if (sub.subscription_status == true && sub.blocked == false) { this.send_message(sub.telegram_id, text, {parse_mode: 'HTML'}) }
+    } else { if (sub.blocked == false) {this.send_message(sub.telegram_id, text, {parse_mode: 'HTML'})} }
   });
 }
 
