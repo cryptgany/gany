@@ -41,6 +41,7 @@ function GanyTheBot(logger) {
     this.subscribers = subscribers
   })
   this.telegram_bot = new TelegramBot(this.token, {polling: true});
+  this.photo = {photo_id:undefined, caption:undefined};
 }
 
 GanyTheBot.prototype.start = function() {
@@ -383,6 +384,27 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/^\/sendpaidmessage/, (msg, match) => {
     if (this.is_mod(msg.chat.id))
       this.broadcast(msg.text.replace(/\/sendpaidmessage\ /, ''), true)
+  })
+
+  this.telegram_bot.on("photo", (msg, match) => {
+    if (this.is_mod(msg.chat.id)) {
+      this.photo.photo_id = msg.photo[0].file_id;
+      this.photo.caption = msg.caption;
+    }
+  })
+
+  this.telegram_bot.onText(/^\/sendimage/, (msg, match) => {
+    if (this.is_mod(msg.chat.id) && this.photo.photo_id)
+       this.broadcastimg(this.photo["photo_id"], this.photo["caption"], '')
+    else (this.send_message(msg.chat.id, "Please send the image you want to broadcast before you use /sendimage"))
+      this.photo.photo_id = undefined;
+  })
+
+  this.telegram_bot.onText(/^\/sendpaidimage/, (msg, match) => {
+    if (this.is_mod(msg.chat.id) && this.photo.photo_id)
+       this.broadcastimg(this.photo["photo_id"], this.photo["caption"], true)
+    else (this.send_message(msg.chat.id, "Please send the image you want to broadcast before you use /sendpaidimage"))
+      this.photo.photo_id = undefined;
   })
 
   this.telegram_bot.onText(/^\/chart/, (msg, match) => {
@@ -765,4 +787,11 @@ GanyTheBot.prototype.broadcast = function(text, only_paid = false) {
   });
 }
 
+GanyTheBot.prototype.broadcastimg = function(photoid, caption, only_paid = false) {
+  this.subscribers.forEach((sub) => {
+    if (only_paid) {
+      if (sub.subscription_status == true && sub.blocked == false) { this.telegram_bot.sendPhoto(sub.telegram_id, photoid, {caption: caption}) }
+    } else { if (sub.blocked == false) { this.telegram_bot.sendPhoto(sub.telegram_id, photoid, {caption: caption}) } }
+   });
+}
 module.exports = GanyTheBot;
