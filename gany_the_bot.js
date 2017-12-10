@@ -178,7 +178,7 @@ GanyTheBot.prototype.start = function() {
       this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30')
   })
 
-  this.telegram_bot.onText(/^\/convert\s[0-9]?.?[0-9]?\s[a-zA-Z]?[a-zA-Z]?[a-zA-Z]?-?[a-zA-Z]?[a-zA-Z]?[a-zA-Z]?$$/, (msg, match) => {
+  this.telegram_bot.onText(/^\/ convert\s[0-9]?.?[0-9]?\s[a-zA-Z]?[a-zA-Z]?[a-zA-Z]?-?[a-zA-Z]?[a-zA-Z]?[a-zA-Z]?$$/, (msg, match) => {
     subscriber = undefined
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
