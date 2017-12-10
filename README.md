@@ -23,14 +23,14 @@ $ sudo nvm install node
 
 - Make sure it runs on boot so you don't need to start it manually by typing:
 ```sh
-$ sudo systemctl enable redis
+$ sudo systemctl enable mongod
 ```
 
 ##### Redis (last stable version)
 
 - Make sure it runs on boot so you don't need to start it manually by typing:
 ```sh
-$ sudo systemctl enable mongod
+$ sudo systemctl enable redis
 ```
 
 ##### Automattic/nodejs canvas
