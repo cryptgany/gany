@@ -47,6 +47,10 @@ class Kraken extends AbstractExchange {
         return "https://www.kraken.com/charts"
     }
 
+    symbol_for(pair) {
+        return pair.split("-")[1]
+    }
+
     watchTickers(){
         this.fetchAssetPairs()
         .then((data) => {

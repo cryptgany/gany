@@ -650,8 +650,10 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
 
 GanyTheBot.prototype.convert_curr = function(btcamount, exchange, market, ticker_info) {
   result = btcamount/ticker_info.last.toFixed(8)
+  marketSymbol = this.detektor.api_clients[exchange].symbol_for(market)
+  marketBase = this.detektor.api_clients[exchange].volume_for(market)
   message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ")"
-  message += "\n" + btcamount + " " + market.split(/\-/)[0] + " is " + result.toFixed(8) + " " + market.split(/\-/)[1] + " in " + exchange + "(" + ticker_info.last.toFixed(8) + ")"
+  message += "\n" + btcamount + " " + marketBase + " is " + result.toFixed(8) + " " + marketSymbol + " in " + exchange + "(" + ticker_info.last.toFixed(8) + ")"
   return message
 }
 
