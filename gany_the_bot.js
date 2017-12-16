@@ -197,7 +197,7 @@ GanyTheBot.prototype.start = function() {
       message = "Too many markets found"
     if (markets.length > 0 && markets.length <= 6)
       message = markets.map((market_info) => {
-        return this.convert_curr(btcamount, market, market_info.exchange, market_info.market, market_info.ticker)
+        return this.convert_curr(btcamount, market_info.exchange, market_info.market, market_info.ticker)
       }).join("\n\n")
     this.send_message(msg.chat.id, message)
   })
@@ -648,10 +648,10 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   return message
 }
 
-GanyTheBot.prototype.convert_curr = function(btcamount, marketid, exchange, market, ticker_info) {
+GanyTheBot.prototype.convert_curr = function(btcamount, exchange, market, ticker_info) {
   result = btcamount/ticker_info.last.toFixed(8)
   message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ")"
-  message += "\n" + btcamount + " " + market.match(/^[A-Z]*/) + " is " + result.toFixed(8) + " " + marketid + " in " + exchange + "(" + ticker_info.last.toFixed(8) + ")"
+  message += "\n" + btcamount + " " + market.split(/\-/)[0] + " is " + result.toFixed(8) + " " + market.split(/\-/)[1] + " in " + exchange + "(" + ticker_info.last.toFixed(8) + ")"
   return message
 }
 
