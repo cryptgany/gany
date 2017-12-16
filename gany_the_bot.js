@@ -178,14 +178,13 @@ GanyTheBot.prototype.start = function() {
       this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30')
   })
 
-  this.telegram_bot.onText(/^\/convert\s[0-9]?.?[0-9]?\s[a-zA-Z]?[a-zA-Z]?[a-zA-Z]?-?[a-zA-Z]?[a-zA-Z]?[a-zA-Z]?$$/, (msg, match) => {
+  this.telegram_bot.onText(/^\/convert\s\d/, (msg, match) => {
     subscriber = undefined
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
     }
       data = msg.text.toUpperCase().split(' ')
-      let market = data[2]
-      let marketid = data[2]
+      let market = data[2] || 'BTC'
       let btcamount = data[1]
     if (market == 'ETH')
       market = 'ETH-BTC'
@@ -198,7 +197,7 @@ GanyTheBot.prototype.start = function() {
       message = "Too many markets found"
     if (markets.length > 0 && markets.length <= 6)
       message = markets.map((market_info) => {
-        return this.convert_curr(btcamount, marketid, market_info.exchange, market_info.market, market_info.ticker)
+        return this.convert_curr(btcamount, market, market_info.exchange, market_info.market, market_info.ticker)
       }).join("\n\n")
     this.send_message(msg.chat.id, message)
   })
