@@ -315,6 +315,23 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
+  if (process.env.ENVIRONMENT == 'development') {
+    this.telegram_bot.onText(/^\/setfree /, (msg, match) => {
+      if (this.is_mod(msg.chat.id)){ // only process vip chat requests
+        command = msg.text.split(' ')
+        subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
+        if (subscriber == undefined) {
+          this.send_message(msg.chat.id, 'User ' + command[1] + ' not found')
+        } else {
+          subscriber.subscription_status = false
+          subscriber.subscription_expires_on = new Date()
+          subscriber.save()
+          this.send_message(msg.chat.id, 'User ' + command[1] + ' is now a free user.', {parse_mode: 'HTML'})
+        }
+      }
+    })
+  }
+
   this.telegram_bot.onText(/^\/finduser/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
       command = msg.text.split(' ')
@@ -395,17 +412,23 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/sendimage/, (msg, match) => {
-    if (this.is_mod(msg.chat.id) && this.photo.photo_id)
-       this.broadcastimg(this.photo["photo_id"], this.photo["caption"], '')
-    else (this.send_message(msg.chat.id, "Please send the image you want to broadcast before you use /sendimage"))
-      this.photo.photo_id = undefined;
+    if (this.is_mod(msg.chat.id))
+      if (this.photo.photo_id) {
+        this.broadcastimg(this.photo["photo_id"], this.photo["caption"])
+      } else {
+        this.send_message(msg.chat.id, "Please send the image you want to broadcast before you use /sendimage")
+        this.photo.photo_id = undefined;
+      }
   })
 
   this.telegram_bot.onText(/^\/sendpaidimage/, (msg, match) => {
-    if (this.is_mod(msg.chat.id) && this.photo.photo_id)
-       this.broadcastimg(this.photo["photo_id"], this.photo["caption"], true)
-    else (this.send_message(msg.chat.id, "Please send the image you want to broadcast before you use /sendpaidimage"))
-      this.photo.photo_id = undefined;
+    if (this.is_mod(msg.chat.id))
+      if (this.photo.photo_id) {
+        this.broadcastimg(this.photo["photo_id"], this.photo["caption"], true)
+      } else {
+        this.send_message(msg.chat.id, "Please send the image you want to broadcast before you use /sendpaidimage")
+        this.photo.photo_id = undefined;
+      }
   })
 
   this.telegram_bot.onText(/^\/chart/, (msg, match) => {
