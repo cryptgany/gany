@@ -717,7 +717,7 @@ GanyTheBot.prototype.configuration_menu_exchanges = function() {
         [{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }],
         [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }],
         [{ text: 'Kraken', callback_data: 'configure exchange Kraken' }, { text: 'Binance', callback_data: 'configure exchange Binance' }],
-        [{ text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' }, { text: 'Kucoin', callback_data: 'configure exchange Kucoin' }],
+        // [{ text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' }, { text: 'Kucoin', callback_data: 'configure exchange Kucoin' }],
         [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })
