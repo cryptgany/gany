@@ -548,10 +548,10 @@ GanyTheBot.prototype.start = function() {
 }
 
 GanyTheBot.prototype.is_not_a_group = function(msg) {
-  if (msg.chat.type == 'group' || msg.chat.type == 'supergroup') {
+  if (msg.chat.id != process.env.SPECIAL_GROUP_ID && (msg.chat.type == 'group' || msg.chat.type == 'supergroup')) {
     this.send_message(msg.chat.id, 'Hello ' + msg.from.first_name + '. You need to talk to me directly in a private chat.\nGroups can only use the /see currency feature.')
   }
-  return msg.chat.type != 'group' && msg.chat.type != 'supergroup'
+  return msg.chat.id == process.env.SPECIAL_GROUP_ID || (msg.chat.type != 'group' && msg.chat.type != 'supergroup')
 }
 
 GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse_mode: "Markdown", disable_web_page_preview: true }) {
