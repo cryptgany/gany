@@ -52,9 +52,10 @@ Binance.prototype._watch_tickers = function() { // watches markets every 10 seco
 Binance.prototype._refreshMarkets = function() {
   try {
     this.client._makeRequest({}, (err, data)=>{
-      if (err)
+      if (err || data == undefined)
         this.logger.error("Error refreshing binance markets", err)
-      this.markets = this._normalizeMarketNames(data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)})) // only ETH/BTC markets
+      if (data.filter != undefined)
+        this.markets = this._normalizeMarketNames(data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)})) // only ETH/BTC markets
     }, 'ticker/allPrices');
   } catch(e) {
     this.logger.error("Error on binance refresh markets (catched):", e)
