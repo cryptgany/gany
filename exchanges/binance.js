@@ -51,7 +51,7 @@ class Binance extends AbstractExchange {
             } else {
                 this.markets = this._normalizeMarketNames(data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)})) // only ETH/BTC markets
             }
-        }, 'ticker/allPrices');
+        }, 'api/v1/ticker/allPrices');
     }
 
     marketList() {
