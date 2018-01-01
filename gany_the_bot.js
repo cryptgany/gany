@@ -188,6 +188,8 @@ GanyTheBot.prototype.start = function() {
       market = 'ETH-BTC'
     if (market == 'BTC')
       market = 'BTC-USDT'
+    if (market == 'NEO')
+      market = 'NEO-BTC'
     markets = this.detektor.get_market_data(market, subscriber)
     if (markets.length == 0)
       message = "Not found."
@@ -211,6 +213,8 @@ GanyTheBot.prototype.start = function() {
       market = 'ETH-BTC'
     if (market == 'BTC')
       market = 'BTC-USDT'
+    if (market == 'NEO')
+      market = 'NEO-BTC'
     time = parseInt(data[2])
     if (time.toString() != data[2] || time < 1 || time > 60 * 6) {
       this.send_message(msg.chat.id, 'Please enter a number between 1 and 360.')
@@ -431,6 +435,8 @@ GanyTheBot.prototype.start = function() {
         market = 'ETH-BTC'
       if (market == 'BTC')
         market = 'BTC-USDT'
+      if (market == 'NEO')
+        market = 'NEO-BTC'
       if (market.match(/^[^\-]+$/))
         market = market + "-BTC"
       markets = this.detektor.get_market_data(market, subscriber)
