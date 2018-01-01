@@ -147,19 +147,6 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/^\/listmarkets\ /i, (msg, match) => {
-    exchange = msg.text.replace(/\/listmarkets\ /, '')
-    markets = this.detektor.getMarketList(exchange)
-    if (markets.length > 0) {
-      message = exchange + " has " + markets.length + " markets:\n"
-      message += markets.join(", ")
-    } else {
-      message = 'Exchange ' + exchange + ' not found.'
-    }
-    console.log(message)
-    this.send_message(msg.chat.id, message, {parse_mode: 'HTML'})
-  })
-
   this.telegram_bot.onText(/^\/pay/, (msg, match) => {
     if (this.is_not_a_group(msg) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
       if (this.is_subscribed(msg.chat.id)) {
@@ -262,7 +249,6 @@ GanyTheBot.prototype.start = function() {
     message += "\n/configure - Configure the exchanges you want or don't want"
     message += "\n/see XXX - See information on all exchanges about XXX currency"
     message += "\n/see XXX 20 - See information on all exchanges with change over 20 minutes"
-    message += "\n/listmarkets exchange - See which markets are watched on exchange"
     message += "\n/pricing - See information about pricing of Gany"
     message += '\n/pay - See information required for paying monthly fee'
     message += "\n/whatisbal - What is B A L ?"
