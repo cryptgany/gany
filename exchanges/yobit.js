@@ -26,15 +26,15 @@ class Yobit extends AbstractExchange {
         setTimeout(() => { this._watch_tickers() }, 5 * 1000)
     }
 
-    volume_for(pair) {
+    static volume_for(pair) {
         return 'BTC' // all markets on Yobit are BTC
     }
 
-    symbol_for(pair) {
+    static symbol_for(pair) {
         return pair.split('-')[0]
     }
 
-    market_url(market) {
+    static market_url(market) {
         let cur = market.split("-")[0].toLowerCase(0)
         return "http://yobit.net/en/trade/" + cur + "/BTC"
     }

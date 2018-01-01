@@ -57,10 +57,6 @@ class EtherDelta extends AbstractExchange {
         return 'ETH'
     }
 
-    static symbol_for(pair) {
-        return pair.split("-")[1]
-    }
-
     static market_url(market) {
         return "https://etherdelta.com/#" + market.split(/\-/).reverse().join('-')
     }

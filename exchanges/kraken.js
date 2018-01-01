@@ -44,12 +44,8 @@ class Kraken extends AbstractExchange {
         });
     }
 
-    static volume_for(pair) {
-        return pair.split("-")[0]
-    }
-
-    static symbol_for(pair) {
-        return pair.split("-")[1]
+    static market_url(market){
+        return "https://www.kraken.com/charts"
     }
 
     watchTickers(){
@@ -78,9 +74,6 @@ class Kraken extends AbstractExchange {
     /**
      * It is not necessary because Kraken is too picky to provide URL for a market :)
      */
-    static market_url(market){
-        return "https://www.kraken.com/charts"
-    }
 
     marketList() {
         return this.markets.filter((e)=>{ return e != 'USDTZUSD' && e.match(/(XBT|XXBT|ETH)/) && !e.match(/\.d$/) }).map((e)=>{ return this.mapName(e) })

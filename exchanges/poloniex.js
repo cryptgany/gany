@@ -12,14 +12,6 @@ class Poloniex extends AbstractExchange {
       this._watch_tickers()
     }
 
-    static volume_for(pair) {
-        return pair.split("-")[0]
-    }
-
-    static symbol_for(pair) {
-        return pair.split("-")[1]
-    }
-
     static market_url(market) {
         return "https://poloniex.com/#/exchange/" + market.toLowerCase().replace(/\-/, "_")
     }

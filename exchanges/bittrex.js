@@ -58,15 +58,6 @@ class Bittrex extends AbstractExchange {
         return this.markets
     }
 
-
-    static volume_for(pair) {
-        return pair.split("-")[0]
-    }
-
-    static symbol_for(pair) {
-        return pair.split("-")[1]
-    }
-
     static market_url(market) {
         return "https://bittrex.com/Market/Index?MarketName=" + market
     }

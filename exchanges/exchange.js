@@ -42,6 +42,10 @@ class AbstractExchange {
     volume_for(pair) { return this.constructor.volume_for(pair) }
     symbol_for(pair) { return this.constructor.symbol_for(pair) }
     market_url(pair) { return this.constructor.market_url(pair) }
+
+    static volume_for(pair) { return pair.split("-")[0] }
+    static symbol_for(pair) { return pair.split("-")[1] }
+
 }
 
 module.exports = AbstractExchange;
