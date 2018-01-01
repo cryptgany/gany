@@ -91,7 +91,7 @@ GanyTheBot.prototype.start = function() {
             message += '\nYou can also configure exchanges using the command: /configure.'
             message += '\nYou are currently a free user. The full version of CryptGany works with a monthly subscription fee of 0.006 BTC that you can pay using the command /pay.'
             message += "\nOr you can remain as a free user but you will only receive 25% of all of Gany's notifications. You will be able to use the /configure and /see commands."
-            message += '\nGany paid version offers customized signal reviews, 100% notifications and will be implementing more features over time.'
+            message += '\nGany paid version offers customized alert reviews, 100% notifications and will be implementing more features over time.'
             message += '\nIf you have any doubts or comments that you would like to ask, join the discussion group at https://t.me/CryptoWarnings'
             message += '\nYou can also use the /help command for further information'
             this.send_message(msg.chat.id, message)
@@ -600,8 +600,8 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
   message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
   message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
   if (prev) {
-    if (prev.createdAt) { message += "\nLast Signal: " + moment(prev.createdAt).fromNow() }
-    message += "\nLast Signal Price: " + prev.last_ticker.last.toFixed(8)
+    if (prev.createdAt) { message += "\nLast Alert: " + moment(prev.createdAt).fromNow() }
+    message += "\nLast Alert Price: " + prev.last_ticker.last.toFixed(8)
   }
   return message
 }
