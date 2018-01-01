@@ -40,6 +40,10 @@ class Kucoin extends AbstractExchange {
         return pair.split('-')[1]
     }
 
+    symbol_for(pair) {
+        return pair.split('-')[0]
+    }
+
     mapData(ticker) {
         return {
             high: ticker.high,

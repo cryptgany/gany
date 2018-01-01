@@ -35,6 +35,10 @@ Yobit.prototype.volume_for = function(pair) {
   return 'BTC' // all markets on Yobit are BTC
 }
 
+Yobit.prototype.symbol_for = function(pair) {
+  return pair.split('-')[0]
+}
+
 Yobit.prototype._watch_tickers = function() {
   cycles = Math.ceil(this.markets.length / 50)
   for(i = 0; i < cycles; i++) {

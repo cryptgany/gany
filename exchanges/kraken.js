@@ -48,6 +48,10 @@ class Kraken extends AbstractExchange {
         return pair.split("-")[0]
     }
 
+    symbol_for(pair) {
+        return pair.split("-")[1]
+    }
+
     watchTickers(){
         this.fetchAssetPairs()
         .then((data) => {

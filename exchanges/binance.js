@@ -35,6 +35,10 @@ Binance.prototype.volume_for = function(pair) {
   return pair.split("-")[1]
 }
 
+Binance.prototype.symbol_for = function(pair) {
+  return pair.split("-")[0]
+}
+
 Binance.prototype._watch_tickers = function() { // watches markets every 10 seconds
   try {
     this.markets.forEach((market) => {

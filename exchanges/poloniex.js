@@ -23,6 +23,10 @@ Poloniex.prototype.volume_for = function(pair) {
   return pair.split("-")[0]
 }
 
+Poloniex.prototype.symbol_for = function(pair) {
+  return pair.split("-")[1]
+}
+
 Poloniex.prototype.marketList = function() {
   return this.markets.map((e)=>{return e.replace(/\_/, '-')})
 }

@@ -39,6 +39,10 @@ Cryptopia.prototype.volume_for = function(pair) {
   return 'BTC' // all markets on Cryptopia are BTC
 }
 
+Cryptopia.prototype.symbol_for = function(pair) {
+  return pair.split("-")[0]
+}
+
 Cryptopia.prototype.get_markets = function(callback) {
   fetched_data = []
   this.public_request('GetMarkets/BTC', (err, data) => {

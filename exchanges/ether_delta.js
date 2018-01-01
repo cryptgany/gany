@@ -62,6 +62,10 @@ class EtherDelta extends AbstractExchange {
         return 'ETH'
     }
 
+    symbol_for(pair) {
+        return pair.split("-")[1]
+    }
+
     mapData(ticker) {
         return {
             high: 0, // replace with real calculated value
