@@ -5,21 +5,21 @@ const PumpHandler = require('./pump_handler.js')
 const Signal = require('./models/signal')
 const _ = require('underscore')
 const TickerHandler = require('./ticker_handler')
+const ExchangeList = require('./exchange_list')
 
 require('./protofunctions.js')
 var DateTime = require('node-datetime')
 
 // REAL CODING
-function Detektor(logger, telegram_bot, pump_events, database, api_clients, rules) {
+function Detektor(logger, telegram_bot, pump_events, database, rules) {
   this.logger = logger
   this.telegram_bot = telegram_bot
   this.pump_events = pump_events
   this.database = database
-  this.api_clients = api_clients
   this.rules = rules
 
   this.matcher = require('./matcher')
-  this.ticker_handler = new TickerHandler(this, logger, api_clients)
+  this.ticker_handler = new TickerHandler(this, logger)
 
   this.spam_detector = { // small spam detector so we don't send so many notifications when lags/delays happen in exchanges
     max_time: 1.5 * 1000, // minimum MS between notifications
@@ -95,7 +95,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
 
           this.tickers_detected_blacklist[exchange+market] = 360 * 3 // blacklist for 3 hour, each "1" is 10 seconds
           if (!this.muted())
-            this.telegram_bot.send_signal(this.api_clients[exchange], signal)
+            this.telegram_bot.send_signal(ExchangeList[exchange], signal)
         }
       }
   }, 0) // run async
@@ -115,7 +115,7 @@ Detektor.prototype.detect_spam = function() {
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
-  return this.api_clients[exchange].market_url(market)
+  return ExchangeList[exchange].market_url(market)
 }
 
 Detektor.prototype.getMarketDataForChart = function(market) { // returns first 30 mins of data for most-used to least-used exchange data
@@ -139,7 +139,7 @@ Detektor.prototype.getHourMarketData = function(exchange, market, ticker_type, t
 }
 
 Detektor.prototype.getMarketList = function(exchange) {
-  return this.api_clients[exchange].marketList() || []
+  return ExchangeList[exchange].marketList() || []
 }
 
 module.exports = Detektor;

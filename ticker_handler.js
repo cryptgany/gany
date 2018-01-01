@@ -2,11 +2,12 @@
 require('./protofunctions.js')
 const Ticker = require('./models/ticker')
 const TickerData = require('./models/ticker_data')
+const ExchangeList = require('./exchange_list')
 /*
     Handles all the ticker related information through time.
 */
 class TickerHandler {
-    constructor(detektor, logger, clients) {
+    constructor(detektor, logger) {
         this.detektor = detektor // for handling tickers blacklist, refactor me
         this.logger = logger
         this.current_data = {} // current data (1 record per ticker)
@@ -15,8 +16,7 @@ class TickerHandler {
         this.high_low = {} // High Low of last minute
 
         this.minute_counter_by_exchange_market = {} // counts 1 per ticker update per exchange per market, once equals to one minute data gets stored
-        this.clients = clients
-        this.premiumClients = Object.keys(clients).filter((name)=>{ return clients[name].premiumOnly }).map((name) => { return clients[name].code })
+        this.premiumClients = Object.keys(ExchangeList).filter((name)=>{ return ExchangeList[name].premiumOnly }).map((name) => { return ExchangeList[name].code })
 
         // configurations
         this.last_minute_data_cleaning_time = 20 // clean ever X minutes
@@ -131,11 +131,11 @@ class TickerHandler {
     }
 
     cycle_time(exchange) {
-        return this.clients[exchange].cycle_time * 60 / this.exchange_ticker_speed(exchange)
+        return ExchangeList[exchange].cycle_time * 60 / this.exchange_ticker_speed(exchange)
     }
 
     exchange_ticker_speed(exchange) {
-        return this.clients[exchange].ticker_speed
+        return ExchangeList[exchange].ticker_speed
     }
 
     oneMinuteLength(exchange) {
