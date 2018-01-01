@@ -5,7 +5,7 @@ var ccxt = require ('ccxt')
 
 class Yobit extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, 'Yobit', 5, 20, 'Yobit', skipVolumes)
+        super(logger, pumpEvents, 5, 20, skipVolumes)
         this.all_markets = [];
         this.market_data = [];
         this.client = ccxt.yobit({

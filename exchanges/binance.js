@@ -5,7 +5,7 @@ const BinanceClient = require('binance');
 
 class Binance extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, 'Binance', 20, 20, 'Binance', skipVolumes)
+        super(logger, pumpEvents, 20, 20, skipVolumes)
         this.client = new BinanceClient.BinanceRest({
             key: 'api-key', // Get this from your account on binance.com
             secret: 'api-secret', // Same for this

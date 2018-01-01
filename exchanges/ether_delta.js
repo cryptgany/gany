@@ -4,7 +4,7 @@ const BASE_URL = 'https://socket.etherdelta.com'
 
 class EtherDelta extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, 'EtherDelta', 10, 20, 'EtherDelta', skipVolumes)
+        super(logger, pumpEvents, 10, 20, skipVolumes)
         this.client = io.connect(BASE_URL, { transports: ['websocket'] })
         this.lastData = {}
 

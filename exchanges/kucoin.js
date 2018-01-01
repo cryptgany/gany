@@ -3,7 +3,7 @@ const KucoinClient = require('kucoin-api')
 
 class Kucoin extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, 'Kucoin', 5, 20, 'Kucoin', skipVolumes)
+        super(logger, pumpEvents, 5, 20, skipVolumes)
         this.client = new KucoinClient()
     }
 

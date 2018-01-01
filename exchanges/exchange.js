@@ -9,13 +9,13 @@
 class AbstractExchange {
 
     /* minimun attributes */
-    constructor(logger, pumpEvents, exchangeName, tickerSpeed = 5, cycleTime, code, skipVolumes){
+    constructor(logger, pumpEvents, tickerSpeed = 5, cycleTime = 20, skipVolumes){
         this.logger = logger;
         this.pumpEvents = pumpEvents;
-        this.exchange_name = exchangeName;
+        this.exchange_name = this.constructor.name;
         this.ticker_speed = tickerSpeed;
         this.cycle_time = cycleTime;
-        this.code = code;
+        this.code = this.constructor.name;
         this.skipVolumes = skipVolumes;
         this.markets = []
         this.lastData = {}
@@ -40,7 +40,7 @@ class AbstractExchange {
         try {
             _funct()
         } catch (e) {
-            this.logger.error("Error on exchange", this.constructor.name, ":", e)
+            this.logger.error("Error on " + this.exchange_name + " exchange:", e)
         }
         setTimeout(() => { this.watchFunction(_funct, time) }, time) // update markets every 5 mins
     }
