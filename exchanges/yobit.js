@@ -88,91 +88,8 @@ Yobit.prototype.marketList = function() {
   return this.markets.map((e)=>{ return e.toUpperCase().replace(/\_/, '-') })
 }
 
-// Implement standard functions
-Yobit.prototype.balance = function(callback) {
-  this.client.fetchBalance().then(callback) // implement later
-}
-
 Yobit.prototype.get_markets = function(callback) {
   this.client.load_products().then(callback)
-}
-
-Yobit.prototype.get_order = function(order_id, callback) {
-  this.client.apiKey = process.env.YOBIT_GET_KEY; this.client.secret = process.env.YOBIT_GET_SECRET
-  this.client.tapiPostOrderInfo({order_id: order_id}).then((data) => {
-    callback({
-      success: data.success == 1,
-      message: data.error,
-      result: data.success == 1 ? this._parse_order(data.return)[0] : undefined
-    })
-  })
-}
-
-Yobit.prototype.get_orders = function(market, callback) {
-  market = market.toLowerCase().replace(/\-/, '_')
-  this.client.apiKey = process.env.YOBIT_GET_KEY; this.client.secret = process.env.YOBIT_GET_SECRET
-  this.client.privateRequest('ActiveOrders', { pair: market }, (err, data) => {
-    callback({
-      success: data.success == 1,
-      message: data.error,
-      result: this._parse_order(data.return)
-    })
-  })
-}
-
-Yobit.prototype.get_all_orders = function(callback) { // pair is required
-  this.client.privateRequest('ActiveOrders', { }, (err, data) => {
-    callback({
-      success: data.success == 1,
-      message: data.error,
-      result: this._parse_order(data.return)
-    })
-  })
-}
-
-Yobit.prototype.buy_order = function(market, quantity, rate, callback) {
-  market = market.replace(/\-/, '/')
-  this.client.apiKey = process.env.YOBIT_BUY_KEY; this.client.secret = process.env.YOBIT_BUY_SECRET
-  this.client.createLimitBuyOrder(market, quantity, rate).then((data) => {
-    callback(
-      { success: data.success == 1,
-      message: data.error,
-      result: { id: data.success == 1 ? data.return.order_id : undefined } }
-    )
-  })
-}
-
-Yobit.prototype.sell_order = function(market, quantity, rate, callback) {
-  market = market.replace(/\-/, '/')
-  this.client.apiKey = process.env.YOBIT_BUY_KEY; this.client.secret = process.env.YOBIT_BUY_SECRET
-  this.client.createLimitSellOrder(market, quantity, rate).then((data) => {
-    callback(
-      { success: (data.success == 1),
-      message: data.error,
-      result: { id: (data.success == 1 ? data.return.order_id : undefined) } }
-    )
-  })
-}
-
-Yobit.prototype.cancel_order = function(order_id, callback) {
-  this.client.apiKey = process.env.YOBIT_BUY_KEY; this.client.secret = process.env.YOBIT_BUY_SECRET
-  this.client.cancelOrder(order_id).then((data) => {
-    callback({
-      success: data.success == 1,
-      return: data.return
-    })
-  })
-}
-
-Yobit.prototype.cancel_all_orders = function(market) { // emergency function
-  this.get_orders(market, (response) => {
-    response.result.forEach((order, n) => {
-      setTimeout(() => {
-        this.logger.log("canceling order " + order.id)
-        this.cancel_order(order.id, (err, info) => { this.logger.log("order deleted", err, info) })
-      }, 1000 * (n + 1))
-    })
-  })
 }
 
 Yobit.prototype._normalize_ticker_data = function(data) {
@@ -185,25 +102,6 @@ Yobit.prototype._normalize_ticker_data = function(data) {
     ask: data.sell,
     bid: data.buy
   }
-}
-
-Yobit.prototype._parse_order = function(e) {
-  if (e == undefined) return undefined
-  return Object.keys(e).map((order_id) => {
-    order = e[order_id]
-    return {
-      id: order_id,
-      market: order.pair.toUpperCase().replace(/\_/, '-'),
-      type: order.type == 'buy' ? 'ask' : 'bid',
-      quantity: order.start_amount,
-      quantity_remaining: order.amount,
-      price: order.rate,
-      price_per_unit: order.rate,
-      opened: order.timestamp_created,
-      status: order.status,
-      closed: order.status == 1
-    }
-  })
 }
 
 module.exports = Yobit;
