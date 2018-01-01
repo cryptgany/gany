@@ -46,10 +46,8 @@ class Binance extends AbstractExchange {
 
     _refreshMarkets() {
         this.client._makeRequest({}, (err, data)=>{
-            if (err || data == undefined)
-                this.logger.error("Error refreshing binance markets", err)
-            if (data.filter == undefined) {
-                this.logger.error("Error refreshing binance markets", data)
+            if (err || data == undefined || data.filter == undefined) {
+                this.logger.error("Error refreshing binance markets:", err)
             } else {
                 this.markets = this._normalizeMarketNames(data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)})) // only ETH/BTC markets
             }
