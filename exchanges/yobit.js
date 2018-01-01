@@ -31,12 +31,21 @@ Yobit.prototype.watch = function() {
   setTimeout(() => { this._watch_tickers() }, 5 * 1000)
 }
 
-Yobit.prototype.volume_for = function(pair) {
+Yobit.prototype.volume_for = function(pair) { return this.constructor.volume_for(pair) }
+Yobit.prototype.symbol_for = function(pair) { return this.constructor.symbol_for(pair) }
+Yobit.prototype.market_url = function(market) { return this.constructor.market_url(market) }
+
+Yobit.volume_for = function(pair) {
   return 'BTC' // all markets on Yobit are BTC
 }
 
-Yobit.prototype.symbol_for = function(pair) {
+Yobit.symbol_for = function(pair) {
   return pair.split('-')[0]
+}
+
+Yobit.market_url = function(market) {
+  cur = market.split("-")[0].toLowerCase(0)
+  return "http://yobit.net/en/trade/" + cur + "/BTC"
 }
 
 Yobit.prototype._watch_tickers = function() {
@@ -73,11 +82,6 @@ Yobit.prototype._select_good_volume_markets = function() {
     })
   }
   setTimeout(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) // update markets on track every hour
-}
-
-Yobit.prototype.market_url = function(market) {
-  cur = market.split("-")[0].toLowerCase(0)
-  return "http://yobit.net/en/trade/" + cur + "/BTC"
 }
 
 Yobit.prototype.marketList = function() {

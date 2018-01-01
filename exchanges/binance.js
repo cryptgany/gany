@@ -31,12 +31,20 @@ Binance.prototype.watch = function() {
   setTimeout(() => { this._watch_tickers() }, 5 * 1000)
 }
 
-Binance.prototype.volume_for = function(pair) {
+Binance.prototype.volume_for = function(pair) { return this.constructor.volume_for(pair) }
+Binance.prototype.symbol_for = function(pair) { return this.constructor.symbol_for(pair) }
+Binance.prototype.market_url = function(market) { return this.constructor.market_url(market) }
+
+Binance.volume_for = function(pair) {
   return pair.split("-")[1]
 }
 
-Binance.prototype.symbol_for = function(pair) {
+Binance.symbol_for = function(pair) {
   return pair.split("-")[0]
+}
+
+Binance.market_url = function(market) {
+  return "https://www.binance.com/trade.html?symbol=" + market.replace(/\-/,'_')
 }
 
 Binance.prototype._watch_tickers = function() { // watches markets every 10 seconds
@@ -65,10 +73,6 @@ Binance.prototype._refreshMarkets = function() {
     this.logger.error("Error on binance refresh markets (catched):", e)
   }
   setTimeout(() => { this._refreshMarkets() }, 5 * 60 * 1000) // update markets every 5 mins
-}
-
-Binance.prototype.market_url = function(market) {
-  return "https://www.binance.com/trade.html?symbol=" + market.replace(/\-/,'_')
 }
 
 Binance.prototype.marketList = function() {

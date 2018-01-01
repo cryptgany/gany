@@ -37,11 +37,9 @@ class AbstractExchange {
     /*
         Override when necessary
     */
-    volume_for(pair) {
-        return 'BTC'
-    }
-
-
+    volume_for(pair) { return this.constructor.volume_for(pair) }
+    symbol_for(pair) { return this.constructor.symbol_for(pair) }
+    market_url(pair) { return this.constructor.market_url(pair) }
 }
 
 module.exports = AbstractExchange;

@@ -19,13 +19,22 @@ Poloniex.prototype.watch = function() {
   this._watch_tickers()
 }
 
-Poloniex.prototype.volume_for = function(pair) {
+Poloniex.prototype.volume_for = function(pair) { return this.constructor.volume_for(pair) }
+Poloniex.prototype.symbol_for = function(pair) { return this.constructor.symbol_for(pair) }
+Poloniex.prototype.market_url = function(market) { return this.constructor.market_url(market) }
+
+Poloniex.volume_for = function(pair) {
   return pair.split("-")[0]
 }
 
-Poloniex.prototype.symbol_for = function(pair) {
+Poloniex.symbol_for = function(pair) {
   return pair.split("-")[1]
 }
+
+Poloniex.market_url = function(market) {
+  return "https://poloniex.com/#/exchange/" + market.toLowerCase().replace(/\-/, "_")
+}
+
 
 Poloniex.prototype.marketList = function() {
   return this.markets.map((e)=>{return e.replace(/\_/, '-')})
@@ -41,10 +50,6 @@ Poloniex.prototype._watch_tickers = function() {
     })
   }).catch((e) => { this.logger.error("Error trying to fetch POLONIEX:", e) })
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
-}
-
-Poloniex.prototype.market_url = function(market) {
-  return "https://poloniex.com/#/exchange/" + market.toLowerCase().replace(/\-/, "_")
 }
 
 Poloniex.prototype._filter_market = function(data) {

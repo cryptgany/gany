@@ -27,21 +27,21 @@ class Kucoin extends AbstractExchange {
         })
     }
 
-    market_url(market) {
-        return "https://www.kucoin.com/#/trade/" + market
-    }
-
     marketList() {
         return this.lastData.map((e) => { return e.symbol })
     }
 
 
-    volume_for(pair) {
+    static volume_for(pair) {
         return pair.split('-')[1]
     }
 
-    symbol_for(pair) {
+    static symbol_for(pair) {
         return pair.split('-')[0]
+    }
+
+    static market_url(market) {
+        return "https://www.kucoin.com/#/trade/" + market
     }
 
     mapData(ticker) {

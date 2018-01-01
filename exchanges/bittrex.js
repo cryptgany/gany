@@ -28,12 +28,20 @@ Bittrex.prototype.watch = function() {
   setTimeout(() => { this._watch_tickers() }, 5 * 1000)
 }
 
-Bittrex.prototype.volume_for = function(pair) {
+Bittrex.prototype.volume_for = function(pair) { return this.constructor.volume_for(pair) }
+Bittrex.prototype.symbol_for = function(pair) { return this.constructor.symbol_for(pair) }
+Bittrex.prototype.market_url = function(market) { return this.constructor.market_url(market) }
+
+Bittrex.volume_for = function(pair) {
   return pair.split("-")[0]
 }
 
-Bittrex.prototype.symbol_for = function(pair) {
+Bittrex.symbol_for = function(pair) {
   return pair.split("-")[1]
+}
+
+Bittrex.market_url = function(market) {
+  return "https://bittrex.com/Market/Index?MarketName=" + market
 }
 
 Bittrex.prototype._watch_tickers = function() { // watches markets every 10 seconds
@@ -82,10 +90,6 @@ Bittrex.prototype._select_good_volume_markets = function() {
 
 // Implement standard functions
 
-
-Bittrex.prototype.market_url = function(market) {
-  return "https://bittrex.com/Market/Index?MarketName=" + market
-}
 
 Bittrex.prototype.marketList = function() {
   return this.markets

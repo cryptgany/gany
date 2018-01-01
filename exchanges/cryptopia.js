@@ -35,13 +35,22 @@ Cryptopia.prototype._watch_tickers = function() {
   setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
 }
 
-Cryptopia.prototype.volume_for = function(pair) {
+Cryptopia.prototype.volume_for = function(pair) { return this.constructor.volume_for(pair) }
+Cryptopia.prototype.symbol_for = function(pair) { return this.constructor.symbol_for(pair) }
+Cryptopia.prototype.market_url = function(market) { return this.constructor.market_url(market) }
+
+Cryptopia.volume_for = function(pair) {
   return 'BTC' // all markets on Cryptopia are BTC
 }
 
-Cryptopia.prototype.symbol_for = function(pair) {
+Cryptopia.symbol_for = function(pair) {
   return pair.split("-")[0]
 }
+
+Cryptopia.market_url = function(market) {
+  return "https://www.cryptopia.co.nz/Exchange/?market=" + market.replace(/\-/, "_")
+}
+
 
 Cryptopia.prototype.get_markets = function(callback) {
   fetched_data = []
@@ -97,10 +106,6 @@ Cryptopia.prototype._parse_ticker_json = function(tickers_json) {
 }
 Cryptopia.prototype._filter_market = function(data) {
   return (data.BaseVolume > this.skip_volumes) && data.Label.match(/BTC/)
-}
-
-Cryptopia.prototype.market_url = function(market) {
-  return "https://www.cryptopia.co.nz/Exchange/?market=" + market.replace(/\-/, "_")
 }
 
 Cryptopia.prototype.marketList = function() {

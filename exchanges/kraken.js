@@ -44,11 +44,11 @@ class Kraken extends AbstractExchange {
         });
     }
 
-    volume_for(pair) {
+    static volume_for(pair) {
         return pair.split("-")[0]
     }
 
-    symbol_for(pair) {
+    static symbol_for(pair) {
         return pair.split("-")[1]
     }
 
@@ -78,7 +78,7 @@ class Kraken extends AbstractExchange {
     /**
      * It is not necessary because Kraken is too picky to provide URL for a market :)
      */
-    market_url(market){
+    static market_url(market){
         return "https://www.kraken.com/charts"
     }
 

@@ -45,10 +45,6 @@ class EtherDelta extends AbstractExchange {
         });
     }
 
-    market_url(market) {
-        return "https://etherdelta.com/#" + market.split(/\-/).reverse().join('-')
-    }
-
     mapName(market) {
     	return market.replace(/\_/, '-')
     }
@@ -57,13 +53,16 @@ class EtherDelta extends AbstractExchange {
         return Object.keys(this.lastData).filter((key) => {return (!key.match(/\_0x/) && this.lastData[key].baseVolume >= this._skipVolumes)}).map((e)=>{ return this.mapName(e) })
     }
 
-
-    volume_for(pair) {
+    static volume_for(pair) {
         return 'ETH'
     }
 
-    symbol_for(pair) {
+    static symbol_for(pair) {
         return pair.split("-")[1]
+    }
+
+    static market_url(market) {
+        return "https://etherdelta.com/#" + market.split(/\-/).reverse().join('-')
     }
 
     mapData(ticker) {
