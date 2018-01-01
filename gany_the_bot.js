@@ -729,7 +729,7 @@ GanyTheBot.prototype.configuration_menu_markets = function() {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: 'BTC', callback_data: 'configure market BTC' }, { text: 'ETH', callback_data: 'configure market ETH' }],
+        [{ text: 'BTC', callback_data: 'configure market BTC' }, { text: 'ETH', callback_data: 'configure market ETH' }, { text: 'NEO', callback_data: 'configure market NEO' }],
         [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })
