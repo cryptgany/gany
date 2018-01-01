@@ -26,26 +26,25 @@ const CurrencyMap = {
 class Kraken extends AbstractExchange {
 
     constructor(logger, pumpEvents, exchangeName,skipVolumes = 0.5){
-        super(logger, pumpEvents,'Kraken', 5, 20, 'Kraken', skipVolumes);
+        super(logger, pumpEvents, 5, 20, skipVolumes);
         this.client = new KrakenClient(key,secret);
     }
 
     watch(){
-        this.watchTickers();
-        setTimeout(()=>this.watch(),1000 * this.ticker_speed);
+        this.watchFunction(()=>this.watchTickers(),1000 * this.ticker_speed);
     }
 
     getAssets() {
         this.client.api('Assets', {asset: 'XBT'},(err,data) => {
             if(err)
-                this._logger.log(JSON.stringify(err));
+                this.logger.log(JSON.stringify(err));
             else
-                this._logger.log(JSON.stringify(data));
+                this.logger.log(JSON.stringify(data));
         });
     }
 
-    volume_for(pair) {
-        return pair.split("-")[0]
+    static market_url(market){
+        return "https://www.kraken.com/charts"
     }
 
     watchTickers(){
@@ -56,7 +55,7 @@ class Kraken extends AbstractExchange {
         .then((data)=>{
             this.emitData(data.result);
         })
-        .catch((e)=> this._logger.error('Error fetching data for KRAKEN.'));
+        .catch((e)=> this.logger.error('Error fetching data for KRAKEN.'));
     }
 
     fetchAssetPairs() {
@@ -74,9 +73,6 @@ class Kraken extends AbstractExchange {
     /**
      * It is not necessary because Kraken is too picky to provide URL for a market :)
      */
-    market_url(market){
-        return "https://www.kraken.com/charts"
-    }
 
     marketList() {
         return this.markets.filter((e)=>{ return e != 'USDTZUSD' && e.match(/(XBT|XXBT|ETH)/) && !e.match(/\.d$/) }).map((e)=>{ return this.mapName(e) })
@@ -101,7 +97,7 @@ class Kraken extends AbstractExchange {
         var that = this;
         Object.keys(data).forEach(key => {
             if (key != 'USDTZUSD' && key.match(/(XBT|XXBT|ETH)/))
-            that._pumpEvents.emit('marketupdate', 'TICKER', this._code, this.mapName(key), this.mapData(data[key]));
+            that.pumpEvents.emit('marketupdate', 'TICKER', this.code, this.mapName(key), this.mapData(data[key]));
         });
     }
 

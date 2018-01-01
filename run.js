@@ -7,31 +7,24 @@ const Detektor = require('./detektor');
 const EventEmitter = require('events');
 const Logger = require('./logger');
 const Database = require('./database')
-const Bittrex = require('./exchanges/bittrex');
-const Yobit = require('./exchanges/yobit');
-const Poloniex = require('./exchanges/poloniex');
-const Cryptopia = require("./exchanges/cryptopia");
 const Wallet = require("./wallet")
 const Payment = require("./models/payment")
 const GanyTheBot = require('./gany_the_bot')
-const Kraken = require('./exchanges/kraken');
-const Binance = require('./exchanges/binance');
-const EtherDelta = require('./exchanges/ether_delta');
-const Kucoin = require('./exchanges/kucoin');
+const ExchangeList = require('./exchange_list')
 
 // Initializers
 class PumpEvents extends EventEmitter {}
 var pump_events = new PumpEvents();
 var logger = new Logger();
 var gany_the_bot = new GanyTheBot(logger)
-var bittrex = new Bittrex(logger, pump_events);
-var yobit = new Yobit(logger, pump_events);
-var poloniex = new Poloniex(logger, pump_events);
-var cryptopia = new Cryptopia(logger, pump_events);
-let kraken = new Kraken(logger,pump_events);
-let binance = new Binance(logger,pump_events);
-let etherDelta = new EtherDelta(logger,pump_events);
-let kucoin = new Kucoin(logger,pump_events);
+var bittrex = new ExchangeList.Bittrex(logger, pump_events);
+var yobit = new ExchangeList.Yobit(logger, pump_events);
+var poloniex = new ExchangeList.Poloniex(logger, pump_events);
+var cryptopia = new ExchangeList.Cryptopia(logger, pump_events);
+let kraken = new ExchangeList.Kraken(logger, pump_events);
+let binance = new ExchangeList.Binance(logger, pump_events);
+let etherDelta = new ExchangeList.EtherDelta(logger, pump_events);
+let kucoin = new ExchangeList.Kucoin(logger, pump_events);
 var database = new Database();
 var wallet = new Wallet(logger, gany_the_bot);
 
@@ -78,6 +71,6 @@ rules = {
   ]
 }
 
-detektor = new Detektor(logger, gany_the_bot, pump_events, database, {Bittrex: bittrex, Yobit: yobit, Poloniex: poloniex, Cryptopia: cryptopia, Kraken : kraken, Binance: binance, Kucoin: kucoin, EtherDelta: etherDelta}, rules)
+detektor = new Detektor(logger, gany_the_bot, pump_events, database, rules)
 gany_the_bot.detektor = detektor
 detektor.restore_snapshot()

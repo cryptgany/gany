@@ -29,7 +29,8 @@ var subscriberSchema = mongoose.Schema({
     },
     markets: {
       BTC: { type: Boolean, default: true },
-      ETH: { type: Boolean, default: true }
+      ETH: { type: Boolean, default: true },
+      NEO: { type: Boolean, default: true }
     }
 }, { timestamps: true });
 

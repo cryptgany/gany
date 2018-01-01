@@ -3,6 +3,7 @@ require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./models/subscriber');
 const Signal = require('./models/signal')
+const ExchangeList = require('./exchange_list')
 const _ = require('underscore')
 var moment = require('moment')
 
@@ -624,7 +625,7 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   message += "\nB: " + ticker_info.bid.toFixed(8)
   message += "\nA: " + ticker_info.ask.toFixed(8)
   message += "\nL: " + ticker_info.last.toFixed(8)
-  message += "\nVolume: " + ticker_info.volume.toFixed(4) + " " + this.detektor.api_clients[exchange].volume_for(market)
+  message += "\nVolume: " + ticker_info.volume.toFixed(4) + " " + ExchangeList[exchange].volume_for(market)
   message += "\n24h Low: " + ticker_info.low.toFixed(8)
   message += "\n24h High: " + ticker_info.high.toFixed(8)
   return message
@@ -634,7 +635,7 @@ GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market,
   diff = lastTicker.volume - firstTicker.volume
   change = this.detektor.volume_change(firstTicker, lastTicker)
   message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ")"
-  message += "\nVol. changed by *" + diff.toFixed(2) + "* " + this.detektor.api_clients[exchange].volume_for(market) + " since *" + time + " minutes*"
+  message += "\nVol. changed by *" + diff.toFixed(2) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
   message += "\nVolume: " + lastTicker.volume.toFixed(4) + " (*" + ((change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
   message += "\nA: " + firstTicker.ask.toFixed(8) + " " + this.telegram_arrow(firstTicker.ask, lastTicker.ask) + " " + lastTicker.ask.toFixed(8)
@@ -729,7 +730,7 @@ GanyTheBot.prototype.configuration_menu_markets = function() {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: 'BTC', callback_data: 'configure market BTC' }, { text: 'ETH', callback_data: 'configure market ETH' }],
+        [{ text: 'BTC', callback_data: 'configure market BTC' }, { text: 'ETH', callback_data: 'configure market ETH' }, { text: 'NEO', callback_data: 'configure market NEO' }],
         [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })

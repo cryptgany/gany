@@ -3,32 +3,26 @@ const KucoinClient = require('kucoin-api')
 
 class Kucoin extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, 'Kucoin', 5, 20, 'Kucoin', skipVolumes)
-        this.lastData = {}
+        super(logger, pumpEvents, 5, 20, skipVolumes)
         this.client = new KucoinClient()
     }
 
     watch(){
-        this.getMarkets();
-        setTimeout(()=>this.watch(), 1000 * this.ticker_speed);
+        this.watchFunction(()=>this.getMarkets(), 1000 * this.ticker_speed);
     }
 
   	getMarkets () {
         this.client.getTicker({pair: []}).then((result) => {
             this.lastData = result.data
             this.emitData(result.data)
-        }).catch(this._logger.error)
+        }).catch(this.logger.error)
   	};
 
     emitData(data) {
         data.forEach((record) => {
-            if (record.volValue >= this._skipVolumes)
-                this._pumpEvents.emit('marketupdate', 'TICKER', this._code, record.symbol, this.mapData(record))
+            if (record.volValue >= this.skipVolumes)
+                this.pumpEvents.emit('marketupdate', 'TICKER', this.code, record.symbol, this.mapData(record))
         })
-    }
-
-    market_url(market) {
-        return "https://www.kucoin.com/#/trade/" + market
     }
 
     marketList() {
@@ -36,8 +30,16 @@ class Kucoin extends AbstractExchange {
     }
 
 
-    volume_for(pair) {
+    static volume_for(pair) {
         return pair.split('-')[1]
+    }
+
+    static symbol_for(pair) {
+        return pair.split('-')[0]
+    }
+
+    static market_url(market) {
+        return "https://www.kucoin.com/#/trade/" + market
     }
 
     mapData(ticker) {
