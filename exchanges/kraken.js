@@ -38,9 +38,9 @@ class Kraken extends AbstractExchange {
     getAssets() {
         this.client.api('Assets', {asset: 'XBT'},(err,data) => {
             if(err)
-                this._logger.log(JSON.stringify(err));
+                this.logger.log(JSON.stringify(err));
             else
-                this._logger.log(JSON.stringify(data));
+                this.logger.log(JSON.stringify(data));
         });
     }
 
@@ -60,7 +60,7 @@ class Kraken extends AbstractExchange {
         .then((data)=>{
             this.emitData(data.result);
         })
-        .catch((e)=> this._logger.error('Error fetching data for KRAKEN.'));
+        .catch((e)=> this.logger.error('Error fetching data for KRAKEN.'));
     }
 
     fetchAssetPairs() {
@@ -105,7 +105,7 @@ class Kraken extends AbstractExchange {
         var that = this;
         Object.keys(data).forEach(key => {
             if (key != 'USDTZUSD' && key.match(/(XBT|XXBT|ETH)/))
-            that._pumpEvents.emit('marketupdate', 'TICKER', this._code, this.mapName(key), this.mapData(data[key]));
+            that.pumpEvents.emit('marketupdate', 'TICKER', this.code, this.mapName(key), this.mapData(data[key]));
         });
     }
 

@@ -1,73 +1,63 @@
+const AbstractExchange = require('./exchange');
 const PoloniexClient = require('poloniex-api-node');
 
-function Poloniex(logger, pump_events, skip_volumes = 0.5) {
-  this.logger = logger
-  this.exchange_name = 'Poloniex'
-  this.code = 'Poloniex'
-  this.client = new PoloniexClient('nothing', 'nothing', { socketTimeout: 15000 })
-  this.all_markets = [];
-  this.markets = []; // after selecting only good volume markets
-  this.market_data = [];
-  this.pump_events = pump_events;
-  this.skip_volumes = 0.5 // skip markets with lower than this volume
-  this.ticker_speed = 10 // seconds
-  this.cycle_time = 20 // minutes
-}
+class Poloniex extends AbstractExchange {
+    constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
+        super(logger, pumpEvents, 'Poloniex', 10, 20, 'Poloniex', skipVolumes)
+        this.market_data = [];
+        this.client = new PoloniexClient('nothing', 'nothing', { socketTimeout: 15000 })
+    }
 
-Poloniex.prototype.watch = function() {
-  // setTimeout(() => { this._watch_tickers() }, 10 * 1000)
-  this._watch_tickers()
-}
+    watch() {
+      this._watch_tickers()
+    }
 
-Poloniex.prototype.volume_for = function(pair) { return this.constructor.volume_for(pair) }
-Poloniex.prototype.symbol_for = function(pair) { return this.constructor.symbol_for(pair) }
-Poloniex.prototype.market_url = function(market) { return this.constructor.market_url(market) }
+    static volume_for(pair) {
+        return pair.split("-")[0]
+    }
 
-Poloniex.volume_for = function(pair) {
-  return pair.split("-")[0]
-}
+    static symbol_for(pair) {
+        return pair.split("-")[1]
+    }
 
-Poloniex.symbol_for = function(pair) {
-  return pair.split("-")[1]
-}
-
-Poloniex.market_url = function(market) {
-  return "https://poloniex.com/#/exchange/" + market.toLowerCase().replace(/\-/, "_")
-}
+    static market_url(market) {
+        return "https://poloniex.com/#/exchange/" + market.toLowerCase().replace(/\-/, "_")
+    }
 
 
-Poloniex.prototype.marketList = function() {
-  return this.markets.map((e)=>{return e.replace(/\_/, '-')})
-}
+    marketList() {
+        return this.markets.map((e)=>{return e.replace(/\_/, '-')})
+    }
 
-Poloniex.prototype._watch_tickers = function() {
-  this.client.returnTicker().then((tickers) => {
-    this.markets = Object.keys(tickers)
-    Object.keys(tickers).forEach((market) => {
-      if (this._filter_market(tickers[market])) {
-        this.pump_events.emit('marketupdate', 'TICKER', this.code, market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));
-      }
-    })
-  }).catch((e) => { this.logger.error("Error trying to fetch POLONIEX:", e) })
-  setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
-}
+    _watch_tickers() {
+        this.client.returnTicker().then((tickers) => {
+            this.markets = Object.keys(tickers)
+            Object.keys(tickers).forEach((market) => {
+                if (this._filter_market(tickers[market])) {
+                    this.pumpEvents.emit('marketupdate', 'TICKER', this.code, market.replace(/\_/, '-'), this._normalize_ticker_data(tickers[market]));
+                }
+            })
+        }).catch((e) => { this.logger.error("Error trying to fetch POLONIEX:", e) })
+        setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
+    }
 
-Poloniex.prototype._filter_market = function(data) {
-  return (data.baseVolume > this.skip_volumes) && (data.isFrozen == '0')
-}
+    _filter_market(data) {
+        return (data.baseVolume > this.skipVolumes) && (data.isFrozen == '0')
+    }
 
-Poloniex.prototype._normalize_ticker_data = function(data) {
-  return {
-    id: data.id,
-    high: parseFloat(data.high24hr),
-    low: parseFloat(data.low24hr),
-    volume: parseFloat(data.baseVolume),
-    last: parseFloat(data.last),
-    ask: parseFloat(data.lowestAsk),
-    bid: parseFloat(data.highestBid),
-    updated: data.updated,
-    is_frozen: data.isFrozen
-  }
+    _normalize_ticker_data(data) {
+        return {
+            id: data.id,
+            high: parseFloat(data.high24hr),
+            low: parseFloat(data.low24hr),
+            volume: parseFloat(data.baseVolume),
+            last: parseFloat(data.last),
+            ask: parseFloat(data.lowestAsk),
+            bid: parseFloat(data.highestBid),
+            updated: data.updated,
+            is_frozen: data.isFrozen
+        }
+    }
 }
 
 module.exports = Poloniex;

@@ -9,11 +9,11 @@ class EtherDelta extends AbstractExchange {
         this.lastData = {}
 
 	    this.client.on('connect', () => {
-	        this._logger.log('EtherDelta socket connected');
+	        this.logger.log('EtherDelta socket connected');
 	    });
 
 	    this.client.on('disconnect', () => {
-	        this._logger.log('EtherDelta socket disconnected, reconnecting...');
+	        this.logger.log('EtherDelta socket disconnected, reconnecting...');
             this.client.close()
             this.client = io.connect(BASE_URL, { transports: ['websocket'] })
 	    });
@@ -32,7 +32,7 @@ class EtherDelta extends AbstractExchange {
             if (returnTicker.returnTicker) {
                 this.lastData = returnTicker.returnTicker
             } else {
-                this._logger.error("EtherDelta fetch failed, emitting last stored data")
+                this.logger.error("EtherDelta fetch failed, emitting last stored data")
             }
             this.emitData(this.lastData) // failsafe for when fetching fails
         })
@@ -40,8 +40,8 @@ class EtherDelta extends AbstractExchange {
 
     emitData(data) {
         Object.keys(data).forEach(key => {
-            if (!key.match(/\_0x/) && data[key].baseVolume >= this._skipVolumes) // also skip < 0.5 ETH volumes
-                this._pumpEvents.emit('marketupdate', 'TICKER', this._code, this.mapName(key), this.mapData(data[key]))
+            if (!key.match(/\_0x/) && data[key].baseVolume >= this.skipVolumes) // also skip < 0.5 ETH volumes
+                this.pumpEvents.emit('marketupdate', 'TICKER', this.code, this.mapName(key), this.mapData(data[key]))
         });
     }
 
@@ -50,7 +50,7 @@ class EtherDelta extends AbstractExchange {
     }
 
     marketList() {
-        return Object.keys(this.lastData).filter((key) => {return (!key.match(/\_0x/) && this.lastData[key].baseVolume >= this._skipVolumes)}).map((e)=>{ return this.mapName(e) })
+        return Object.keys(this.lastData).filter((key) => {return (!key.match(/\_0x/) && this.lastData[key].baseVolume >= this.skipVolumes)}).map((e)=>{ return this.mapName(e) })
     }
 
     static volume_for(pair) {
