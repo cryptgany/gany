@@ -9,7 +9,7 @@ class Cryptopia extends AbstractExchange {
     }
 
     watch(){
-        this._watch_tickers()
+        this.watchFunction(() => { this._watch_tickers() }, this.ticker_speed * 1000)
     }
 
     _watch_tickers() {
@@ -26,7 +26,6 @@ class Cryptopia extends AbstractExchange {
                 })
             }
         })
-        setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
     }
 
     static volume_for(pair) {

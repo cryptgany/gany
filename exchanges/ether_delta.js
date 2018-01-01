@@ -21,8 +21,7 @@ class EtherDelta extends AbstractExchange {
     }
 
     watch(){
-        this.getMarkets();
-        setTimeout(()=>this.watch(), 1000 * this.ticker_speed);
+        this.watchFunction(()=>this.getMarkets(), 1000 * this.ticker_speed)
     }
 
   	getMarkets () {

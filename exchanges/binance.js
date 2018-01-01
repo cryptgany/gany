@@ -19,8 +19,8 @@ class Binance extends AbstractExchange {
     }
 
     watch(){
-        this._refreshMarkets()
-        setTimeout(() => { this._watch_tickers() }, 5 * 1000)
+        this.watchFunction(() => { this._refreshMarkets() }, 1 * 60 * 1000)
+        setTimeout(() => { this.watchFunction(() => { this._watch_tickers() }, this.ticker_speed * 1000) }, 5 * 1000)
     }
 
     static volume_for(pair) {
@@ -36,31 +36,24 @@ class Binance extends AbstractExchange {
     }
 
     _watch_tickers() { // watches markets every 10 seconds
-        try {
-            this.markets.forEach((market) => {
-                this.client.ticker24hr(market.key).then((data)=>{
-                    if (data.volume > 0)
-                        this.pumpEvents.emit('marketupdate', 'TICKER', this.code, market.name, this._normalize_ticker_data(data));
-                }).catch((e) => { this.logger.error("Error fetching data from BINANCE:", e)})
-            })
-        } catch(e) {
-            this.logger.error("Error on binance watch ticker (catched):", e)
-        }
-        setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
+        this.markets.forEach((market) => {
+            this.client.ticker24hr(market.key).then((data)=>{
+                if (data.volume > 0)
+                    this.pumpEvents.emit('marketupdate', 'TICKER', this.code, market.name, this._normalize_ticker_data(data));
+            }).catch((e) => { this.logger.error("Error fetching data from BINANCE:", e)})
+        })
     }
 
     _refreshMarkets() {
-        try {
-            this.client._makeRequest({}, (err, data)=>{
-                if (err || data == undefined)
-                    this.logger.error("Error refreshing binance markets", err)
-                if (data.filter != undefined)
-                    this.markets = this._normalizeMarketNames(data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)})) // only ETH/BTC markets
-            }, 'ticker/allPrices');
-        } catch(e) {
-            this.logger.error("Error on binance refresh markets (catched):", e)
-        }
-        setTimeout(() => { this._refreshMarkets() }, 5 * 60 * 1000) // update markets every 5 mins
+        this.client._makeRequest({}, (err, data)=>{
+            if (err || data == undefined)
+                this.logger.error("Error refreshing binance markets", err)
+            if (data.filter == undefined) {
+                this.logger.error("Error refreshing binance markets", data)
+            } else {
+                this.markets = this._normalizeMarketNames(data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)})) // only ETH/BTC markets
+            }
+        }, 'ticker/allPrices');
     }
 
     marketList() {

@@ -16,8 +16,8 @@ class Bittrex extends AbstractExchange {
     }
 
     watch(){
-        this._select_good_volume_markets()
-        setTimeout(() => { this._watch_tickers() }, 5 * 1000)
+        this.watchFunction( () => { this._select_good_volume_markets() }, 15 * 60 * 1000)
+        setTimeout(() => { this.watchFunction(() => { this._watch_tickers() }, this.ticker_speed * 1000) }, 5 * 1000)
     }
 
     _watch_tickers() { // watches markets every 10 seconds
@@ -31,7 +31,6 @@ class Bittrex extends AbstractExchange {
                 this.logger.error("Error getting Bittrex tickers: ", data)
             }
         });
-        setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
     }
 
     _select_good_volume_markets() {
@@ -46,7 +45,6 @@ class Bittrex extends AbstractExchange {
                 this.logger.error("Error trying to fetch data from bittrex:", info)
             }
         });
-        setTimeout(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) // update markets on track every hour
     }
 
     get_markets(callback) {

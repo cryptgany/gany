@@ -31,8 +31,7 @@ class Kraken extends AbstractExchange {
     }
 
     watch(){
-        this.watchTickers();
-        setTimeout(()=>this.watch(),1000 * this.ticker_speed);
+        this.watchFunction(()=>this.watchTickers(),1000 * this.ticker_speed);
     }
 
     getAssets() {

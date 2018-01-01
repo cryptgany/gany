@@ -9,7 +9,7 @@ class Poloniex extends AbstractExchange {
     }
 
     watch() {
-      this._watch_tickers()
+      this.watchFunction(() => { this._watch_tickers() }, this.ticker_speed * 1000)
     }
 
     static market_url(market) {
@@ -30,7 +30,6 @@ class Poloniex extends AbstractExchange {
                 }
             })
         }).catch((e) => { this.logger.error("Error trying to fetch POLONIEX:", e) })
-        setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
     }
 
     _filter_market(data) {

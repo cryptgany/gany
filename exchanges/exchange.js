@@ -36,6 +36,15 @@ class AbstractExchange {
         throw new Error('You have to implement the method marketUrl!');
     }
 
+    watchFunction(_funct, time) {
+        try {
+            _funct()
+        } catch (e) {
+            this.logger.error("Error on exchange", this.constructor.name, ":", e)
+        }
+        setTimeout(() => { this.watchFunction(_funct, time) }, time) // update markets every 5 mins
+    }
+
     /*
         Override when necessary
     */

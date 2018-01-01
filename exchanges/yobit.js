@@ -22,8 +22,8 @@ class Yobit extends AbstractExchange {
             })
         });
 
-        setTimeout(() => { this._select_good_volume_markets() }, 3 * 1000)
-        setTimeout(() => { this._watch_tickers() }, 5 * 1000)
+        setTimeout(() => { this.watchFunction(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) }, 3 * 1000)
+        setTimeout(() => { this.watchFunction(() => { this._watch_tickers() }, this.ticker_speed * 1000)    }, 5 * 1000)
     }
 
     static volume_for(pair) {
@@ -53,7 +53,6 @@ class Yobit extends AbstractExchange {
                 }
             }).catch((e) => { this.logger.error("Error fetching YOBIT data:", e) })
         }
-        setTimeout(() => { this._watch_tickers() }, this.ticker_speed * 1000)
     }
 
     _select_good_volume_markets() {
@@ -72,7 +71,6 @@ class Yobit extends AbstractExchange {
                 }
             })
         }
-        setTimeout(() => { this._select_good_volume_markets() }, 15 * 60 * 1000) // update markets on track every hour
     }
 
     marketList() {
