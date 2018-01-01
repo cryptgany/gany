@@ -31,7 +31,7 @@ function Detektor(logger, telegram_bot, pump_events, database, rules) {
   this.tickers_detected_blacklist = {}
 
   this.pump_events.on('marketupdate', (operation, exchange, market, data) => {
-    if (market.match(/(BTC|ETH)/)) { //NOTE: not so sure but think XXBT is the nomenclature given for BTC please check it
+    if (market.match(/(BTC|ETH|NEO)/)) { //NOTE: not so sure but think XXBT is the nomenclature given for BTC please check it
       if (operation == 'TICKER') {
         this.ticker_handler.update_ticker(exchange, market, data)
         this.analyze_ticker(exchange, market, data)

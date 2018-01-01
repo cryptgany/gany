@@ -774,15 +774,7 @@ GanyTheBot.prototype._seconds_to_minutes = function(seconds) {
 }
 
 GanyTheBot.prototype._signalMarketType = function(signal) {
-  return this._isBTCMarket(signal) ? 'BTC' : 'ETH'
-}
-
-GanyTheBot.prototype._isBTCMarket = function(signal) {
-  return signal.market.match(/BTC/)
-}
-
-GanyTheBot.prototype._isETHMarket = function(signal) {
-  return signal.market.match(/ETH/)
+  return ExchangeList[signal.exchange].volume_for(signal.market)
 }
 
 GanyTheBot.prototype.is_god = function(subscriber_id) {
