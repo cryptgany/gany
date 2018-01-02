@@ -568,7 +568,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   this.previous_signal(signal.exchange, signal.market, (prev) => {
     text = this.telegram_post_signal(client, signal, prev)
     this.logger.log(text)
-    if (client.exchange_name == 'EtherDelta' || client.exchange_name == 'Kucoin') {
+    if (client.name == 'EtherDelta' || client.name == 'Kucoin') {
       this.message_gods(text); this.message_mods(text);
     } else {
       send_free = this.random_number(1,4) == 4 // randomly pick if we should send it or not
@@ -598,7 +598,7 @@ GanyTheBot.prototype.previous_signal = async function(exchange, market, callback
 
 GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
-  message = "[" + client.exchange_name + " - " + signal.market + "](" + client.market_url(signal.market) + ")"
+  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ")"
   message += "\nVol. up by *" + diff.toFixed(2) + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
   message += "\nVolume: " + signal.last_ticker.volume.toFixed(4) + " (*" + ((signal.change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)

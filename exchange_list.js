@@ -1,4 +1,4 @@
-ExchangeList = {
+var ExchangeList = {
 	Bittrex: require('./exchanges/bittrex'),
 	Yobit: require('./exchanges/yobit'),
 	Poloniex: require('./exchanges/poloniex'),
@@ -9,6 +9,7 @@ ExchangeList = {
 	Kucoin: require('./exchanges/kucoin'),
 }
 
+// Refactor me, im too tired to do it
 ExchangeList.Bittrex.ticker_speed = 5
 ExchangeList.Bittrex.cycle_time = 20
 
