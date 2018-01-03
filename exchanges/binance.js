@@ -19,8 +19,7 @@ class Binance extends AbstractExchange {
     }
 
     watch(){
-        this.watchFunction(() => { this._refreshMarkets() }, 1 * 60 * 1000)
-        setTimeout(() => { this.watchFunction(() => { this._watch_tickers() }, this.ticker_speed * 1000) }, 5 * 1000)
+        this.watchFunction(() => { this._watch_tickers() }, this.ticker_speed * 1000)
     }
 
     static volume_for(pair) {
@@ -35,7 +34,7 @@ class Binance extends AbstractExchange {
         return "https://www.binance.com/trade.html?symbol=" + market.replace(/\-/,'_')
     }
 
-    _watch_tickers() { // watches markets every 10 seconds
+    _wastch_tickers() { // watches markets every 10 seconds
         this.markets.forEach((market) => {
             this.client.ticker24hr(market.key).then((data)=>{
                 if (data.volume > 0)
@@ -44,14 +43,18 @@ class Binance extends AbstractExchange {
         })
     }
 
-    _refreshMarkets() {
+    _watch_tickers() {
         this.client._makeRequest({}, (err, data)=>{
             if (err || data == undefined || data.filter == undefined) {
                 this.logger.error("Error refreshing binance markets:", err)
             } else {
-                this.markets = this._normalizeMarketNames(data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)})) // only ETH/BTC markets
+                let filteredData = data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)}) // only ETH/BTC markets
+                filteredData.forEach((data) => {
+                    this.pumpEvents.emit('marketupdate', 'TICKER', this.code, this._normalizeMarketName(data.symbol), this._normalize_ticker_data(data));
+                })
+                this.markets = this._normalizeMarketNames(filteredData)
             }
-        }, 'api/v1/ticker/allPrices');
+        }, 'api/v1/ticker/24hr');
     }
 
     marketList() {
@@ -60,8 +63,12 @@ class Binance extends AbstractExchange {
 
     _normalizeMarketNames(data) { // NEOBTC => NEO-BTC
         return data.map((val) => {
-            return {name: val.symbol.split(/(ETH|BTC)$/i).slice(0,2).join('-'), key: val.symbol}
+            return {name: this._normalizeMarketName(val.symbol), key: val.symbol}
         })
+    }
+
+    _normalizeMarketName(name) {
+        return name.split(/(ETH|BTC)$/i).slice(0,2).join('-')
     }
 
     _normalize_ticker_data(data) {
