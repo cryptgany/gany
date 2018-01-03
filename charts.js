@@ -23,23 +23,16 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
     }
     // data = data.reverse()
     data.forEach((d) => {
+        formattedData.push({
+            t: date,
+            o: d.open,
+            h: d.minuteHigh || d.high,
+            l: d.minuteLow  || d.low,
+            c: d.close
+        })
         if (type == 'minute') {
-            formattedData.push({
-                t: date,
-                o: d.open,
-                h: d.minuteHigh,
-                l: d.minuteLow,
-                c: d.close
-            })
             date = date.clone().subtract(time, 'm');
         } else {
-            formattedData.push({
-                t: date,
-                o: d.close, // TODO: FIX ME, open and close is inversed
-                h: d.high,
-                l: d.low,
-                c: d.open
-            })
             date = date.clone().subtract(time, 'h');
         }
     })
@@ -82,7 +75,6 @@ function genChart(exchange, market, data, type = 'minute') {// type = minute/hou
         }
     }
 
-
     // 600x600 canvas size
     var chartNode = new ChartjsNode(800, 500);
     return chartNode.drawChart(chartJsOptions).then(() => {
@@ -115,7 +107,6 @@ function reduceDataSize(data, type) {
     data.eachPair(newSize, (e) => {
         newData.push(sumFinancialValues(e, type))
     })
-
     return [newData, newSize]
 }
 
@@ -131,13 +122,19 @@ function sumFinancialValues(data, type) {
 
     var c = data[data.length - 1].close
     data.forEach((e) => {
-        if (e.high > h)
-            h = e.high;
-        if (e.low < l)
-            l = e.low;
+        if (type == 'minute') {
+            if (e.minuteHigh > h)
+                h = e.minuteHigh;
+            if (e.minuteLow < l)
+                l = e.minuteLow;
+        } else {
+            if (e.high > h)
+                h = e.high;
+            if (e.low < l)
+                l = e.low;
+        }
     })
-
-    return {open: o, high: h, low: l, close: c, minuteHigh: h, minuteLow: l}
+    return {open: o, high: h, low: l, close: c}
 }
 
 Array.prototype.eachPair = function(n, callback) { // return in groups of n
