@@ -111,7 +111,7 @@ function reduceDataSize(data, type) {
 }
 
 function sumFinancialValues(data, type) {
-    var o = data[0].open
+    var o = data[data.length - 1].open
     if (type == 'minute') {
         var h = data[0].minuteHigh
         var l = data[0].minuteLow
@@ -120,7 +120,7 @@ function sumFinancialValues(data, type) {
         var l = data[0].low
     }
 
-    var c = data[data.length - 1].close
+    var c = data[0].close
     data.forEach((e) => {
         if (type == 'minute') {
             if (e.minuteHigh > h)
