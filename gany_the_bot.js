@@ -568,7 +568,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   this.previous_signal(signal.exchange, signal.market, (prev) => {
     text = this.telegram_post_signal(client, signal, prev)
     this.logger.log(text)
-    if (client.name == 'EtherDelta' || client.name == 'Kucoin') {
+    if (client.name == 'EtherDelta') {
       this.message_gods(text); this.message_mods(text);
     } else {
       send_free = this.random_number(1,4) == 4 // randomly pick if we should send it or not
@@ -577,7 +577,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
           this.send_message(sub.telegram_id, text)
         } else {
           // free users
-          if (send_free && !client.premiumOnly)
+          if (send_free && !client.premiumOnly) // after last refactor, client is class itself, we need to move this to config file
             this.send_message(sub.telegram_id, text)
         }
       });
