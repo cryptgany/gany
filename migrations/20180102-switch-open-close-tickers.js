@@ -4,93 +4,16 @@
 
 var TickerData = require('../models/ticker_data')
 
-TickerData.find({exchange: 'Binance', ticker_type: 'hour'}, (err, datas)=>{
-	datas.forEach((data) => {
-		let close = data.close
-		let open = data.open
-		data.open = close
-		data.close = open
-		data.save()
-	}); console.log('Done!')
-})
+TickerData.count({}, (err,c)=>{ console.log(c) })
 
-TickerData.find({exchange: 'Bittrex', ticker_type: 'hour'}, (err, datas)=>{
-	datas.forEach((data) => {
-		let close = data.close
-		let open = data.open
-		data.open = close
-		data.close = open
-		data.save()
-	}); console.log('Done!')
-})
+TickerData.collection.update({}, { $rename: { "open": "tmpclose", "close": "tmpopen" } }, { multi: true }, (err,c)=>{
+	console.log(err,c)
+	console.log("Done, records updated.")
+});
 
-TickerData.find({exchange: 'EtherDelta', ticker_type: 'hour'}, (err, datas)=>{
-	datas.forEach((data) => {
-		let close = data.close
-		let open = data.open
-		data.open = close
-		data.close = open
-		data.save()
-	}); console.log('Done!')
-})
+// RUN SEPARATED
 
-TickerData.find({exchange: 'Kraken', ticker_type: 'hour'}, (err, datas)=>{
-	datas.forEach((data) => {
-		let close = data.close
-		let open = data.open
-		data.open = close
-		data.close = open
-		data.save()
-	}); console.log('Done!')
-})
-
-TickerData.find({exchange: 'Yobit', ticker_type: 'hour'}, (err, datas)=>{
-	datas.forEach((data) => {
-		let close = data.close
-		let open = data.open
-		data.open = close
-		data.close = open
-		data.save()
-	}); console.log('Done!')
-})
-
-TickerData.find({exchange: 'Poloniex', ticker_type: 'hour'}, (err, datas)=>{
-	datas.forEach((data) => {
-		let close = data.close
-		let open = data.open
-		data.open = close
-		data.close = open
-		data.save()
-	}); console.log('Done!')
-})
-
-TickerData.find({exchange: 'Cryptopia', ticker_type: 'hour'}, (err, datas)=>{
-	datas.forEach((data) => {
-		let close = data.close
-		let open = data.open
-		data.open = close
-		data.close = open
-		data.save()
-	}); console.log('Done!')
-})
-
-TickerData.find({exchange: 'Kucoin', ticker_type: 'hour'}, (err, datas)=>{
-	datas.forEach((data) => {
-		let close = data.close
-		let open = data.open
-		data.open = close
-		data.close = open
-		data.save()
-	}); console.log('Done!')
-})
-
-// Day is few data so it doesn't require much
-TickerData.find({ticker_type: 'day'}, (err, datas)=>{
-	datas.forEach((data) => {
-		let close = data.close
-		let open = data.open
-		data.open = close
-		data.close = open
-		data.save()
-	}); console.log('Done!')
-})
+TickerData.collection.update({}, { $rename: { "tmpclose": "close", "tmpopen": "open" } }, { multi: true }, (err,c)=>{
+	console.log(err,c)
+	console.log("Done, records updated.")
+});
