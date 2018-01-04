@@ -28,9 +28,10 @@ var subscriberSchema = mongoose.Schema({
       Kucoin: { type: Boolean, default: true }
     },
     markets: {
-      BTC: { type: Boolean, default: true },
-      ETH: { type: Boolean, default: true },
-      NEO: { type: Boolean, default: true }
+      BTC:  { type: Boolean, default: true },
+      ETH:  { type: Boolean, default: true },
+      NEO:  { type: Boolean, default: true },
+      USDT: { type: Boolean, default: true }
     }
 }, { timestamps: true });
 
