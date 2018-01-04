@@ -169,7 +169,7 @@ class TickerHandler {
         if (subscriber && subscriber.subscription_status == false) // filter premium exchanges
             markets = markets.filter((market) => { return !this.isPremiumExchange(market.exchange)}) // only non prem
         if ((subscriber && (subscriber.telegram_id != 65954004 && subscriber.telegram_id != 403276254)) || !subscriber)
-            markets = markets.filter((market) => { return market.exchange != 'EtherDelta' && market.exchange != 'Kucoin' }) // only mods
+            markets = markets.filter((market) => { return market.exchange != 'EtherDelta' }) // only mods
 
         return markets
     }
