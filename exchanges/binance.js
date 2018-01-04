@@ -34,15 +34,6 @@ class Binance extends AbstractExchange {
         return "https://www.binance.com/trade.html?symbol=" + market.replace(/\-/,'_')
     }
 
-    _wastch_tickers() { // watches markets every 10 seconds
-        this.markets.forEach((market) => {
-            this.client.ticker24hr(market.key).then((data)=>{
-                if (data.volume > 0)
-                    this.pumpEvents.emit('marketupdate', 'TICKER', this.code, market.name, this._normalize_ticker_data(data));
-            }).catch((e) => { this.logger.error("Error fetching data from BINANCE:", e)})
-        })
-    }
-
     _watch_tickers() {
         this.client._makeRequest({}, (err, data)=>{
             if (err || data == undefined || data.filter == undefined) {
