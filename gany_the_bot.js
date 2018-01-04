@@ -91,7 +91,7 @@ GanyTheBot.prototype.start = function() {
             message += '\nYou can also configure exchanges using the command: /configure.'
             message += '\nYou are currently a free user. The full version of CryptGany works with a monthly subscription fee of 0.006 BTC that you can pay using the command /pay.'
             message += "\nOr you can remain as a free user but you will only receive 25% of all of Gany's notifications. You will be able to use the /configure and /see commands."
-            message += '\nGany paid version offers customized signal reviews, 100% notifications and will be implementing more features over time.'
+            message += '\nGany paid version offers customized alert reviews, 100% notifications and will be implementing more features over time.'
             message += '\nIf you have any doubts or comments that you would like to ask, join the discussion group at https://t.me/CryptoWarnings'
             message += '\nYou can also use the /help command for further information'
             this.send_message(msg.chat.id, message)
@@ -147,19 +147,6 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/^\/listmarkets\ /i, (msg, match) => {
-    exchange = msg.text.replace(/\/listmarkets\ /, '')
-    markets = this.detektor.getMarketList(exchange)
-    if (markets.length > 0) {
-      message = exchange + " has " + markets.length + " markets:\n"
-      message += markets.join(", ")
-    } else {
-      message = 'Exchange ' + exchange + ' not found.'
-    }
-    console.log(message)
-    this.send_message(msg.chat.id, message, {parse_mode: 'HTML'})
-  })
-
   this.telegram_bot.onText(/^\/pay/, (msg, match) => {
     if (this.is_not_a_group(msg) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
       if (this.is_subscribed(msg.chat.id)) {
@@ -201,6 +188,8 @@ GanyTheBot.prototype.start = function() {
       market = 'ETH-BTC'
     if (market == 'BTC')
       market = 'BTC-USDT'
+    if (market == 'NEO')
+      market = 'NEO-BTC'
     markets = this.detektor.get_market_data(market, subscriber)
     if (markets.length == 0)
       message = "Not found."
@@ -224,6 +213,8 @@ GanyTheBot.prototype.start = function() {
       market = 'ETH-BTC'
     if (market == 'BTC')
       market = 'BTC-USDT'
+    if (market == 'NEO')
+      market = 'NEO-BTC'
     time = parseInt(data[2])
     if (time.toString() != data[2] || time < 1 || time > 60 * 6) {
       this.send_message(msg.chat.id, 'Please enter a number between 1 and 360.')
@@ -262,7 +253,6 @@ GanyTheBot.prototype.start = function() {
     message += "\n/configure - Configure the exchanges you want or don't want"
     message += "\n/see XXX - See information on all exchanges about XXX currency"
     message += "\n/see XXX 20 - See information on all exchanges with change over 20 minutes"
-    message += "\n/listmarkets exchange - See which markets are watched on exchange"
     message += "\n/pricing - See information about pricing of Gany"
     message += '\n/pay - See information required for paying monthly fee'
     message += "\n/whatisbal - What is B A L ?"
@@ -445,6 +435,8 @@ GanyTheBot.prototype.start = function() {
         market = 'ETH-BTC'
       if (market == 'BTC')
         market = 'BTC-USDT'
+      if (market == 'NEO')
+        market = 'NEO-BTC'
       if (market.match(/^[^\-]+$/))
         market = market + "-BTC"
       markets = this.detektor.get_market_data(market, subscriber)
@@ -576,7 +568,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   this.previous_signal(signal.exchange, signal.market, (prev) => {
     text = this.telegram_post_signal(client, signal, prev)
     this.logger.log(text)
-    if (client.exchange_name == 'EtherDelta' || client.exchange_name == 'Kucoin') {
+    if (client.name == 'EtherDelta' || client.name == 'Kucoin') {
       this.message_gods(text); this.message_mods(text);
     } else {
       send_free = this.random_number(1,4) == 4 // randomly pick if we should send it or not
@@ -606,7 +598,7 @@ GanyTheBot.prototype.previous_signal = async function(exchange, market, callback
 
 GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
-  message = "[" + client.exchange_name + " - " + signal.market + "](" + client.market_url(signal.market) + ")"
+  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ")"
   message += "\nVol. up by *" + diff.toFixed(2) + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
   message += "\nVolume: " + signal.last_ticker.volume.toFixed(4) + " (*" + ((signal.change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
@@ -614,8 +606,8 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
   message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
   message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
   if (prev) {
-    if (prev.createdAt) { message += "\nLast Signal: " + moment(prev.createdAt).fromNow() }
-    message += "\nLast Signal Price: " + prev.last_ticker.last.toFixed(8)
+    if (prev.createdAt) { message += "\nLast Alert: " + moment(prev.createdAt).fromNow() }
+    message += "\nLast Alert Price: " + prev.last_ticker.last.toFixed(8)
   }
   return message
 }
@@ -718,7 +710,8 @@ GanyTheBot.prototype.configuration_menu_exchanges = function() {
         [{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }],
         [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }],
         [{ text: 'Kraken', callback_data: 'configure exchange Kraken' }, { text: 'Binance', callback_data: 'configure exchange Binance' }],
-        // [{ text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' }, { text: 'Kucoin', callback_data: 'configure exchange Kucoin' }],
+        [{ text: 'Kucoin', callback_data: 'configure exchange Kucoin' }],
+        //{ text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' },
         [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })
@@ -774,15 +767,7 @@ GanyTheBot.prototype._seconds_to_minutes = function(seconds) {
 }
 
 GanyTheBot.prototype._signalMarketType = function(signal) {
-  return this._isBTCMarket(signal) ? 'BTC' : 'ETH'
-}
-
-GanyTheBot.prototype._isBTCMarket = function(signal) {
-  return signal.market.match(/BTC/)
-}
-
-GanyTheBot.prototype._isETHMarket = function(signal) {
-  return signal.market.match(/ETH/)
+  return ExchangeList[signal.exchange].volume_for(signal.market)
 }
 
 GanyTheBot.prototype.is_god = function(subscriber_id) {

@@ -180,7 +180,7 @@ class TickerHandler {
     }
 
     getMarketType(marketData) {
-        return marketData.market.match(/BTC/) ? 'BTC' : 'ETH'
+        return ExchangeList[marketData.exchange].volume_for(marketData.market)
     }
 
     getMarketDataWithTime(marketName, time, subscriber) {

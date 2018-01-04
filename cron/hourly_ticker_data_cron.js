@@ -15,7 +15,7 @@ var hourlyTickerDataJob = new CronJob('00 00 */1 * * *', function() {
         spt = exchangeMarket.split('.')
         logger.log("Saving hourly data for", spt[0], spt[1])
         Ticker.getRange(spt[0], spt[1], 0, 59, (err, data) => {
-          Ticker.getHourlyHighLowResume(data).then((tdata) => {
+          Ticker.getHourlyHighLowResume(data.reverse()).then((tdata) => { // we reverse it because that way the [0] element is the real first one
             tickerData = new TickerData()
             tickerData.exchange = spt[0]
             tickerData.market = spt[1]

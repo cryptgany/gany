@@ -3,7 +3,7 @@ var https = require("https")
 
 class Cryptopia extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, 20, 20, skipVolumes)
+        super(logger, pumpEvents, skipVolumes)
         this.all_markets = [];
         this.market_data = [];
     }
