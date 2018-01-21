@@ -16,7 +16,7 @@ class TickerHandler {
         this.high_low = {} // High Low of last minute
 
         this.minute_counter_by_exchange_market = {} // counts 1 per ticker update per exchange per market, once equals to one minute data gets stored
-        this.premiumClients = Object.keys(ExchangeList).filter((name)=>{ return ExchangeList[name].premiumOnly }).map((name) => { return ExchangeList[name].code })
+        this.premiumClients = Object.keys(ExchangeList).filter((name)=>{ return ExchangeList[name].premiumOnly }).map((name) => { return ExchangeList[name].name })
 
         // configurations
         this.last_minute_data_cleaning_time = 20 // clean ever X minutes
