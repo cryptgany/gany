@@ -24,6 +24,7 @@ ExchangeList.Kucoin.cycle_time = 20
 
 ExchangeList.EtherDelta.ticker_speed = 10
 ExchangeList.EtherDelta.cycle_time = 20
+ExchangeList.EtherDelta.premiumOnly = true
 
 ExchangeList.Poloniex.ticker_speed = 10
 ExchangeList.Poloniex.cycle_time = 20
