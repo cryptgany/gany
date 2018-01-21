@@ -568,7 +568,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
   this.previous_signal(signal.exchange, signal.market, (prev) => {
     text = this.telegram_post_signal(client, signal, prev)
     this.logger.log(text)
-    if (client.name == 'EtherDelta') {
+    if (client.name == 'PRIVATEEX') {
       this.message_gods(text); this.message_mods(text);
     } else {
       send_free = this.random_number(1,4) == 4 // randomly pick if we should send it or not
@@ -604,7 +604,8 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
   message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
   message += "\nA: " + signal.first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.ask, signal.last_ticker.ask) + " " + signal.last_ticker.ask.toFixed(8)
   message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
-  message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
+  if (client.name != 'EtherDelta')
+    message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
   if (prev) {
     if (prev.createdAt) { message += "\nLast Alert: " + moment(prev.createdAt).fromNow() }
     message += "\nLast Alert Price: " + prev.last_ticker.last.toFixed(8)
@@ -618,8 +619,10 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   message += "\nA: " + ticker_info.ask.toFixed(8)
   message += "\nL: " + ticker_info.last.toFixed(8)
   message += "\nVolume: " + ticker_info.volume.toFixed(4) + " " + ExchangeList[exchange].volume_for(market)
-  message += "\n24h Low: " + ticker_info.low.toFixed(8)
-  message += "\n24h High: " + ticker_info.high.toFixed(8)
+  if (exchange != 'EtherDelta') {
+    message += "\n24h Low: " + ticker_info.low.toFixed(8)
+    message += "\n24h High: " + ticker_info.high.toFixed(8)
+  }
   return message
 }
 
@@ -632,7 +635,8 @@ GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market,
   message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
   message += "\nA: " + firstTicker.ask.toFixed(8) + " " + this.telegram_arrow(firstTicker.ask, lastTicker.ask) + " " + lastTicker.ask.toFixed(8)
   message += "\nL: " + firstTicker.last.toFixed(8) + " " + this.telegram_arrow(firstTicker.last, lastTicker.last) + " " + lastTicker.last.toFixed(8)
-  message += "\n24h Low: " + lastTicker.low.toFixed(8) + "\n24h High: " + lastTicker.high.toFixed(8)
+  if (exchange != 'EtherDelta')
+    message += "\n24h Low: " + lastTicker.low.toFixed(8) + "\n24h High: " + lastTicker.high.toFixed(8)
   return message
 }
 
@@ -710,8 +714,7 @@ GanyTheBot.prototype.configuration_menu_exchanges = function() {
         [{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }],
         [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }],
         [{ text: 'Kraken', callback_data: 'configure exchange Kraken' }, { text: 'Binance', callback_data: 'configure exchange Binance' }],
-        [{ text: 'Kucoin', callback_data: 'configure exchange Kucoin' }],
-        //{ text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' },
+        [{ text: 'Kucoin', callback_data: 'configure exchange Kucoin' }, { text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' }],
         [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })

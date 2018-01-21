@@ -168,8 +168,8 @@ class TickerHandler {
             markets = markets.filter((market) => { return subscriber.exchanges[market.exchange] && subscriber.markets[this.getMarketType(market)]})
         if (subscriber && subscriber.subscription_status == false) // filter premium exchanges
             markets = markets.filter((market) => { return !this.isPremiumExchange(market.exchange)}) // only non prem
-        if ((subscriber && (subscriber.telegram_id != 65954004 && subscriber.telegram_id != 403276254)) || !subscriber)
-            markets = markets.filter((market) => { return market.exchange != 'EtherDelta' }) // only mods
+        // if ((subscriber && (subscriber.telegram_id != 65954004 && subscriber.telegram_id != 403276254)) || !subscriber)
+        //     markets = markets.filter((market) => { return market.exchange != 'EtherDelta' }) // only mods
 
         return markets
     }
