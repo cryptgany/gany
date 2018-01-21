@@ -598,7 +598,7 @@ GanyTheBot.prototype.previous_signal = async function(exchange, market, callback
 
 GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
-  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ")"
+  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + symbol_hashtag(exchange, market)
   message += "\nVol. up by *" + diff.toFixed(2) + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
   message += "\nVolume: " + signal.last_ticker.volume.toFixed(4) + " (*" + ((signal.change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
@@ -614,7 +614,7 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
 }
 
 GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, ticker_info) {
-  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ")"
+  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market)
   message += "\nB: " + ticker_info.bid.toFixed(8)
   message += "\nA: " + ticker_info.ask.toFixed(8)
   message += "\nL: " + ticker_info.last.toFixed(8)
@@ -629,7 +629,7 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
 GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market, firstTicker, lastTicker, time) {
   diff = lastTicker.volume - firstTicker.volume
   change = this.detektor.volume_change(firstTicker, lastTicker)
-  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ")"
+  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + symbol_hashtag(exchange, market)
   message += "\nVol. changed by *" + diff.toFixed(2) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
   message += "\nVolume: " + lastTicker.volume.toFixed(4) + " (*" + ((change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
@@ -639,6 +639,8 @@ GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market,
     message += "\n24h Low: " + lastTicker.low.toFixed(8) + "\n24h High: " + lastTicker.high.toFixed(8)
   return message
 }
+
+GanyTheBot.prototype.symbol_hashtag = function(exchange, market) { return '#' + ExchangeList[exchange].symbol_for(market) }
 
 GanyTheBot.prototype.find_subscriber = function(telegram_id) {
   return _.find(this.subscribers, (sub) => { return sub.telegram_id == telegram_id } )
