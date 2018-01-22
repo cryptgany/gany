@@ -598,14 +598,14 @@ GanyTheBot.prototype.previous_signal = async function(exchange, market, callback
 
 GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
-  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + symbol_hashtag(exchange, market)
+  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market)
   message += "\nVol. up by *" + diff.toFixed(2) + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
   message += "\nVolume: " + signal.last_ticker.volume.toFixed(4) + " (*" + ((signal.change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
   message += "\nA: " + signal.first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.ask, signal.last_ticker.ask) + " " + signal.last_ticker.ask.toFixed(8)
   message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
   if (client.name != 'EtherDelta')
-    message += "\n24h Low: " + signal.last_ticker.low.toFixed(8) + "\n24h High: " + signal.last_ticker.high.toFixed(8)
+    message += "\n24h H/L:" + signal.last_ticker.high.toFixed(8) + " / " + signal.last_ticker.low.toFixed(8)
   if (prev) {
     if (prev.createdAt) { message += "\nLast Alert: " + moment(prev.createdAt).fromNow() }
     message += "\nLast Alert Price: " + prev.last_ticker.last.toFixed(8)
@@ -619,24 +619,22 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   message += "\nA: " + ticker_info.ask.toFixed(8)
   message += "\nL: " + ticker_info.last.toFixed(8)
   message += "\nVolume: " + ticker_info.volume.toFixed(4) + " " + ExchangeList[exchange].volume_for(market)
-  if (exchange != 'EtherDelta') {
-    message += "\n24h Low: " + ticker_info.low.toFixed(8)
-    message += "\n24h High: " + ticker_info.high.toFixed(8)
-  }
+  if (exchange != 'EtherDelta')
+    message += "\n24h H/L: " + ticker_info.high.toFixed(8) + " / " + ticker_info.low.toFixed(8)
   return message
 }
 
 GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market, firstTicker, lastTicker, time) {
   diff = lastTicker.volume - firstTicker.volume
   change = this.detektor.volume_change(firstTicker, lastTicker)
-  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + symbol_hashtag(exchange, market)
+  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market)
   message += "\nVol. changed by *" + diff.toFixed(2) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
   message += "\nVolume: " + lastTicker.volume.toFixed(4) + " (*" + ((change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
   message += "\nA: " + firstTicker.ask.toFixed(8) + " " + this.telegram_arrow(firstTicker.ask, lastTicker.ask) + " " + lastTicker.ask.toFixed(8)
   message += "\nL: " + firstTicker.last.toFixed(8) + " " + this.telegram_arrow(firstTicker.last, lastTicker.last) + " " + lastTicker.last.toFixed(8)
   if (exchange != 'EtherDelta')
-    message += "\n24h Low: " + lastTicker.low.toFixed(8) + "\n24h High: " + lastTicker.high.toFixed(8)
+    message += "\n24h H/L: " + lastTicker.high.toFixed(8) + " / " + lastTicker.low.toFixed(8)
   return message
 }
 
