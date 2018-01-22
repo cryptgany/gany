@@ -62,7 +62,7 @@ rules = {
   ],
   "Binance": [
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.125 },
-    (first_ticker, last_ticker, time, matcher) => { return (time <= 5 * 60) && matcher.volume_change(first_ticker, last_ticker) > 1.05 && matcher.price_change(first_ticker, last_ticker) > 1.05 },
+    (first_ticker, last_ticker, time, matcher) => { return (time <= 5 * 60) && matcher.volume_change(first_ticker, last_ticker) > 1.05 && matcher.last_change(first_ticker, last_ticker) > 1.05 },
     (first_ticker, last_ticker, time, matcher) => { return (time <= 10 * 60) && matcher.volume_change(first_ticker, last_ticker) > 1.05 }
   ],
   "EtherDelta": [
