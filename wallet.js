@@ -33,7 +33,7 @@ Wallet.prototype.refresh = function() { // update list of accounts to check
 }
 
 Wallet.prototype.check_transactions = function() {
-  setTimeout(() => { this.check_transactions() }, 3 * 60 * 1000)
+  setTimeout(() => { this.check_transactions() }, 10 * 60 * 1000)
   // first of all, check if users already have enough balance
   this.subscriber_list = this.subscriber_list.filter((sub) => {
     if (sub.total_balance() >= this.subscription_price[sub.subscription_type]) {
