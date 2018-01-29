@@ -22,6 +22,7 @@ const CurrencyMap = {
     'XXRP': 'XRP',
     'XZEC': 'ZEC'
 }
+const PairMap = {} // Kraken has their own base volume per each market and it varies (FUCKING NON CONSISTENT KRAKEN SHITTY API)
 
 class Kraken extends AbstractExchange {
 
@@ -43,6 +44,8 @@ class Kraken extends AbstractExchange {
         });
     }
 
+    static volume_for(pair) { return PairMap[pair].quote == 'BTC' ? PairMap[pair].quote : PairMap[pair].base }
+    static symbol_for(pair) { return PairMap[pair].quote == 'BTC' ? PairMap[pair].base : PairMap[pair].quote }
     static market_url(market){
         return "https://www.kraken.com/charts"
     }
@@ -50,12 +53,13 @@ class Kraken extends AbstractExchange {
     watchTickers(){
         this.fetchAssetPairs()
         .then((data) => {
+            this.buildPairMap(data.result)
             return this.fetchTicker(data.result);
         })
         .then((data)=>{
             this.emitData(data.result);
         })
-        .catch((e)=> this.logger.error('Error fetching data for KRAKEN.'));
+        .catch((e)=> this.logger.error('Error fetching data for KRAKEN.', e));
     }
 
     fetchAssetPairs() {
@@ -97,7 +101,7 @@ class Kraken extends AbstractExchange {
         var that = this;
         Object.keys(data).forEach(key => {
             if (key != 'USDTZUSD' && key.match(/(XBT|XXBT|ETH)/))
-            that.pumpEvents.emit('marketupdate', 'TICKER', this.code, this.mapName(key), this.mapData(data[key]));
+            that.pumpEvents.emit('marketupdate', 'TICKER', this.code, this.mapName(key), this.mapData(this.mapName(key), data[key]));
         });
     }
 
@@ -118,11 +122,17 @@ class Kraken extends AbstractExchange {
         return CurrencyMap[name] || name
     }
 
-    mapData(ticker){
+    buildPairMap(data) {
+        Object.keys(data).forEach((market) => {
+            PairMap[this.mapName(market)] = {base: this.mapCurrencyName(data[market].base), quote: this.mapCurrencyName(data[market].quote)}
+        })
+    }
+
+    mapData(market, ticker){
         return {
             high: parseFloat(ticker.h[1]),
             low: parseFloat(ticker.l[1]),
-            volume: parseFloat(ticker.v[1]),
+            volume: PairMap[market].quote == 'BTC' ? parseFloat(ticker.v[1]) * parseFloat(ticker.c[0]) : parseFloat(ticker.v[1]),
             last: parseFloat(ticker.c[0]),
             ask: parseFloat(ticker.a[0]),
             bid: parseFloat(ticker.b[0]),
