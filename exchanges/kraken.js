@@ -44,8 +44,8 @@ class Kraken extends AbstractExchange {
         });
     }
 
-    static volume_for(pair) { return PairMap[pair].quote == 'BTC' ? PairMap[pair].quote : PairMap[pair].base }
-    static symbol_for(pair) { return PairMap[pair].quote == 'BTC' ? PairMap[pair].base : PairMap[pair].quote }
+    static volume_for(pair) { return PairMap[pair].base }
+    static symbol_for(pair) { return PairMap[pair].quote }
     static market_url(market){
         return "https://www.kraken.com/charts"
     }
@@ -123,8 +123,8 @@ class Kraken extends AbstractExchange {
     }
 
     buildPairMap(data) {
-        Object.keys(data).forEach((market) => {
-            PairMap[this.mapName(market)] = {base: this.mapCurrencyName(data[market].base), quote: this.mapCurrencyName(data[market].quote)}
+        Object.keys(data).forEach((market) => { // there two are twisted because Kraken just wants to be the contrary of the standard
+            PairMap[this.mapName(market)] = {quote: this.mapCurrencyName(data[market].base), base: this.mapCurrencyName(data[market].quote)}
         })
     }
 
@@ -132,7 +132,7 @@ class Kraken extends AbstractExchange {
         return {
             high: parseFloat(ticker.h[1]),
             low: parseFloat(ticker.l[1]),
-            volume: PairMap[market].quote == 'BTC' ? parseFloat(ticker.v[1]) * parseFloat(ticker.c[0]) : parseFloat(ticker.v[1]),
+            volume: parseFloat(ticker.v[1]) * parseFloat(ticker.c[0]),
             last: parseFloat(ticker.c[0]),
             ask: parseFloat(ticker.a[0]),
             bid: parseFloat(ticker.b[0]),
