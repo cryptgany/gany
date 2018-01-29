@@ -178,27 +178,37 @@ GanyTheBot.prototype.start = function() {
       this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30')
   })
 
-  this.telegram_bot.onText(/^\/convert\s\d/, (msg, match) => {
+  /*
+  / USAGE
+  / /convert 10 neo eth (10 neo to eth)
+  / /convert 10 btc neo (10 btc to neo)
+  / /convert 10 omg (10 omg to btc, default is btc)
+  */
+  this.telegram_bot.onText(/^\/convert/, (msg, match) => {
     subscriber = undefined
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
     }
-      data = msg.text.toUpperCase().split(' ')
-      let market = data[2] || 'BTC'
-      let btcamount = data[1]
-    if (market == 'ETH')
-      market = 'ETH-BTC'
-    if (market == 'BTC')
-      market = 'BTC-USDT'
-    markets = this.detektor.get_market_data(market, subscriber)
-    if (markets.length == 0)
-      message = "Not found."
-    if (markets.length > 6)
-      message = "Too many markets found"
-    if (markets.length > 0 && markets.length <= 6)
-      message = markets.map((market_info) => {
-        return this.convert_curr(btcamount, market_info.exchange, market_info.market, market_info.ticker)
-      }).join("\n\n")
+    data = msg.text.toUpperCase().split(' ')
+    let fromCur = data[2]
+    let toCur = data[3] || 'BTC'
+    let quantity = parseFloat(data[1])
+    if (!fromCur || quantity <= 0) {
+      let message = "Usage:\n"
+      message += "/convert 10 neo btc\n"
+      message += "/convert 0.3 btc eth\n"
+    } else {
+      market = fromCur + '-' + toCur // try to find direct market
+      let markets = this.detektor.get_market_data(market, subscriber)
+      if (markets.length == 0)
+        message = "Not found."
+      if (markets.length > 6)
+        markets = markets.slice(0, 6)
+      if (markets.length > 0 && markets.length <= 6)
+        message = markets.map((market_info) => {
+          return this.convert_curr(quantity, market_info, fromCur, toCur)
+        }).join("\n\n")
+    }
     this.send_message(msg.chat.id, message)
   })
 
@@ -648,12 +658,15 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   return message
 }
 
-GanyTheBot.prototype.convert_curr = function(btcamount, exchange, market, ticker_info) {
-  result = btcamount/ticker_info.last.toFixed(8)
-  marketSymbol = this.detektor.api_clients[exchange].symbol_for(market)
-  marketBase = this.detektor.api_clients[exchange].volume_for(market)
-  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ")"
-  message += "\n" + btcamount + " " + marketBase + " is " + result.toFixed(8) + " " + marketSymbol + " in " + exchange + "(" + ticker_info.last.toFixed(8) + ")"
+GanyTheBot.prototype.convert_curr = function(quantity, marketInfo, fromCur, toCur) {
+  let result = 0
+  if (fromCur == ExchangeList[marketInfo.exchange].volume_for(marketInfo.market)) { // from is the base
+    result = quantity / marketInfo.ticker.last.toFixed(8)
+  } else {
+    result = quantity * marketInfo.ticker.last.toFixed(8)
+  }
+  message = "[" + marketInfo.exchange + " - " + marketInfo.market + "](" + this.detektor.market_url(marketInfo.exchange, market) + ")"
+  message += "\n" +  quantity + " " + fromCur + " is " + result.toFixed(8) + " " + toCur + " in " + marketInfo.exchange + "(" + marketInfo.ticker.last.toFixed(8) + ")"
   return message
 }
 
