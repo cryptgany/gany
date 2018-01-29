@@ -51,7 +51,6 @@ paymentSchema.statics.process_payments = function() {
           data = []
           payments.forEach((payment) => {
             utxos = unspent.filter((utxo) => { return utxo.address == payment.btc_address && utxo.confirmations >= MIN_CONFIRMATIONS_TO_PROCESS })
-            console.log("UTXOS =",utxos)
             if (utxos.length >= 1) {
               // get from first to last unspent and spend them until we have the entire payment.amount
               // if address does not has sufficient found mark as error and log

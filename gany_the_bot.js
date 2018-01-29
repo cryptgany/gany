@@ -31,9 +31,7 @@ EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart firs
 function GanyTheBot(logger) {
   this.logger = logger
   this.god_users = [parseInt(process.env.PERSONAL_CHANNEL)];
-  this.mod_users = []
-  if (process.env.ENVIRONMENT == 'production')
-    this.mod_users = [parseInt(process.env.ADAM_CHANNEL)]
+  this.mod_users = [parseInt(process.env.ADAM_CHANNEL)]
   this.token = process.env.GANY_KEY;
   this.subscribers = []
   this.detektor = undefined
@@ -176,6 +174,41 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/^\/see/i, (msg, match) => {
     if (!msg.text.match(SEE_REGEX_WITH_ONE_PARAM) && !(msg.text.match(SEE_REGEX_WITH_TWO_PARAMS)))
       this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30')
+  })
+
+  /*
+  / USAGE
+  / /convert 10 neo eth (10 neo to eth)
+  / /convert 10 btc neo (10 btc to neo)
+  / /convert 10 omg (10 omg to btc, default is btc)
+  */
+  this.telegram_bot.onText(/^\/convert/, (msg, match) => {
+    subscriber = undefined
+    if (this.is_subscribed(msg.from.id)) {
+      subscriber = this.find_subscriber(msg.from.id)
+    }
+    data = msg.text.toUpperCase().split(' ')
+    let fromCur = data[2]
+    let toCur = data[3] || 'BTC'
+    let quantity = parseFloat(data[1])
+    let message = ""
+    if (!fromCur || quantity <= 0) {
+      message = "Usage:\n"
+      message += "/convert 10 neo btc\n"
+      message += "/convert 0.3 btc eth\n"
+    } else {
+      market = fromCur + '-' + toCur // try to find direct market
+      let markets = this.detektor.get_market_data(market, subscriber)
+      if (markets.length == 0)
+        message = "Not found."
+      if (markets.length > 6)
+        markets = markets.slice(0, 6)
+      if (markets.length > 0 && markets.length <= 6)
+        message = markets.map((market_info) => {
+          return this.convert_curr(quantity, market_info, fromCur, toCur)
+        }).join("\n\n")
+    }
+    this.send_message(msg.chat.id, message)
   })
 
   this.telegram_bot.onText(SEE_REGEX_WITH_ONE_PARAM, (msg, match) => { // common users /see
@@ -621,6 +654,18 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   message += "\nVolume: " + ticker_info.volume.toFixed(4) + " " + ExchangeList[exchange].volume_for(market)
   if (exchange != 'EtherDelta')
     message += "\n24h H/L: " + ticker_info.high.toFixed(8) + " / " + ticker_info.low.toFixed(8)
+  return message
+}
+
+GanyTheBot.prototype.convert_curr = function(quantity, marketInfo, fromCur, toCur) {
+  let result = 0
+  if (fromCur == ExchangeList[marketInfo.exchange].volume_for(marketInfo.market)) { // from is the base
+    result = quantity / marketInfo.ticker.last.toFixed(8)
+  } else {
+    result = quantity * marketInfo.ticker.last.toFixed(8)
+  }
+  message = "[" + marketInfo.exchange + " - " + marketInfo.market + "](" + this.detektor.market_url(marketInfo.exchange, market) + ")"
+  message += "\n" +  quantity + " " + fromCur + " is " + result.toFixed(8) + " " + toCur + " in " + marketInfo.exchange + "(" + marketInfo.ticker.last.toFixed(8) + ")"
   return message
 }
 
