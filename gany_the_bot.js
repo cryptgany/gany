@@ -31,9 +31,7 @@ EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart firs
 function GanyTheBot(logger) {
   this.logger = logger
   this.god_users = [parseInt(process.env.PERSONAL_CHANNEL)];
-  this.mod_users = []
-  if (process.env.ENVIRONMENT == 'production')
-    this.mod_users = [parseInt(process.env.ADAM_CHANNEL)]
+  this.mod_users = [parseInt(process.env.ADAM_CHANNEL)]
   this.token = process.env.GANY_KEY;
   this.subscribers = []
   this.detektor = undefined
