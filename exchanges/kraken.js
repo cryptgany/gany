@@ -8,7 +8,7 @@ const CurrencyMap = {
     'XETC': 'ETC',
     'XETH': 'ETH',
     'ZEUR': 'EUR',
-    'ZUSD': 'USDT',
+    'ZUSD': 'USD',
     'ZCAD': 'CAD',
     'ZGBP': 'GBP',
     'ZJPY': 'JPY',
