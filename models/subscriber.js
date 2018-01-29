@@ -31,7 +31,10 @@ var subscriberSchema = mongoose.Schema({
       BTC:  { type: Boolean, default: true },
       ETH:  { type: Boolean, default: true },
       NEO:  { type: Boolean, default: true },
-      USDT: { type: Boolean, default: true }
+      USDT: { type: Boolean, default: true },
+      USD: { type: Boolean, default: true },
+      GBP: { type: Boolean, default: true },
+      EUR: { type: Boolean, default: true },
     }
 }, { timestamps: true });
 

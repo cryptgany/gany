@@ -8,7 +8,7 @@ const CurrencyMap = {
     'XETC': 'ETC',
     'XETH': 'ETH',
     'ZEUR': 'EUR',
-    'ZUSD': 'USDT',
+    'ZUSD': 'USD',
     'ZCAD': 'CAD',
     'ZGBP': 'GBP',
     'ZJPY': 'JPY',
@@ -22,6 +22,7 @@ const CurrencyMap = {
     'XXRP': 'XRP',
     'XZEC': 'ZEC'
 }
+const PairMap = {} // Kraken has their own base volume per each market and it varies (FUCKING NON CONSISTENT KRAKEN SHITTY API)
 
 class Kraken extends AbstractExchange {
 
@@ -43,6 +44,8 @@ class Kraken extends AbstractExchange {
         });
     }
 
+    static volume_for(pair) { return PairMap[pair].base }
+    static symbol_for(pair) { return PairMap[pair].quote }
     static market_url(market){
         return "https://www.kraken.com/charts"
     }
@@ -50,6 +53,7 @@ class Kraken extends AbstractExchange {
     watchTickers(){
         this.fetchAssetPairs()
         .then((data) => {
+            this.buildPairMap(data.result)
             return this.fetchTicker(data.result);
         })
         .then((data)=>{
@@ -97,7 +101,7 @@ class Kraken extends AbstractExchange {
         var that = this;
         Object.keys(data).forEach(key => {
             if (key != 'USDTZUSD' && key.match(/(XBT|XXBT|ETH)/))
-            that.pumpEvents.emit('marketupdate', 'TICKER', this.code, this.mapName(key), this.mapData(data[key]));
+            that.pumpEvents.emit('marketupdate', 'TICKER', this.code, this.mapName(key), this.mapData(this.mapName(key), data[key]));
         });
     }
 
@@ -118,11 +122,17 @@ class Kraken extends AbstractExchange {
         return CurrencyMap[name] || name
     }
 
-    mapData(ticker){
+    buildPairMap(data) {
+        Object.keys(data).forEach((market) => { // there two are twisted because Kraken just wants to be the contrary of the standard
+            PairMap[this.mapName(market)] = {quote: this.mapCurrencyName(data[market].base), base: this.mapCurrencyName(data[market].quote)}
+        })
+    }
+
+    mapData(market, ticker){
         return {
             high: parseFloat(ticker.h[1]),
             low: parseFloat(ticker.l[1]),
-            volume: parseFloat(ticker.v[1]),
+            volume: parseFloat(ticker.v[1]) * parseFloat(ticker.c[0]),
             last: parseFloat(ticker.c[0]),
             ask: parseFloat(ticker.a[0]),
             bid: parseFloat(ticker.b[0]),
