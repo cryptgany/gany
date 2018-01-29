@@ -193,8 +193,9 @@ GanyTheBot.prototype.start = function() {
     let fromCur = data[2]
     let toCur = data[3] || 'BTC'
     let quantity = parseFloat(data[1])
+    let message = ""
     if (!fromCur || quantity <= 0) {
-      let message = "Usage:\n"
+      message = "Usage:\n"
       message += "/convert 10 neo btc\n"
       message += "/convert 0.3 btc eth\n"
     } else {
