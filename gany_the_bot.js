@@ -201,9 +201,9 @@ GanyTheBot.prototype.start = function() {
       let markets = this.detektor.get_market_data(market, subscriber)
       if (markets.length == 0)
         message = "Not found."
-      if (markets.length > 6)
-        markets = markets.slice(0, 6)
-      if (markets.length > 0 && markets.length <= 6)
+      if (markets.length > 4)
+        markets = this.reduceMarketsResult(markets)
+      if (markets.length > 0 && markets.length <= 4)
         message = markets.map((market_info) => {
           return this.convert_curr(quantity, market_info, fromCur, toCur)
         }).join("\n\n")
@@ -226,9 +226,9 @@ GanyTheBot.prototype.start = function() {
     markets = this.detektor.get_market_data(market, subscriber)
     if (markets.length == 0)
       message = "Not found."
-    if (markets.length > 6)
-      message = "Too many markets found"
-    if (markets.length > 0 && markets.length <= 6)
+    if (markets.length > 4)
+      markets = this.reduceMarketsResult(markets)
+    if (markets.length > 0 && markets.length <= 4)
       message = markets.map((market_info) => {
         return this.telegram_post_price_check(market_info.exchange, market_info.market, market_info.ticker)
       }).join("\n\n")
@@ -255,9 +255,9 @@ GanyTheBot.prototype.start = function() {
       this.detektor.getMarketDataWithTime(market, time-1, subscriber).then((markets) => {
         if (markets.length == 0)
           message = "Not found."
-        if (markets.length > 6)
-          message = "Too many markets found"
-        if (markets.length > 0 && markets.length <= 6)
+        if (markets.length > 4)
+          markets = this.reduceMarketsResult(markets)
+        if (markets.length > 0 && markets.length <= 4)
           message = markets.map((market_info) => {
             return this.telegramPostPriceCheckWithTime(market_info.exchange, market_info.market, market_info.firstTicker, market_info.lastTicker, time)
           }).join("\n\n")
@@ -475,9 +475,9 @@ GanyTheBot.prototype.start = function() {
       markets = this.detektor.get_market_data(market, subscriber)
       if (markets.length == 0)
         message = "Not found."
-      if (markets.length > 6)
-        message = "Too many markets found"
-      if (markets.length > 0 && markets.length <= 6) {
+      if (markets.length > 4)
+        markets = this.reduceMarketsResult(markets)
+      if (markets.length > 0 && markets.length <= 4) {
         exchange_market = markets.sort((a,b) => { return EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange] })[0]
         time = data[2] ? parseInt(data[2]) : 24*5 // 5 days
         if (chart_type == 'minute') {
@@ -657,16 +657,33 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   return message
 }
 
-GanyTheBot.prototype.convert_curr = function(quantity, marketInfo, fromCur, toCur) {
-  let result = 0
-  if (fromCur == ExchangeList[marketInfo.exchange].volume_for(marketInfo.market)) { // from is the base
-    result = quantity / marketInfo.ticker.last.toFixed(8)
+GanyTheBot.prototype.reduceMarketsResult = function(markets) {
+  markets.sort((a,b) => this.btcVolumeFor(a) < this.btcVolumeFor(b))
+  return markets.slice(0, 4)
+}
+GanyTheBot.prototype.btcVolumeFor = function(market) {
+  let baseVol = ExchangeList[market.exchange].volume_for(market.market)
+  let ticker = market.ticker || market.lastTicker
+  if (baseVol == 'BTC') {
+    return ticker.volume
   } else {
-    result = quantity * marketInfo.ticker.last.toFixed(8)
+    return this.baseConvert(ticker.volume, market.exchange, market.market, ticker, baseVol, 'BTC')
   }
+}
+GanyTheBot.prototype.convert_curr = function(quantity, marketInfo, fromCur, toCur) {
   message = "[" + marketInfo.exchange + " - " + marketInfo.market + "](" + this.detektor.market_url(marketInfo.exchange, market) + ")"
-  message += "\n" +  quantity + " " + fromCur + " is " + result.toFixed(8) + " " + toCur + " in " + marketInfo.exchange + "(" + marketInfo.ticker.last.toFixed(8) + ")"
+  message += "\n" +  quantity + " " + fromCur + " is " + baseConvert(quantity, marketInfo.exchange, marketInfo.market, fromCur, toCur).toFixed(8) + " " + toCur + " in " + marketInfo.exchange + "(" + marketInfo.ticker.last.toFixed(8) + ")"
   return message
+}
+
+GanyTheBot.prototype.baseConvert = function(quantity, exchange, market, ticker, fromCur, toCur) {
+  let result = 0
+  if (fromCur == ExchangeList[exchange].volume_for(market)) { // from is the base
+    result = quantity / ticker.last.toFixed(8)
+  } else {
+    result = quantity * ticker.last.toFixed(8)
+  }
+  return result
 }
 
 GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market, firstTicker, lastTicker, time) {
