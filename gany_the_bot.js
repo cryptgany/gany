@@ -208,35 +208,37 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(SEE_REGEX_WITH_ONE_PARAM, (msg, match) => { // common users /see
-    subscriber = undefined
+    let subscriber = undefined
+    let message = undefined
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
     }
-    market = msg.text.toUpperCase().replace(/\/SEE\ /, '')
+    let market = msg.text.toUpperCase().replace(/\/SEE\ /, '')
     if (market == 'ETH')
       market = 'ETH-BTC'
     if (market == 'BTC')
       market = 'BTC-USDT'
     if (market == 'NEO')
       market = 'NEO-BTC'
-    markets = this.detektor.get_market_data(market, subscriber)
+    let markets = this.detektor.get_market_data(market, subscriber)
     if (markets.length == 0)
       message = "Not found."
-    if (markets.length > 4)
-      markets = this.reduceMarketsResult(markets)
-    if (markets.length > 0 && markets.length <= 4)
+    else {
+      markets = this.reduceMarketsByVolume(markets)
       message = markets.map((market_info) => {
         return this.telegram_post_price_check(market_info.exchange, market_info.market, market_info.ticker)
       }).join("\n\n")
+    }
     this.send_message(msg.chat.id, message)
   })
 
   this.telegram_bot.onText(SEE_REGEX_WITH_TWO_PARAMS, (msg, match) => {
-    subscriber = undefined
+    let subscriber = undefined
+    let message = undefined
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
     }
-    data = msg.text.toUpperCase().split(' ')
+    let data = msg.text.toUpperCase().split(' ')
     let market = data[1]
     if (market == 'ETH')
       market = 'ETH-BTC'
@@ -244,19 +246,19 @@ GanyTheBot.prototype.start = function() {
       market = 'BTC-USDT'
     if (market == 'NEO')
       market = 'NEO-BTC'
-    time = parseInt(data[2])
+    let time = parseInt(data[2])
     if (time.toString() != data[2] || time < 1 || time > 60 * 6) {
       this.send_message(msg.chat.id, 'Please enter a number between 1 and 360.')
     } else {
       this.detektor.getMarketDataWithTime(market, time-1, subscriber).then((markets) => {
         if (markets.length == 0)
           message = "Not found."
-        if (markets.length > 4)
-          markets = this.reduceMarketsResult(markets)
-        if (markets.length > 0 && markets.length <= 4)
+        else {
+          markets = this.reduceMarketsByVolume(markets)
           message = markets.map((market_info) => {
             return this.telegramPostPriceCheckWithTime(market_info.exchange, market_info.market, market_info.firstTicker, market_info.lastTicker, time)
           }).join("\n\n")
+        }
         this.send_message(msg.chat.id, message)
       }).catch((err) => {
         if (err == 'no_time_data') {
@@ -275,7 +277,7 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/help/, (msg, match) => {
-    message = "/whatisgany - What is this bot?"
+    let message = "/whatisgany - What is this bot?"
     message += "\n/subscribe - Subscribe to Gany's notifications"
     message += "\n/subscription - Information about your subscription"
     message += "\n/stop - Stop receiving notifications from Gany"
@@ -291,7 +293,7 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/^\/whatisgany/, (msg, match) => {
     if (this.is_subscribed(msg.chat.id)) {
-      message = "Gany is a CryptoCurrency Trading Analysis bot that monitors multiple exchanges and markets"
+      let message = "Gany is a CryptoCurrency Trading Analysis bot that monitors multiple exchanges and markets"
       message += " 24/7, giving its subscribers notifications when certain conditions happen in a given market.\n\n"
       message += "It's information is not a direct buy or sell signal, it gives detailed information about changes during specific times"
       message += " so traders can analyse them and make wiser decisions about their investments."
@@ -301,7 +303,7 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/^\/whatisbal/, (msg, match) => {
     if (this.is_subscribed(msg.chat.id)) {
-      message = "\nB: Bid"
+      let message = "\nB: Bid"
       message += "\nA: Ask"
       message += "\nL: Last"
       this.send_message(msg.chat.id, message)
@@ -309,7 +311,7 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/pricing/, (msg, match) => {
-    message = "Gany has both paid and free subscription:"
+    let message = "Gany has both paid and free subscription:"
     message += '\n*Paid User*: 0.006 BTC monthly fee. Receives all Gany notifications and can use current features.'
     message += '\n*Free User*: Receives only 25% of notifications and can use /see and /configure commands.'
     message += "\n\nGany is an evolving product, there will be new exchanges added, mobile app (for which your subscription will work) and much more."
@@ -319,9 +321,9 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/^\/granttime/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
-      command = msg.text.split(' ')
-      subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
-      time = parseInt(command[2])
+      let command = msg.text.split(' ')
+      let subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
+      let time = parseInt(command[2])
       if (command.length != 3 || time <= 0) {
         this.send_message(msg.chat.id, 'Usage: /grant telegram_id time')
       } else {
@@ -338,8 +340,8 @@ GanyTheBot.prototype.start = function() {
   if (process.env.ENVIRONMENT == 'development') {
     this.telegram_bot.onText(/^\/setfree /, (msg, match) => {
       if (this.is_mod(msg.chat.id)){ // only process vip chat requests
-        command = msg.text.split(' ')
-        subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
+        let command = msg.text.split(' ')
+        let subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
         if (subscriber == undefined) {
           this.send_message(msg.chat.id, 'User ' + command[1] + ' not found')
         } else {
@@ -354,12 +356,12 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/^\/finduser/, (msg, match) => {
     if (this.is_mod(msg.chat.id)){ // only process vip chat requests
-      command = msg.text.split(' ')
-      subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
+      let command = msg.text.split(' ')
+      let subscriber = this.find_subscriber(parseInt(command[1])) || this.find_subscriber_by_username(command[1])
       if (subscriber == undefined) {
         this.send_message(msg.chat.id, 'User ' + command[1] + ' not found')
       } else {
-        message = "\nID: " + subscriber.telegram_id
+        let message = "\nID: " + subscriber.telegram_id
         message += "\nName: " + subscriber.full_name
         message += "\nUsername: " + subscriber.username
         message += "\nBTC Address: " + subscriber.btc_address
@@ -458,7 +460,7 @@ GanyTheBot.prototype.start = function() {
         subscriber = this.find_subscriber(msg.from.id)
       }
       data = msg.text.split(' ')
-      market = data[1].toUpperCase().replace(/\/CHART\ /, '')
+      let market = data[1].toUpperCase().replace(/\/CHART\ /, '')
       chart_type = (data[3] == 'minute' || data[3] == 'minutes') ? 'minute' : 'hour'
       if (market == 'ETH')
         market = 'ETH-BTC'
@@ -471,9 +473,8 @@ GanyTheBot.prototype.start = function() {
       markets = this.detektor.get_market_data(market, subscriber)
       if (markets.length == 0)
         message = "Not found."
-      if (markets.length > 4)
-        markets = this.reduceMarketsResult(markets)
-      if (markets.length > 0 && markets.length <= 4) {
+      else {
+        markets = this.reduceMarketsByVolume(markets)
         exchange_market = markets.sort((a,b) => { return EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange] })[0]
         time = data[2] ? parseInt(data[2]) : 24*5 // 5 days
         if (chart_type == 'minute') {
@@ -490,8 +491,6 @@ GanyTheBot.prototype.start = function() {
             }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
           })
         }
-      } else {
-        this.send_message(msg.chat.id, message)
       }
     } else {
       this.send_message(msg.chat.id, "Sorry, this feature is only for paid members.")
@@ -653,8 +652,12 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   return message
 }
 
-GanyTheBot.prototype.reduceMarketsResult = function(markets) {
+GanyTheBot.prototype.reduceMarketsByVolume = function(markets) {
   markets.sort((a,b) => this.btcVolumeFor(a).volume < this.btcVolumeFor(b).volume)
+  return markets.slice(0, 4)
+}
+GanyTheBot.prototype.reduceMarketsByImportance = function(markets) {
+  markets.sort((a,b) => EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange])
   return markets.slice(0, 4)
 }
 GanyTheBot.prototype.btcVolumeFor = function(market) {
@@ -679,8 +682,8 @@ GanyTheBot.prototype.convert_curr = function(quantity, fromCur, toCur) {
   let markets = this.detektor.get_market_data(market)
   if (markets.length == 0) { // complex
     result.type = 'complex'
-    let fromMarket = this.reduceMarketsResult(this.detektor.get_market_data(fromCur + '-BTC'))[0]
-    let toMarkets = this.reduceMarketsResult(this.detektor.get_market_data(toCur + '-BTC'))
+    let fromMarket = this.reduceMarketsByImportance(this.detektor.get_market_data(fromCur + '-BTC'))[0]
+    let toMarkets = this.reduceMarketsByImportance(this.detektor.get_market_data(toCur + '-BTC'))
     if (fromMarket && toMarkets.length > 0) {
       // get BTC worth of fromCur
       result.from = this.conversionResult(fromMarket, quantity, fromCur, 'BTC')
@@ -691,7 +694,7 @@ GanyTheBot.prototype.convert_curr = function(quantity, fromCur, toCur) {
     } // the else case is markets = []
   } else { // simple
     result.type = 'simple'
-    this.reduceMarketsResult(markets).forEach((market) => {
+    this.reduceMarketsByImportance(markets).forEach((market) => {
       let baseVol = this.baseVolumeFor(market)
       result.markets.push(this.conversionResult(market, quantity, fromCur, toCur))
     })
