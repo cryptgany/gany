@@ -197,7 +197,11 @@ GanyTheBot.prototype.start = function() {
       if (result.markets.length == 0)
         message = "Not found."
       else {
-        message = result.markets.map((currResult) => this.convertCurMsg(currResult, fromCur, toCur)).join("\n\n")
+        if (result.type == 'complex') {
+          message = result.markets.map((currResult) => this.convertCurComplexMsg(result.from, currResult, quantity, fromCur, toCur)).join("\n\n")
+        } else {
+          message = result.markets.map((currResult) => this.convertCurMsg(currResult, quantity, fromCur, toCur)).join("\n\n")
+        }
       }
     }
     this.send_message(msg.chat.id, message)
@@ -686,9 +690,16 @@ GanyTheBot.prototype.convert_curr = function(quantity, fromCur, toCur) {
   return result
 }
 
-GanyTheBot.prototype.convertCurMsg = function(currResult, fromCur, toCur) {
+GanyTheBot.prototype.convertCurMsg = function(currResult, quantity, fromCur, toCur) {
   message = "[" + currResult.exchange + " - " + currResult.market + "](" + this.detektor.market_url(currResult.exchange, currResult.market) + ")"
-  message += "\n" +  currResult.quantity + " " + fromCur + " is " + currResult.result.toFixed(8) + " " + toCur + " in " + currResult.exchange + " (" + currResult.price + ")"
+  message += "\n" +  quantity + " " + fromCur + " (" + currResult.price + ") is " + currResult.result.toFixed(8) + " " + toCur + " in " + currResult.exchange
+  return message
+}
+
+GanyTheBot.prototype.convertCurComplexMsg = function(from, currResult, quantity, fromCur, toCur) {
+  message = "[" + from.exchange + " - " + from.market + "](" + this.detektor.market_url(from.exchange, from.market) + ") -> "
+  message += "[" + currResult.exchange + " - " + currResult.market + "](" + this.detektor.market_url(currResult.exchange, currResult.market) + ")"
+  message += "\n" +  quantity + " " + fromCur + " (" + from.price + ") is " + currResult.result.toFixed(8) + " " + toCur + " (" + currResult.price + ")"
   return message
 }
 
