@@ -658,30 +658,55 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
 }
 
 GanyTheBot.prototype.reduceMarketsResult = function(markets) {
-  markets.sort((a,b) => this.btcVolumeFor(a) < this.btcVolumeFor(b))
+  markets.sort((a,b) => this.baseVolumeFor(a).volume < this.baseVolumeFor(b).volume)
   return markets.slice(0, 4)
 }
-GanyTheBot.prototype.btcVolumeFor = function(market) {
-  let baseVol = ExchangeList[market.exchange].volume_for(market.market)
+GanyTheBot.prototype.baseVolumeFor = function(market) {
   let ticker = market.ticker || market.lastTicker
-  if (baseVol == 'BTC') {
-    return ticker.volume
-  } else {
-    return this.baseConvert(ticker.volume, market.exchange, market.market, ticker, baseVol, 'BTC')
-  }
+  return {base: ExchangeList[market.exchange].volume_for(market.market), volume: ticker.volume}
 }
-GanyTheBot.prototype.convert_curr = function(quantity, marketInfo, fromCur, toCur) {
+/*
+/ Returns array, first 5 volume-sorted mixes of, possible from cur to cur changes
+*/
+GanyTheBot.prototype.convert_curr = function(quantity, fromCur, toCur) {
+  let market = fromCur + '-' + toCur
+  let result = {type: "", markets: []}
+  let markets = this.detektor.get_market_data(market)
+  if (markets.length == 0) { // complex
+    result.type = 'complex'
+    markets = this.detektor.get_market_data(fromCur + '-BTC')
+    this.detektor.get_market_data(toCur + '-BTC')
+  } else { // simple
+    result.type = 'simple'
+    this.reduceMarketsResult(markets).forEach((market) => {
+      let baseVol = this.baseVolumeFor(market)
+      let conversion = this.baseConvert(market.exchange, market.market, quantity, this.tickerFor(market).last, fromCur, toCur)
+      result.markets.push({exchange: market.exchange, market: market.market, quantity: quantity, price: this.tickerFor(market).last, result: conversion})
+    })
+  }
+  return result
+}
+
+GanyTheBot.prototype.convertCurMsg = function(currRates) {
   message = "[" + marketInfo.exchange + " - " + marketInfo.market + "](" + this.detektor.market_url(marketInfo.exchange, market) + ")"
   message += "\n" +  quantity + " " + fromCur + " is " + baseConvert(quantity, marketInfo.exchange, marketInfo.market, fromCur, toCur).toFixed(8) + " " + toCur + " in " + marketInfo.exchange + "(" + marketInfo.ticker.last.toFixed(8) + ")"
   return message
 }
 
-GanyTheBot.prototype.baseConvert = function(quantity, exchange, market, ticker, fromCur, toCur) {
+GanyTheBot.prototype.tickerFor = function(market) {
+  return market.ticker || market.lastTicker
+}
+
+/*
+/ Performs basic conversion
+/ exchange: String, market: String, quantity: Decimal, price: Decimal, fromCur: String, toCur: String
+*/
+GanyTheBot.prototype.baseConvert = function(exchange, market, quantity, price, fromCur, toCur) {
   let result = 0
   if (fromCur == ExchangeList[exchange].volume_for(market)) { // from is the base
-    result = quantity / ticker.last.toFixed(8)
+    result = quantity / price.toFixed(8)
   } else {
-    result = quantity * ticker.last.toFixed(8)
+    result = quantity * price.toFixed(8)
   }
   return result
 }
