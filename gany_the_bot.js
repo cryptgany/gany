@@ -654,8 +654,17 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
 }
 
 GanyTheBot.prototype.reduceMarketsResult = function(markets) {
-  markets.sort((a,b) => this.baseVolumeFor(a).volume < this.baseVolumeFor(b).volume)
+  markets.sort((a,b) => this.btcVolumeFor(a).volume < this.btcVolumeFor(b).volume)
   return markets.slice(0, 4)
+}
+GanyTheBot.prototype.btcVolumeFor = function(market) {
+  baseVol = ExchangeList[market.exchange].volume_for(market.market)
+  if (baseVol == 'BTC') {
+    return this.baseVolumeFor(market)
+  } else {
+    let conversions = this.convert_curr(this.tickerFor(market).volume, baseVol, 'BTC')
+    return {volume: conversions.markets[0].result}
+  }
 }
 GanyTheBot.prototype.baseVolumeFor = function(market) {
   let ticker = market.ticker || market.lastTicker
