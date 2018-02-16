@@ -670,18 +670,25 @@ GanyTheBot.prototype.baseVolumeFor = function(market) {
 */
 GanyTheBot.prototype.convert_curr = function(quantity, fromCur, toCur) {
   let market = fromCur + '-' + toCur
-  let result = {type: "", markets: []}
+  let result = {type: "", from: {}, markets: []}
   let markets = this.detektor.get_market_data(market)
   if (markets.length == 0) { // complex
     result.type = 'complex'
-    markets = this.detektor.get_market_data(fromCur + '-BTC')
-    this.detektor.get_market_data(toCur + '-BTC')
+    let fromMarket = this.reduceMarketsResult(this.detektor.get_market_data(fromCur + '-BTC'))[0]
+    let toMarkets = this.reduceMarketsResult(this.detektor.get_market_data(toCur + '-BTC'))
+    if (fromMarket && toMarkets.length > 0) {
+      // get BTC worth of fromCur
+      result.from = this.conversionResult(fromMarket, quantity, fromCur, 'BTC')
+      // convert fromBTC to toCur worth
+      toMarkets.forEach((market) => {
+        result.markets.push(this.conversionResult(market, result.from.result, 'BTC', toCur))
+      })
+    } // the else case is markets = []
   } else { // simple
     result.type = 'simple'
     this.reduceMarketsResult(markets).forEach((market) => {
       let baseVol = this.baseVolumeFor(market)
-      let conversion = this.baseConvert(market.exchange, market.market, quantity, this.tickerFor(market).last, fromCur, toCur)
-      result.markets.push({exchange: market.exchange, market: market.market, quantity: quantity, price: this.tickerFor(market).last, result: conversion})
+      result.markets.push(this.conversionResult(market, quantity, fromCur, toCur))
     })
   }
   return result
@@ -695,6 +702,11 @@ GanyTheBot.prototype.convertCurMsg = function(currRates) {
 
 GanyTheBot.prototype.tickerFor = function(market) {
   return market.ticker || market.lastTicker
+}
+
+GanyTheBot.prototype.conversionResult = function(market, quantity, fromCur, toCur) {
+  let conversion = this.baseConvert(market.exchange, market.market, quantity, this.tickerFor(market).last, fromCur, toCur)
+  return {exchange: market.exchange, market: market.market, quantity: quantity, price: this.tickerFor(market).last, result: conversion}
 }
 
 /*
