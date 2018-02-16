@@ -183,10 +183,6 @@ GanyTheBot.prototype.start = function() {
   / /convert 10 omg (10 omg to btc, default is btc)
   */
   this.telegram_bot.onText(/^\/convert/, (msg, match) => {
-    subscriber = undefined
-    if (this.is_subscribed(msg.from.id)) {
-      subscriber = this.find_subscriber(msg.from.id)
-    }
     data = msg.text.toUpperCase().split(' ')
     let fromCur = data[2]
     let toCur = data[3] || 'BTC'
@@ -197,16 +193,12 @@ GanyTheBot.prototype.start = function() {
       message += "/convert 10 neo btc\n"
       message += "/convert 0.3 btc eth\n"
     } else {
-      market = fromCur + '-' + toCur // try to find direct market
-      let markets = this.detektor.get_market_data(market, subscriber)
-      if (markets.length == 0)
+      let result = this.convert_curr(quantity, fromCur, toCur)
+      if (result.markets.length == 0)
         message = "Not found."
-      if (markets.length > 4)
-        markets = this.reduceMarketsResult(markets)
-      if (markets.length > 0 && markets.length <= 4)
-        message = markets.map((market_info) => {
-          return this.convert_curr(quantity, market_info, fromCur, toCur)
-        }).join("\n\n")
+      else {
+        message = result.markets.map((currResult) => this.convertCurMsg(currResult, fromCur, toCur)).join("\n\n")
+      }
     }
     this.send_message(msg.chat.id, message)
   })
@@ -694,9 +686,9 @@ GanyTheBot.prototype.convert_curr = function(quantity, fromCur, toCur) {
   return result
 }
 
-GanyTheBot.prototype.convertCurMsg = function(currRates) {
-  message = "[" + marketInfo.exchange + " - " + marketInfo.market + "](" + this.detektor.market_url(marketInfo.exchange, market) + ")"
-  message += "\n" +  quantity + " " + fromCur + " is " + baseConvert(quantity, marketInfo.exchange, marketInfo.market, fromCur, toCur).toFixed(8) + " " + toCur + " in " + marketInfo.exchange + "(" + marketInfo.ticker.last.toFixed(8) + ")"
+GanyTheBot.prototype.convertCurMsg = function(currResult, fromCur, toCur) {
+  message = "[" + currResult.exchange + " - " + currResult.market + "](" + this.detektor.market_url(currResult.exchange, currResult.market) + ")"
+  message += "\n" +  currResult.quantity + " " + fromCur + " is " + currResult.result.toFixed(8) + " " + toCur + " in " + currResult.exchange + " (" + currResult.price + ")"
   return message
 }
 
