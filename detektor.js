@@ -17,6 +17,8 @@ function Detektor(logger, telegram_bot, pump_events, database, rules) {
   this.pump_events = pump_events
   this.database = database
   this.rules = rules
+  this.conversionTable = {}
+  // {base: {pair: xxx}} multipliers
 
   this.matcher = require('./matcher')
   this.ticker_handler = new TickerHandler(this, logger)
@@ -34,6 +36,7 @@ function Detektor(logger, telegram_bot, pump_events, database, rules) {
     if (market.match(/(BTC|ETH|NEO)/)) { //NOTE: not so sure but think XXBT is the nomenclature given for BTC please check it
       if (operation == 'TICKER') {
         this.ticker_handler.update_ticker(exchange, market, data)
+        this.updateConversionTable(exchange, market, data)
         this.analyze_ticker(exchange, market, data)
       }
     }
@@ -112,6 +115,13 @@ Detektor.prototype.detect_spam = function() {
     setTimeout(() => { this.spam_detector.muted = false }, this.spam_detector.mute_for)
   }
   this.spam_detector.last_signal = time
+}
+
+Detektor.prototype.updateConversionTable = function(exchange, market, data) {
+  setTimeout(() => {
+    this.conversionTable[ExchangeList[exchange].volume_for(market)] = this.conversionTable[ExchangeList[exchange].volume_for(market)] || {}
+    this.conversionTable[ExchangeList[exchange].volume_for(market)][ExchangeList[exchange].symbol_for(market)] = data.last
+  }, 0)
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
