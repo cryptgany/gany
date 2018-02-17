@@ -7,6 +7,7 @@ var ExchangeList = {
 	Binance: require('./exchanges/binance'),
 	EtherDelta: require('./exchanges/ether_delta'),
 	Kucoin: require('./exchanges/kucoin'),
+	CoinExchange: require('./exchanges/coin_exchange'),
 }
 
 // Refactor me, im too tired to do it
@@ -34,6 +35,9 @@ ExchangeList.Binance.cycle_time = 20
 
 ExchangeList.Cryptopia.ticker_speed = 20
 ExchangeList.Cryptopia.cycle_time = 20
+
+ExchangeList.CoinExchange.ticker_speed = 10
+ExchangeList.CoinExchange.cycle_time = 20
 
 
 module.exports = ExchangeList

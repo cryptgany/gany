@@ -7,30 +7,33 @@ class CoinExchange extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
         super(logger, pumpEvents, skipVolumes)
         this.marketsInfo = {}
-        this.marketsData = []
+        this.marketsData = {}
     }
 
     watch(){
-        const watchman = setInterval(() => refresh(), this.ticker_speed * 1000)
+        this.refresh()
+        const watchman = setInterval(() => this.refresh(), this.ticker_speed * 1000)
     }
 
     getMarketInfo() {
-        return this.makeRequest(MARKETS_INFO)
+        return this._makeRequest(MARKETS_INFO)
     }
 
     getMarketData() {
-        return this.makeRequest(MARKETS_DATA)
+        return this._makeRequest(MARKETS_DATA)
     }
 
     storeMarketInfo(marketsInfo) {
         marketsInfo.map((marketInfo) => {
-            this.marketsInfo[marketInfo.MarketID] = marketInfo.MarketAssetCode + "-" + marketInfo.BaseCurrencyCode
+            this.marketsInfo[marketInfo.MarketID] = marketInfo.BaseCurrencyCode + "-" + marketInfo.MarketAssetCode
         })
     }
 
     storeMarketsData(marketsData) {
-        if (marketsData.length > 0)
-            this.marketsData = marketsData.map((marketData) => this._normalize_ticker_data(marketData))
+        if (marketsData.length > 0) {
+            this.marketsData = {}
+            marketsData.forEach((marketData) => { this.marketsData[this.marketsInfo[marketData.MarketID]] = this._normalize_ticker_data(marketData) })
+        }
     }
 
     refresh() {
@@ -52,10 +55,12 @@ class CoinExchange extends AbstractExchange {
     }
 
     emitData() {
-        console.log("Going to emit", this.marketsData)
+        Object.keys(this.marketsData).forEach((market) => {
+            this.pumpEvents.emit('marketupdate', 'TICKER', this.code, market, this.marketsData[market]);
+        })
     }
 
-    makeRequest(url) {
+    _makeRequest(url) {
         return new Promise((resolve, reject) => {
             request(url, function (error, response, body) {
                 if (error)
@@ -73,7 +78,6 @@ class CoinExchange extends AbstractExchange {
 
     _normalize_ticker_data(data) {
         return {
-            market: this.marketsInfo[data.MarketID],
             high: parseFloat(data.HighPrice),
             low: parseFloat(data.LowPrice),
             volume: parseFloat(data.BTCVolume),
