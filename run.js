@@ -25,6 +25,7 @@ let kraken = new ExchangeList.Kraken(logger, pump_events);
 let binance = new ExchangeList.Binance(logger, pump_events);
 let etherDelta = new ExchangeList.EtherDelta(logger, pump_events);
 let kucoin = new ExchangeList.Kucoin(logger, pump_events);
+let coin_exchange = new ExchangeList.CoinExchange(logger, pump_events);
 var database = new Database();
 var wallet = new Wallet(logger, gany_the_bot);
 
@@ -41,6 +42,7 @@ if (process.env.ENVIRONMENT == 'production' || process.env.ENVIRONMENT == 'testi
   binance.watch()
   etherDelta.watch()
   kucoin.watch()
+  coin_exchange.watch()
 }
 Payment.process_payments()
 gany_the_bot.expire_expired_users()
@@ -69,6 +71,9 @@ rules = {
     (first_ticker, last_ticker, time, matcher) => { return (time <= 20 * 60) && matcher.volume_change(first_ticker, last_ticker) > 1.35 }
   ],
   "Kucoin": [
+    (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.25 }
+  ],
+  "CoinExchange": [
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.25 }
   ]
 }
