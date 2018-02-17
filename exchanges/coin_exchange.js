@@ -73,7 +73,7 @@ class CoinExchange extends AbstractExchange {
     }
 
     static market_url(market) {
-        return "https://bittrex.com/Market/Index?MarketName=" + market
+        return "https://www.coinexchange.io/market/" + market.split('-').reverse().join('/')
     }
 
     _normalize_ticker_data(data) {
