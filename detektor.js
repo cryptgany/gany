@@ -17,7 +17,8 @@ function Detektor(logger, telegram_bot, pump_events, database, rules) {
   this.pump_events = pump_events
   this.database = database
   this.rules = rules
-  this.conversionTable = {}
+  this.conversionTable = {} // base: BTC/ETH/etc (divisible). pair: dgb, xrp, eos, etc (multiplicable)
+  this.all_market_names = [] // BTC, ETC, USD, etc
   // {base: {pair: xxx}} multipliers
 
   this.matcher = require('./matcher')
@@ -121,12 +122,53 @@ Detektor.prototype.updateConversionTable = function(exchange, market, data) {
   setTimeout(() => {
     this.conversionTable[ExchangeList[exchange].volume_for(market)] = this.conversionTable[ExchangeList[exchange].volume_for(market)] || {}
     this.conversionTable[ExchangeList[exchange].volume_for(market)][ExchangeList[exchange].symbol_for(market)] = data.last
+    this.addMarketNameIfNotExists(market)
   }, 0)
+}
+
+// Mathematical conversion, ignoring any other factor
+Detektor.prototype.convert = function(quantity, from, to) {
+  if (this.marketExists(from) && this.marketExists(to)) {
+    if (this.conversionTable[from]) {// from exists as a base
+      if (this.conversionTable[from][to]) {// to exists as a pair
+        result = quantity / this.conversionTable[from][to]
+        return result
+      }
+      else { // to does not exists as a pair, look for any base that has it, convert to that base, then convert that base to FROM
+        let price = 0
+        let match = Object.keys(this.conversionTable[from]).find((e) => price = this.convert(1, e, to)) // find one of the pairs that can be converted to TO
+        return match ? quantity * (price * this.convert(1, from, match)) : false
+      }
+    }
+    if (this.conversionTable[to]) { // to is the base
+      if (this.conversionTable[to][from]) {// from exists as pair
+        return quantity * this.conversionTable[to][from]
+      }
+      else { // to is a base but from is not a direct pair, example: convert NEO to CAD CAD: { ETH: 1191.15, BTC: 13491.3 }
+        let price = 0
+        let match = Object.keys(this.conversionTable[to]).find((e) => price = this.convert(1, from, e)) // find one of the pairs that can be converted to TO
+        return match ? quantity * (price / this.convert(1, to,  match)) : false
+      }
+    }
+    // neither to or from are base, we need to find a common base and convert
+    // try to find a base for FROM
+    let fromBase = Object.keys(this.conversionTable).find((e) => this.conversionTable[e][from])
+    if (fromBase) { // if there's no base for any of them then there's no way to convert (error?)
+      fromConvert = this.convert(quantity, from, fromBase)
+      return this.convert(fromConvert, fromBase, to)
+    }
+  }
 }
 
 Detektor.prototype.market_url = function(exchange, market) {
   return ExchangeList[exchange].market_url(market)
 }
+
+Detektor.prototype.addMarketNameIfNotExists = function(market) {
+  market.split('-').forEach((n) => { if (!this.marketExists(n)) { this.all_market_names.push(n)}})
+}
+
+Detektor.prototype.marketExists = function(name) { return this.all_market_names.indexOf(name) != -1 }
 
 Detektor.prototype.getMarketDataForChart = function(market) { // returns first 30 mins of data for most-used to least-used exchange data
   return this.ticker_handler.getMarketDataForChart(market_name)
