@@ -17,6 +17,7 @@ CHECK_EXPIRED_USERS = 1 // hours
 
 SEE_REGEX_WITH_ONE_PARAM=/^\/see\ ([a-zA-Z0-9]|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))+$/i // /see neo | /see neo-btc
 SEE_REGEX_WITH_TWO_PARAMS=/^\/see\ (([a-zA-Z0-9]{1,6})|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))\ \d+$/i // /see neo 20 | /see neo-btc 20
+FIAT_SYMBOLS = ['USD', 'EUR', 'GBP', 'USDT', 'EURT']
 EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart first
   Bittrex: 1,
   Binance: 2,
@@ -220,7 +221,7 @@ GanyTheBot.prototype.start = function() {
     else {
       markets = this.reduceMarketsByVolume(markets)
       message = markets.map((market_info) => {
-        return this.telegram_post_price_check(market_info.exchange, market_info.market, market_info.ticker)
+        return this.telegram_post_volume_analysis(market_info.exchange, market_info.market, market_info.ticker)
       }).join("\n\n")
     }
     this.send_message(msg.chat.id, message)
@@ -258,7 +259,27 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/price/, (msg, match) => {
-    
+    let subscriber = undefined
+    let message = undefined
+    if (this.is_subscribed(msg.from.id)) {
+      subscriber = this.find_subscriber(msg.from.id)
+    }
+    let market = msg.text.toUpperCase().replace(/\/PRICE\ /, '')
+    if (market == 'BTC')
+      market = 'BTC-USDT'
+    if (market.match(/^[^\-]+$/))
+      market = market + "-BTC"
+    let markets = this.detektor.get_market_data(market, subscriber)
+    if (market == 'BTC-USDT') { markets = markets.concat(this.detektor.get_market_data('BTC-USD', subscriber))}
+    if (markets.length == 0)
+      message = "Not found."
+    else {
+      markets = this.reduceMarketsByVolume(markets)
+      message = markets.map((market_info) => {
+        return this.telegramPostPriceCheck(market_info.exchange, market_info.market, market_info.ticker)
+      }).join("\n\n")
+    }
+    this.send_message(msg.chat.id, message)
   })
 
   this.telegram_bot.onText(/^\/(stop|block)/, (msg, match) => {
@@ -377,7 +398,7 @@ GanyTheBot.prototype.start = function() {
         pair = command.replace(/\/detektor see\ /, '').split(" ")
         exchange = pair[0]; market = pair[1]
         ticker_info = this.detektor.tickers[exchange][market]
-        message = this.telegram_post_price_check(exchange, market, ticker_info)
+        message = this.telegram_post_volume_analysis(exchange, market, ticker_info)
         this.send_message(msg.chat.id, message)
       }
       if (command.match(/^\/detektor update users/)) {
@@ -633,7 +654,7 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
   return message
 }
 
-GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, ticker_info) {
+GanyTheBot.prototype.telegram_post_volume_analysis = function(exchange, market, ticker_info) {
   message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market) + "$)"
   message += "\nB: " + ticker_info.bid.toFixed(8)
   message += "\nA: " + ticker_info.ask.toFixed(8)
@@ -643,6 +664,8 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
     message += "\n24h H/L: " + ticker_info.high.toFixed(8) + " / " + ticker_info.low.toFixed(8)
   return message
 }
+
+GanyTheBot.prototype.quickConvert = function(quantity, from, to) { return this.detektor.convert(quantity, from, to)}
 
 GanyTheBot.prototype.priceInUSD = function(exchange, market) {
   return this.detektor.convert(1, ExchangeList[exchange].symbol_for(market), 'USDT').toFixed(3)
@@ -729,10 +752,21 @@ GanyTheBot.prototype.baseConvert = function(exchange, market, quantity, price, f
   return result
 }
 
+GanyTheBot.prototype.telegramPostPriceCheck = function(exchange, market, ticker) {
+  let message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market)
+  let base = ExchangeList[exchange].volume_for(market)
+  let symbol = ExchangeList[exchange].symbol_for(market)
+  if (this.isFiatSymbol(base)) {
+    return message + "\nPrice(" + base + "): " + ticker.last + "$"
+  } else {
+    return message + "\nPrice(BTC): " + ticker.last + ", Price(USD): " + this.quickConvert(ticker.last, base, 'USD') + "$"
+  }
+}
+
 GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market, firstTicker, lastTicker, time) {
   diff = lastTicker.volume - firstTicker.volume
   change = this.detektor.volume_change(firstTicker, lastTicker)
-  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market)
+  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(client.name, signal.market) + "$)"
   message += "\nVol. changed by *" + diff.toFixed(2) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
   message += "\nVolume: " + lastTicker.volume.toFixed(4) + " (*" + ((change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
@@ -748,6 +782,8 @@ GanyTheBot.prototype.symbol_hashtag = function(exchange, market) { return '#' + 
 GanyTheBot.prototype.find_subscriber = function(telegram_id) {
   return _.find(this.subscribers, (sub) => { return sub.telegram_id == telegram_id } )
 }
+
+GanyTheBot.prototype.isFiatSymbol = function(symbol) { return FIAT_SYMBOLS.indexOf(symbol) != -1}
 
 GanyTheBot.prototype.find_subscriber_by_username = function(username) {
   return _.find(this.subscribers, (sub) => { return sub.username == username } )
