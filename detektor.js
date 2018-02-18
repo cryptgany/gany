@@ -130,6 +130,7 @@ Detektor.prototype.updateConversionTable = function(exchange, market, data) {
 
 // Mathematical conversion, ignoring any other factor
 Detektor.prototype.convert = function(quantity, from, to) {
+  if (from == to) { return quantity }
   if (this.marketExists(from) && this.marketExists(to)) {
     // if we got from and to as base/pair return right away
     if (this.conversionTable[from] && this.conversionTable[from][to]) { return quantity / this.conversionTable[from][to] }
