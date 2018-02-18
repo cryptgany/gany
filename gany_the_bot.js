@@ -289,7 +289,7 @@ GanyTheBot.prototype.start = function() {
       subscriber = this.find_subscriber(msg.from.id)
     }
     let markets = this.detektor.getAllMarkets(subscriber)
-    markets = this.reduceMarketsByVolume(markets, 5)
+    markets = this.reduceMarketsByVolume(markets)
     message = markets.map((market_info) => {
       return this.telegram_post_volume_analysis(market_info.exchange, market_info.market, market_info.ticker)
     }).join("\n\n")
