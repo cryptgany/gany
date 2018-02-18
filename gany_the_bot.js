@@ -282,6 +282,20 @@ GanyTheBot.prototype.start = function() {
     this.send_message(msg.chat.id, message)
   })
 
+  this.telegram_bot.onText(/^\/top/, (msg, match) => {
+    let subscriber = undefined
+    let message = undefined
+    if (this.is_subscribed(msg.from.id)) {
+      subscriber = this.find_subscriber(msg.from.id)
+    }
+    let markets = this.detektor.getAllMarkets(subscriber)
+    markets = this.reduceMarketsByVolume(markets, 5)
+    message = markets.map((market_info) => {
+      return this.telegram_post_volume_analysis(market_info.exchange, market_info.market, market_info.ticker)
+    }).join("\n\n")
+    this.send_message(msg.chat.id, message)
+  })
+
   this.telegram_bot.onText(/^\/(stop|block)/, (msg, match) => {
     if (this.is_subscribed(msg.chat.id) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
       this.block_subscriber(msg.chat.id)
@@ -671,9 +685,9 @@ GanyTheBot.prototype.priceInUSD = function(exchange, market) {
   return this.detektor.convert(1, ExchangeList[exchange].symbol_for(market), 'USDT').toFixed(3)
 }
 
-GanyTheBot.prototype.reduceMarketsByVolume = function(markets) {
+GanyTheBot.prototype.reduceMarketsByVolume = function(markets, amount = 4) {
   markets = markets.sort((a,b) => this.btcVolumeFor(b) - this.btcVolumeFor(a))
-  return markets.slice(0, 4)
+  return markets.slice(0, amount)
 }
 GanyTheBot.prototype.reduceMarketsByImportance = function(markets) {
   markets.sort((a,b) => EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange])
