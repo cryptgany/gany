@@ -153,6 +153,11 @@ subscriberSchema.methods.subscriptionDaysLeft = function() {
   }
 }
 
+subscriberSchema.methods.isMod = function() {
+  // adam or me
+  return this.telegram_id == process.env.PERSONAL_CHANNEL || this.telegram_id == process.env.ADAM_CHANNEL
+}
+
 SubscriberModel = mongoose.model('subscribers', subscriberSchema)
 
 module.exports = SubscriberModel;

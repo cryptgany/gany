@@ -38,6 +38,7 @@ ExchangeList.Cryptopia.cycle_time = 20
 
 ExchangeList.CoinExchange.ticker_speed = 10
 ExchangeList.CoinExchange.cycle_time = 20
+ExchangeList.CoinExchange.modOnly = true
 
 
 module.exports = ExchangeList

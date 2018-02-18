@@ -17,6 +17,7 @@ class TickerHandler {
 
         this.minute_counter_by_exchange_market = {} // counts 1 per ticker update per exchange per market, once equals to one minute data gets stored
         this.premiumClients = Object.keys(ExchangeList).filter((name)=>{ return ExchangeList[name].premiumOnly }).map((name) => { return ExchangeList[name].name })
+        this.modClients = Object.keys(ExchangeList).filter((name)=>{ return ExchangeList[name].modOnly }).map((name) => { return ExchangeList[name].name })
 
         // configurations
         this.last_minute_data_cleaning_time = 20 // clean ever X minutes
@@ -79,6 +80,13 @@ class TickerHandler {
 
     isPremiumExchange(exchange) {
         return this.premiumClients.indexOf(exchange) != -1
+    }
+
+    /*
+    / Exchanges only open for MODS for testing purposes
+    */
+    isModExchange(exchange) {
+        return this.modClients.indexOf(exchange) != -1
     }
 
     getLastMinuteThElement(exchange, market, time) {
@@ -168,8 +176,8 @@ class TickerHandler {
             markets = markets.filter((market) => { return subscriber.exchanges[market.exchange] && subscriber.markets[this.getMarketType(market)]})
         if (subscriber && subscriber.subscription_status == false) // filter premium exchanges
             markets = markets.filter((market) => { return !this.isPremiumExchange(market.exchange)}) // only non prem
-        // if ((subscriber && (subscriber.telegram_id != 65954004 && subscriber.telegram_id != 403276254)) || !subscriber)
-        //     markets = markets.filter((market) => { return market.exchange != 'EtherDelta' }) // only mods
+        if (subscriber && !subscriber.isMod()) // filter mod only exchanges
+            markets = markets.filter((market) => { return !this.isModExchange(market.exchange)}) // only non mod
 
         return markets
     }
@@ -185,8 +193,8 @@ class TickerHandler {
             markets = markets.filter((market) => { return subscriber.exchanges[market.exchange] && subscriber.markets[this.getMarketType(market)]})
         if (subscriber && subscriber.subscription_status == false) // filter premium exchanges
             markets = markets.filter((market) => { return !this.isPremiumExchange(market.exchange)}) // only non prem
-        // if ((subscriber && (subscriber.telegram_id != 65954004 && subscriber.telegram_id != 403276254)) || !subscriber)
-        //     markets = markets.filter((market) => { return market.exchange != 'EtherDelta' }) // only mods
+        if (subscriber && !subscriber.isMod()) // filter mod only exchanges
+            markets = markets.filter((market) => { return !this.isModExchange(market.exchange)}) // only non mod
 
         return markets
     }

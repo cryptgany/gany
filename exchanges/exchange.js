@@ -18,6 +18,7 @@ class AbstractExchange {
         this.markets = []
         this.lastData = {}
         this.premiumOnly = false
+        this.modOnly = false
     }
 
     /*
