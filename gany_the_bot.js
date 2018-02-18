@@ -30,6 +30,18 @@ EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart firs
   CoinExchange: 9,
   Huobi: 10,
 }
+EXCHANGES_CONVERSION = { // there should be a better way of doing this
+  BITTREX: 'Bittrex',
+  BINANCE: 'Binance',
+  KRAKEN: 'Kraken',
+  POLONIEX: 'Poloniex',
+  CRYPTOPIA: 'Cryptopia',
+  YOBIT: 'Yobit',
+  KUCOIN: 'Kucoin',
+  ETHERDELTA: 'EtherDelta',
+  COINEXCHANGE: 'CoinExchange',
+  HUOBI: 'Huobi'
+}
 
 function GanyTheBot(logger) {
   this.logger = logger
@@ -287,14 +299,19 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/^\/top/, (msg, match) => {
     let subscriber = undefined
     let message = undefined
+    let exchange = EXCHANGES_CONVERSION[msg.text.toUpperCase().split(' ')[1]] || 'All'
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
     }
-    let markets = this.detektor.getAllMarkets(subscriber)
-    markets = this.reduceMarketsByVolume(markets)
-    message = markets.map((market_info) => {
-      return this.telegram_post_volume_analysis(market_info.exchange, market_info.market, market_info.ticker)
-    }).join("\n\n")
+    let markets = this.detektor.getAllMarkets(subscriber, exchange)
+    if (markets.length == 0) {
+      message = 'Not found.'
+    } else {
+      markets = this.reduceMarketsByVolume(markets)
+      message = markets.map((market_info) => {
+        return this.telegram_post_volume_analysis(market_info.exchange, market_info.market, market_info.ticker)
+      }).join("\n\n")
+    }
     this.send_message(msg.chat.id, message)
   })
 

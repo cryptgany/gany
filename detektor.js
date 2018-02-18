@@ -172,8 +172,8 @@ Detektor.prototype.get_market_data = function(market_name, subscriber) {
   return this.ticker_handler.get_market_data(market_name, subscriber)
 }
 
-Detektor.prototype.getAllMarkets = function(subscriber) {
-  return this.ticker_handler.getAllMarkets(subscriber)
+Detektor.prototype.getAllMarkets = function(subscriber, exchange) {
+  return this.ticker_handler.getAllMarkets(subscriber, exchange)
 }
 
 Detektor.prototype.getMarketDataWithTime = function(market_name, time, subscriber) {

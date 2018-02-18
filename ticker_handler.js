@@ -182,13 +182,20 @@ class TickerHandler {
         return markets
     }
 
-    getAllMarkets(subscriber) {
+    getAllMarkets(subscriber, _exchange) {
         let markets = []
-        Object.keys(this.current_data).forEach((exchange) => {
-            Object.keys(this.current_data[exchange]).forEach((market) => {
-                markets.push({exchange: exchange, market: market, ticker: this.current_data[exchange][market]})
+        if (_exchange == 'All') {
+            Object.keys(this.current_data).forEach((exchange) => {
+                Object.keys(this.current_data[exchange]).forEach((market) => {
+                    markets.push({exchange: exchange, market: market, ticker: this.current_data[exchange][market]})
+                })
             })
-        })
+        } else {
+            if (this.current_data[_exchange])
+                Object.keys(this.current_data[_exchange]).forEach((market) => {
+                    markets.push({exchange: _exchange, market: market, ticker: this.current_data[_exchange][market]})
+                })
+        }
         if (subscriber) // filter by configuration
             markets = markets.filter((market) => { return subscriber.exchanges[market.exchange] && subscriber.markets[this.getMarketType(market)]})
         if (subscriber && subscriber.subscription_status == false) // filter premium exchanges
