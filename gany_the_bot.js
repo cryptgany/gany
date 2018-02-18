@@ -171,11 +171,6 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/^\/see/i, (msg, match) => {
-    if (!msg.text.match(SEE_REGEX_WITH_ONE_PARAM) && !(msg.text.match(SEE_REGEX_WITH_TWO_PARAMS)))
-      this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30')
-  })
-
   /*
   / USAGE
   / /convert 10 neo eth (10 neo to eth)
@@ -205,6 +200,11 @@ GanyTheBot.prototype.start = function() {
       }
     }
     this.send_message(msg.chat.id, message)
+  })
+
+  this.telegram_bot.onText(/^\/see/i, (msg, match) => {
+    if (!msg.text.match(SEE_REGEX_WITH_ONE_PARAM) && !(msg.text.match(SEE_REGEX_WITH_TWO_PARAMS)))
+      this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30')
   })
 
   this.telegram_bot.onText(SEE_REGEX_WITH_ONE_PARAM, (msg, match) => { // common users /see
@@ -255,6 +255,10 @@ GanyTheBot.prototype.start = function() {
           this.logger.error("Error fetching market with data:", err)
       })
     }
+  })
+
+  this.telegram_bot.onText(/^\/price/, (msg, match) => {
+    
   })
 
   this.telegram_bot.onText(/^\/(stop|block)/, (msg, match) => {
