@@ -657,7 +657,7 @@ GanyTheBot.prototype.previous_signal = async function(exchange, market, callback
 
 GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
-  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market) + " (" + this.priceInUSD(client.name, signal.market) + ")"
+  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market) + " (" + this.priceInUSD(client.name, signal.market, signal.last_ticker.last) + ")"
   message += "\nVol. up by *" + diff.humanize() + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
   message += "\nVolume: " + signal.last_ticker.volume.humanize() + " (*" + ((signal.change - 1) * 100).humanize() + "%*)"
   message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
@@ -673,7 +673,7 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
 }
 
 GanyTheBot.prototype.telegram_post_volume_analysis = function(exchange, market, ticker_info) {
-  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market) + ")"
+  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, ticker_info.last) + ")"
   message += "\nB: " + ticker_info.bid.toFixed(8)
   message += "\nA: " + ticker_info.ask.toFixed(8)
   message += "\nL: " + ticker_info.last.toFixed(8)
@@ -685,8 +685,12 @@ GanyTheBot.prototype.telegram_post_volume_analysis = function(exchange, market, 
 
 GanyTheBot.prototype.quickConvert = function(quantity, from, to) { return this.detektor.convert(quantity, from, to)}
 
-GanyTheBot.prototype.priceInUSD = function(exchange, market) {
-  return this.detektor.convert(1, ExchangeList[exchange].symbol_for(market), 'USDT').humanizeCurrency()
+GanyTheBot.prototype.priceInUSD = function(exchange, market, price) {
+  let base = ExchangeList[exchange].volume_for(market)
+  // let symbol = ExchangeList[exchange].symbol_for(market)
+  let covnertedBase = this.quickConvert(price, base, 'USDT')
+  if (!covnertedBase) { return "" } // couldnt process base to USD
+  return covnertedBase.humanizeCurrency('USD')
 }
 
 GanyTheBot.prototype.reduceMarketsByVolume = function(markets, amount = 4) {
@@ -773,20 +777,19 @@ GanyTheBot.prototype.baseConvert = function(exchange, market, quantity, price, f
 GanyTheBot.prototype.telegramPostPriceCheck = function(exchange, market, ticker) {
   let message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market)
   let base = ExchangeList[exchange].volume_for(market)
-  let symbol = ExchangeList[exchange].symbol_for(market)
-  let covnertedBase = this.quickConvert(ticker.last, base, 'USD')
+  let covnertedBase = this.quickConvert(ticker.last, base, 'USDT')
   if (!covnertedBase) { return "" } // couldnt process base to USD
   if (this.isFiatSymbol(base)) {
     return message + "\nPrice(" + base + "): " + ticker.last.humanizeCurrency(base)
   } else {
-    return message + "\nPrice(BTC): " + ticker.last.humanize() + ", Price(USD): " + covnertedBase.humanizeCurrency()
+    return message + "\nPrice(BTC): " + ticker.last.humanize() + ", Price(USD): " + covnertedBase.humanizeCurrency('USD')
   }
 }
 
 GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market, firstTicker, lastTicker, time) {
   diff = lastTicker.volume - firstTicker.volume
   change = this.detektor.volume_change(firstTicker, lastTicker)
-  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market) + ")"
+  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, lastTicker.last) + ")"
   message += "\nVol. changed by *" + diff.humanize() + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
   message += "\nVolume: " + lastTicker.volume.humanize() + " (*" + ((change - 1) * 100).humanize() + "%*)"
   message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
