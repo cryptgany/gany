@@ -25,7 +25,7 @@ class CoinExchange extends AbstractExchange {
 
     storeMarketInfo(marketsInfo) {
         marketsInfo.map((marketInfo) => {
-            this.marketsInfo[marketInfo.MarketID] = marketInfo.BaseCurrencyCode + "-" + marketInfo.MarketAssetCode
+            this.marketsInfo[marketInfo.MarketID] = marketInfo.MarketAssetCode + "-" + marketInfo.BaseCurrencyCode
         })
     }
 
@@ -69,8 +69,10 @@ class CoinExchange extends AbstractExchange {
     }
 
     static market_url(market) {
-        return "https://www.coinexchange.io/market/" + market.split('-').reverse().join('/')
+        return "https://www.coinexchange.io/market/" + market.split('-').join('/')
     }
+    static volume_for(pair) { return pair.split("-")[1] }
+    static symbol_for(pair) { return pair.split("-")[0] }
 
     _normalize_ticker_data(data) {
         return {

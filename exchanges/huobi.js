@@ -33,7 +33,7 @@ class Huobi extends AbstractExchange {
 
     storeMarketInfo(marketsInfo) {
         return marketsInfo.map((marketInfo) => {
-            this.marketsInfo[marketInfo['base-currency'] + marketInfo['quote-currency']] = marketInfo['quote-currency'].toUpperCase() + '-' + marketInfo['base-currency'].toUpperCase()
+            this.marketsInfo[marketInfo['base-currency'] + marketInfo['quote-currency']] = marketInfo['base-currency'].toUpperCase() + '-' + marketInfo['quote-currency'].toUpperCase()
         })
     }
 
@@ -45,7 +45,7 @@ class Huobi extends AbstractExchange {
         this.getMarketInfo().then((result) => {
             this.storeMarketInfo(result.data)
             this.getMarketData()
-        }).catch((e) => { this.logger.error("Error updating markets for CoinExchange", e);  }) // either way send last info we had to not change ticker data order
+        }).catch((e) => { this.logger.error("Error updating markets for CoinExchange", e); this.emitAllData() }) // either way send last info we had to not change ticker data order
     }
 
     marketList() {
@@ -53,7 +53,7 @@ class Huobi extends AbstractExchange {
     }
 
     emitAllData() {
-    	// loops and emits all, used for when something fails
+		Object.keys(this.marketsData).forEach((marketName) => { this.emitData(marketName) })
     }
 
     emitData(market) {
@@ -73,8 +73,10 @@ class Huobi extends AbstractExchange {
     }
 
     static market_url(market) {
-    	return "https://www.huobi.pro/" + market.toLowerCase().split('-').reverse().join('_') + "/exchange/"
+    	return "https://www.huobi.pro/" + market.toLowerCase().split('-').join('_') + "/exchange/"
     }
+    static volume_for(pair) { return pair.split("-")[1] }
+    static symbol_for(pair) { return pair.split("-")[0] }
 
     _normalize_ticker_data(data) {
         return {
