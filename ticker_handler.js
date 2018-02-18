@@ -174,9 +174,9 @@ class TickerHandler {
         })
         if (subscriber) // filter by configuration
             markets = markets.filter((market) => { return subscriber.exchanges[market.exchange] && subscriber.markets[this.getMarketType(market)]})
-        if (subscriber && subscriber.subscription_status == false) // filter premium exchanges
+        if (!subscriber || subscriber.subscription_status == false) // filter premium exchanges
             markets = markets.filter((market) => { return !this.isPremiumExchange(market.exchange)}) // only non prem
-        if (subscriber && !subscriber.isMod()) // filter mod only exchanges
+        if (!subscriber || !subscriber.isMod()) // filter mod only exchanges
             markets = markets.filter((market) => { return !this.isModExchange(market.exchange)}) // only non mod
 
         return markets
