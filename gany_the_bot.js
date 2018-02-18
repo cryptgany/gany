@@ -657,7 +657,7 @@ GanyTheBot.prototype.priceInUSD = function(exchange, market) {
 }
 
 GanyTheBot.prototype.reduceMarketsByVolume = function(markets) {
-  markets.sort((a,b) => this.btcVolumeFor(a).volume < this.btcVolumeFor(b).volume)
+  markets.sort((a,b) => this.btcVolumeFor(a) < this.btcVolumeFor(b))
   return markets.slice(0, 4)
 }
 GanyTheBot.prototype.reduceMarketsByImportance = function(markets) {
@@ -666,12 +666,7 @@ GanyTheBot.prototype.reduceMarketsByImportance = function(markets) {
 }
 GanyTheBot.prototype.btcVolumeFor = function(market) {
   baseVol = ExchangeList[market.exchange].volume_for(market.market)
-  if (baseVol == 'BTC') {
-    return this.baseVolumeFor(market)
-  } else {
-    let conversions = this.convert_curr(this.tickerFor(market).volume, baseVol, 'BTC')
-    return {volume: conversions.markets[0].result}
-  }
+  return this.detektor.convert(this.tickerFor(market).volume, baseVol, 'BTC')
 }
 GanyTheBot.prototype.baseVolumeFor = function(market) {
   let ticker = market.ticker || market.lastTicker
@@ -686,8 +681,8 @@ GanyTheBot.prototype.convert_curr = function(quantity, fromCur, toCur) {
   let markets = this.detektor.get_market_data(market)
   if (markets.length == 0) { // complex
     result.type = 'complex'
-    let fromMarket = this.reduceMarketsByImportance(this.detektor.get_market_data(fromCur + '-BTC'))[0]
-    let toMarkets = this.reduceMarketsByImportance(this.detektor.get_market_data(toCur + '-BTC'))
+    let fromMarket = this.reduceMarketsByVolume(this.detektor.get_market_data(fromCur + '-BTC'))[0]
+    let toMarkets = this.reduceMarketsByVolume(this.detektor.get_market_data(toCur + '-BTC'))
     if (fromMarket && toMarkets.length > 0) {
       // get BTC worth of fromCur
       result.from = this.conversionResult(fromMarket, quantity, fromCur, 'BTC')
@@ -698,7 +693,7 @@ GanyTheBot.prototype.convert_curr = function(quantity, fromCur, toCur) {
     } // the else case is markets = []
   } else { // simple
     result.type = 'simple'
-    this.reduceMarketsByImportance(markets).forEach((market) => {
+    this.reduceMarketsByVolume(markets).forEach((market) => {
       let baseVol = this.baseVolumeFor(market)
       result.markets.push(this.conversionResult(market, quantity, fromCur, toCur))
     })
