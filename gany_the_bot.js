@@ -26,8 +26,9 @@ EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart firs
   Cryptopia: 5,
   Yobit: 6,
   Kucoin: 7,
-  CoinExchange: 8,
-  EtherDelta: 9
+  EtherDelta: 8,
+  CoinExchange: 9,
+  Huobi: 10,
 }
 
 function GanyTheBot(logger) {
