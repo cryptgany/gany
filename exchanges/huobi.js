@@ -73,7 +73,7 @@ class Huobi extends AbstractExchange {
     }
 
     static market_url(market) {
-        return "https://www.coinexchange.io/market/" + market.split('-').reverse().join('/')
+    	return "https://www.huobi.pro/" + market.toLowerCase().split('-').reverse().join('_') + "/exchange/"
     }
 
     _normalize_ticker_data(data) {
