@@ -34,10 +34,12 @@ Object.defineProperty(Array.prototype, 'chunk', {
 / 0.234234982 = 0.234
 / 0.00000030 = 0.0000003
 */
-Number.prototype.humanize = function() {
-  if (this > 1) { return parseFloat(this.toFixed(2)).toLocaleString() }// 2 decimals max
+Number.prototype.humanize = function(options = {}) {
+  if (this > 1) { return parseFloat(this.toFixed(2)).toLocaleString('en-US', options) }// 2 decimals max
+  if (options.style == 'currency') { return symbolFor(options.currency) + this.toFixed(this.decimalPoints()) }
   return this.toFixed(this.decimalPoints())
 }
+Number.prototype.humanizeCurrency = function(currency = 'USD') { return this.humanize({style: 'currency', currency: safeCurrency(currency)})  }
 Number.prototype.decimalPoints = function() {
   let clone = this.toFixed(8)
   if (clone.indexOf('.') == -1)
@@ -47,4 +49,16 @@ Number.prototype.decimalPoints = function() {
       clone = clone.slice(0, -1)
   }
   return clone.split('.')[1].length
+}
+
+safeCurrency = function(cur) {
+  if (cur == 'USDT') return 'USD'
+  if (cur == 'EURT') return 'EUR'
+  return cur
+}
+
+symbolFor = function(cur = 'USD') {
+  if (safeCurrency(cur) == 'USD') return '$'
+  if (safeCurrency(cur) == 'EUR') return '€'
+  if (safeCurrency(cur) == 'GBP') return '£'
 }
