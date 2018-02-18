@@ -2,8 +2,8 @@ const AbstractExchange = require('./exchange');
 const KucoinClient = require('kucoin-api')
 
 class Kucoin extends AbstractExchange {
-    constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, skipVolumes)
+    constructor(logger, pumpEvents, exchangeName) {
+        super(logger, pumpEvents)
         this.client = new KucoinClient()
     }
 
@@ -19,10 +19,7 @@ class Kucoin extends AbstractExchange {
   	};
 
     emitData(data) {
-        data.forEach((record) => {
-            if (record.volValue >= this.skipVolumes)
-                this.pumpEvents.emit('marketupdate', 'TICKER', this.code, record.symbol, this.mapData(record))
-        })
+        data.forEach((record) => { this.pumpEvents.emit('marketupdate', 'TICKER', this.code, record.symbol, this.mapData(record)) })
     }
 
     marketList() {

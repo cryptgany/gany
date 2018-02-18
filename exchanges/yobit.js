@@ -4,8 +4,9 @@ require('dotenv').config();
 var ccxt = require ('ccxt')
 
 class Yobit extends AbstractExchange {
-    constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, skipVolumes)
+    constructor(logger, pumpEvents, exchangeName) {
+        super(logger, pumpEvents)
+        this.skipVolumes = 0.5 // particular for this as we filter hundreds of markets BEFORE actually making requests to yobit
         this.all_markets = [];
         this.market_data = [];
         this.client = ccxt.yobit({

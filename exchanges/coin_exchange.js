@@ -4,8 +4,8 @@ const MARKETS_INFO = 'https://www.coinexchange.io/api/v1/getmarkets'
 const MARKETS_DATA = 'https://www.coinexchange.io/api/v1/getmarketsummaries'
 
 class CoinExchange extends AbstractExchange {
-    constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, skipVolumes)
+    constructor(logger, pumpEvents, exchangeName) {
+        super(logger, pumpEvents)
         this.marketsInfo = {}
         this.marketsData = {}
     }
@@ -44,10 +44,6 @@ class CoinExchange extends AbstractExchange {
             this.storeMarketsData(marketDatas)
             this.emitData()
         }).catch((e) => { this.logger.error("Error updating markets for CoinExchange", e); this.emitData() }) // either way send last info we had to not change ticker data order
-    }
-
-    goodVolumeMarkets() {
-        return this.marketsData.filter((e) => e.volume > this.skipVolumes)
     }
 
     marketList() {

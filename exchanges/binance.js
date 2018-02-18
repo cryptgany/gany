@@ -4,8 +4,8 @@ require('dotenv').config();
 const BinanceClient = require('binance');
 
 class Binance extends AbstractExchange {
-    constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, skipVolumes)
+    constructor(logger, pumpEvents, exchangeName) {
+        super(logger, pumpEvents)
         this.client = new BinanceClient.BinanceRest({
             key: 'api-key', // Get this from your account on binance.com
             secret: 'api-secret', // Same for this

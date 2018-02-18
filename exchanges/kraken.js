@@ -26,8 +26,8 @@ const PairMap = {} // Kraken has their own base volume per each market and it va
 
 class Kraken extends AbstractExchange {
 
-    constructor(logger, pumpEvents, exchangeName,skipVolumes = 0.5){
-        super(logger, pumpEvents, skipVolumes);
+    constructor(logger, pumpEvents, exchangeName){
+        super(logger, pumpEvents);
         this.client = new KrakenClient(key,secret);
     }
 

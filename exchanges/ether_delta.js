@@ -3,8 +3,8 @@ const io = require('socket.io-client');
 const BASE_URL = 'https://socket.etherdelta.com'
 
 class EtherDelta extends AbstractExchange {
-    constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, skipVolumes)
+    constructor(logger, pumpEvents, exchangeName) {
+        super(logger, pumpEvents)
         this.client = io.connect(BASE_URL, { transports: ['websocket'] })
         this.lastData = {}
 
@@ -39,7 +39,7 @@ class EtherDelta extends AbstractExchange {
 
     emitData(data) {
         Object.keys(data).forEach(key => {
-            if (!key.match(/\_0x/) && data[key].baseVolume >= this.skipVolumes) // also skip < 0.5 ETH volumes
+            if (!key.match(/\_0x/))
                 this.pumpEvents.emit('marketupdate', 'TICKER', this.code, this.mapName(key), this.mapData(data[key]))
         });
     }
@@ -49,7 +49,7 @@ class EtherDelta extends AbstractExchange {
     }
 
     marketList() {
-        return Object.keys(this.lastData).filter((key) => {return (!key.match(/\_0x/) && this.lastData[key].baseVolume >= this.skipVolumes)}).map((e)=>{ return this.mapName(e) })
+        return Object.keys(this.lastData).filter((key) => {return (!key.match(/\_0x/))}).map((e)=>{ return this.mapName(e) })
     }
 
     static volume_for(pair) {

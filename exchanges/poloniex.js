@@ -2,8 +2,8 @@ const AbstractExchange = require('./exchange');
 const PoloniexClient = require('poloniex-api-node');
 
 class Poloniex extends AbstractExchange {
-    constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, skipVolumes)
+    constructor(logger, pumpEvents, exchangeName) {
+        super(logger, pumpEvents)
         this.market_data = [];
         this.client = new PoloniexClient('nothing', 'nothing', { socketTimeout: 15000 })
     }
@@ -33,7 +33,7 @@ class Poloniex extends AbstractExchange {
     }
 
     _filter_market(data) {
-        return (data.baseVolume > this.skipVolumes) && (data.isFrozen == '0')
+        return (data.isFrozen == '0')
     }
 
     _normalize_ticker_data(data) {

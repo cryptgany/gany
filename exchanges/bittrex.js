@@ -3,8 +3,8 @@ const BittrexClient = require('node.bittrex.api');
 require('dotenv').config();
 
 class Bittrex extends AbstractExchange {
-    constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, skipVolumes)
+    constructor(logger, pumpEvents, exchangeName) {
+        super(logger, pumpEvents)
         this.client = BittrexClient;
         this.client.options({
             'apikey' : process.env.BITTREX_KEY,

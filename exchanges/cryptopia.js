@@ -2,8 +2,8 @@ const AbstractExchange = require('./exchange');
 var https = require("https")
 
 class Cryptopia extends AbstractExchange {
-    constructor(logger, pumpEvents, exchangeName, skipVolumes = 0.5) {
-        super(logger, pumpEvents, skipVolumes)
+    constructor(logger, pumpEvents, exchangeName) {
+        super(logger, pumpEvents)
         this.all_markets = [];
         this.market_data = [];
     }
@@ -96,7 +96,7 @@ class Cryptopia extends AbstractExchange {
     }
 
     _filter_market(data) {
-        return (data.BaseVolume > this.skipVolumes) && data.Label.match(/BTC/)
+        return data.Label.match(/BTC/)
     }
 
     marketList() {

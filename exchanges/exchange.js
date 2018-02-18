@@ -8,14 +8,13 @@
 */
 class AbstractExchange {
     /* minimun attributes */
-    constructor(logger, pumpEvents, skipVolumes){
+    constructor(logger, pumpEvents){
         this.logger = logger;
         this.pumpEvents = pumpEvents;
         this.exchange_name = this.constructor.name;
         this.ticker_speed = this.constructor.ticker_speed;
         this.cycle_time = this.constructor.cycle_time;
         this.code = this.constructor.name;
-        this.skipVolumes = skipVolumes;
         this.markets = []
         this.lastData = {}
         this.premiumOnly = false
