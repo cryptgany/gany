@@ -214,12 +214,6 @@ GanyTheBot.prototype.start = function() {
       subscriber = this.find_subscriber(msg.from.id)
     }
     let market = msg.text.toUpperCase().replace(/\/SEE\ /, '')
-    if (market == 'ETH')
-      market = 'ETH-BTC'
-    if (market == 'BTC')
-      market = 'BTC-USDT'
-    if (market == 'NEO')
-      market = 'NEO-BTC'
     let markets = this.detektor.get_market_data(market, subscriber)
     if (markets.length == 0)
       message = "Not found."
@@ -240,12 +234,6 @@ GanyTheBot.prototype.start = function() {
     }
     let data = msg.text.toUpperCase().split(' ')
     let market = data[1]
-    if (market == 'ETH')
-      market = 'ETH-BTC'
-    if (market == 'BTC')
-      market = 'BTC-USDT'
-    if (market == 'NEO')
-      market = 'NEO-BTC'
     let time = parseInt(data[2])
     if (time.toString() != data[2] || time < 1 || time > 60 * 6) {
       this.send_message(msg.chat.id, 'Please enter a number between 1 and 360.')
@@ -626,7 +614,7 @@ GanyTheBot.prototype.previous_signal = async function(exchange, market, callback
 
 GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
-  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market) + " (" + this.priceInUSD(client.name, client.market) + "$)"
+  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market) + " (" + this.priceInUSD(client.name, signal.market) + "$)"
   message += "\nVol. up by *" + diff.toFixed(2) + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
   message += "\nVolume: " + signal.last_ticker.volume.toFixed(4) + " (*" + ((signal.change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
@@ -657,7 +645,7 @@ GanyTheBot.prototype.priceInUSD = function(exchange, market) {
 }
 
 GanyTheBot.prototype.reduceMarketsByVolume = function(markets) {
-  markets.sort((a,b) => this.btcVolumeFor(a) < this.btcVolumeFor(b))
+  markets = markets.sort((a,b) => this.btcVolumeFor(b) - this.btcVolumeFor(a))
   return markets.slice(0, 4)
 }
 GanyTheBot.prototype.reduceMarketsByImportance = function(markets) {
