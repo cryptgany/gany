@@ -626,7 +626,7 @@ GanyTheBot.prototype.previous_signal = async function(exchange, market, callback
 
 GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
-  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market) + " (" + this.priceInUSD(exchange, market) + "$)"
+  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market) + " (" + this.priceInUSD(client.name, client.market) + "$)"
   message += "\nVol. up by *" + diff.toFixed(2) + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
   message += "\nVolume: " + signal.last_ticker.volume.toFixed(4) + " (*" + ((signal.change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
