@@ -129,32 +129,25 @@ Detektor.prototype.updateConversionTable = function(exchange, market, data) {
 // Mathematical conversion, ignoring any other factor
 Detektor.prototype.convert = function(quantity, from, to) {
   if (this.marketExists(from) && this.marketExists(to)) {
-    if (this.conversionTable[from]) {// from exists as a base
-      if (this.conversionTable[from][to]) {// to exists as a pair
-        result = quantity / this.conversionTable[from][to]
-        return result
-      }
-      else { // to does not exists as a pair, look for any base that has it, convert to that base, then convert that base to FROM
-        let price = 0
-        let match = Object.keys(this.conversionTable[from]).find((e) => price = this.convert(1, e, to)) // find one of the pairs that can be converted to TO
-        return match ? quantity * (price * this.convert(1, from, match)) : false
-      }
+    // if we got from and to as base/pair return right away
+    if (this.conversionTable[from] && this.conversionTable[from][to]) { return quantity / this.conversionTable[from][to] }
+    if (this.conversionTable[to] && this.conversionTable[to][from]) { return quantity * this.conversionTable[to][from] }
+
+    if (this.conversionTable[from] && !this.conversionTable[from][to]) {// from exists as a base but to is not pair
+      let price = 0
+      let match = Object.keys(this.conversionTable[from]).find((e) => price = this.convert(1, e, to)) // find one of the pairs that can be converted to TO
+      return match ? quantity * (price * this.convert(1, from, match)) : false
     }
-    if (this.conversionTable[to]) { // to is the base
-      if (this.conversionTable[to][from]) {// from exists as pair
-        return quantity * this.conversionTable[to][from]
-      }
-      else { // to is a base but from is not a direct pair, example: convert NEO to CAD CAD: { ETH: 1191.15, BTC: 13491.3 }
-        let price = 0
-        let match = Object.keys(this.conversionTable[to]).find((e) => price = this.convert(1, from, e)) // find one of the pairs that can be converted to TO
-        return match ? quantity * (price / this.convert(1, to,  match)) : false
-      }
+    if (this.conversionTable[to] && !this.conversionTable[to][from]) { // to is the base
+      let price = 0
+      let match = Object.keys(this.conversionTable[to]).find((e) => price = this.convert(1, from, e)) // find one of the pairs that can be converted to TO
+      return match ? quantity * (price / this.convert(1, to,  match)) : false
     }
     // neither to or from are base, we need to find a common base and convert
     // try to find a base for FROM
     let fromBase = Object.keys(this.conversionTable).find((e) => this.conversionTable[e][from])
     if (fromBase) { // if there's no base for any of them then there's no way to convert (error?)
-      fromConvert = this.convert(quantity, from, fromBase)
+      let fromConvert = this.convert(quantity, from, fromBase)
       return this.convert(fromConvert, fromBase, to)
     }
   }
