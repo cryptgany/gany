@@ -626,7 +626,7 @@ GanyTheBot.prototype.previous_signal = async function(exchange, market, callback
 
 GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
-  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market)
+  message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market) + " (" + this.priceInUSD(exchange, market) + "$)"
   message += "\nVol. up by *" + diff.toFixed(2) + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
   message += "\nVolume: " + signal.last_ticker.volume.toFixed(4) + " (*" + ((signal.change - 1) * 100).toFixed(2) + "%*)"
   message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
@@ -642,7 +642,7 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
 }
 
 GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, ticker_info) {
-  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market)
+  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market) + "$)"
   message += "\nB: " + ticker_info.bid.toFixed(8)
   message += "\nA: " + ticker_info.ask.toFixed(8)
   message += "\nL: " + ticker_info.last.toFixed(8)
@@ -650,6 +650,10 @@ GanyTheBot.prototype.telegram_post_price_check = function(exchange, market, tick
   if (exchange != 'EtherDelta')
     message += "\n24h H/L: " + ticker_info.high.toFixed(8) + " / " + ticker_info.low.toFixed(8)
   return message
+}
+
+GanyTheBot.prototype.priceInUSD = function(exchange, market) {
+  return this.detektor.convert(1, ExchangeList[exchange].symbol_for(market), 'USDT').toFixed(3)
 }
 
 GanyTheBot.prototype.reduceMarketsByVolume = function(markets) {
