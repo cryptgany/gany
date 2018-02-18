@@ -657,35 +657,35 @@ GanyTheBot.prototype.previous_signal = async function(exchange, market, callback
 GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
   diff = signal.last_ticker.volume - signal.first_ticker.volume
   message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market) + " (" + this.priceInUSD(client.name, signal.market) + "$)"
-  message += "\nVol. up by *" + diff.toFixed(2) + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
-  message += "\nVolume: " + signal.last_ticker.volume.toFixed(4) + " (*" + ((signal.change - 1) * 100).toFixed(2) + "%*)"
-  message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
-  message += "\nA: " + signal.first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.ask, signal.last_ticker.ask) + " " + signal.last_ticker.ask.toFixed(8)
-  message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
+  message += "\nVol. up by *" + diff.humanize() + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
+  message += "\nVolume: " + signal.last_ticker.volume.humanize() + " (*" + ((signal.change - 1) * 100).humanize() + "%*)"
+  message += "\nB: " + signal.first_ticker.bid.humanize() + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.humanize()
+  message += "\nA: " + signal.first_ticker.ask.humanize() + " " + this.telegram_arrow(signal.first_ticker.ask, signal.last_ticker.ask) + " " + signal.last_ticker.ask.humanize()
+  message += "\nL: " + signal.first_ticker.last.humanize() + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.humanize()
   if (client.name != 'EtherDelta')
-    message += "\n24h H/L:" + signal.last_ticker.high.toFixed(8) + " / " + signal.last_ticker.low.toFixed(8)
+    message += "\n24h H/L:" + signal.last_ticker.high.humanize() + " / " + signal.last_ticker.low.humanize()
   if (prev) {
     if (prev.createdAt) { message += "\nLast Alert: " + moment(prev.createdAt).fromNow() }
-    message += "\nLast Alert Price: " + prev.last_ticker.last.toFixed(8)
+    message += "\nLast Alert Price: " + prev.last_ticker.last.humanize()
   }
   return message
 }
 
 GanyTheBot.prototype.telegram_post_volume_analysis = function(exchange, market, ticker_info) {
   message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market) + "$)"
-  message += "\nB: " + ticker_info.bid.toFixed(8)
-  message += "\nA: " + ticker_info.ask.toFixed(8)
-  message += "\nL: " + ticker_info.last.toFixed(8)
-  message += "\nVolume: " + ticker_info.volume.toFixed(4) + " " + ExchangeList[exchange].volume_for(market)
+  message += "\nB: " + ticker_info.bid.humanize()
+  message += "\nA: " + ticker_info.ask.humanize()
+  message += "\nL: " + ticker_info.last.humanize()
+  message += "\nVolume: " + ticker_info.volume.humanize() + " " + ExchangeList[exchange].volume_for(market)
   if (exchange != 'EtherDelta')
-    message += "\n24h H/L: " + ticker_info.high.toFixed(8) + " / " + ticker_info.low.toFixed(8)
+    message += "\n24h H/L: " + ticker_info.high.humanize() + " / " + ticker_info.low.humanize()
   return message
 }
 
 GanyTheBot.prototype.quickConvert = function(quantity, from, to) { return this.detektor.convert(quantity, from, to)}
 
 GanyTheBot.prototype.priceInUSD = function(exchange, market) {
-  return this.detektor.convert(1, ExchangeList[exchange].symbol_for(market), 'USDT').toFixed(3)
+  return this.detektor.convert(1, ExchangeList[exchange].symbol_for(market), 'USDT').humanize()
 }
 
 GanyTheBot.prototype.reduceMarketsByVolume = function(markets, amount = 4) {
@@ -735,14 +735,14 @@ GanyTheBot.prototype.convert_curr = function(quantity, fromCur, toCur) {
 
 GanyTheBot.prototype.convertCurMsg = function(currResult, quantity, fromCur, toCur) {
   message = "[" + currResult.exchange + " - " + currResult.market + "](" + this.detektor.market_url(currResult.exchange, currResult.market) + ")"
-  message += "\n" +  quantity + " " + fromCur + " (" + currResult.price + ") is " + currResult.result.toFixed(8) + " " + toCur + " in " + currResult.exchange
+  message += "\n" +  quantity + " " + fromCur + " (" + currResult.price + ") is " + currResult.result.humanize() + " " + toCur + " in " + currResult.exchange
   return message
 }
 
 GanyTheBot.prototype.convertCurComplexMsg = function(from, currResult, quantity, fromCur, toCur) {
   message = "[" + from.exchange + " - " + from.market + "](" + this.detektor.market_url(from.exchange, from.market) + ") -> "
   message += "[" + currResult.exchange + " - " + currResult.market + "](" + this.detektor.market_url(currResult.exchange, currResult.market) + ")"
-  message += "\n" +  quantity + " " + fromCur + " (" + from.price + ") is " + currResult.result.toFixed(8) + " " + toCur + " (" + currResult.price + ")"
+  message += "\n" +  quantity + " " + fromCur + " (" + from.price + ") is " + currResult.result.humanize() + " " + toCur + " (" + currResult.price + ")"
   return message
 }
 
@@ -774,9 +774,9 @@ GanyTheBot.prototype.telegramPostPriceCheck = function(exchange, market, ticker)
   let base = ExchangeList[exchange].volume_for(market)
   let symbol = ExchangeList[exchange].symbol_for(market)
   if (this.isFiatSymbol(base)) {
-    return message + "\nPrice(" + base + "): " + ticker.last + "$"
+    return message + "\nPrice(" + base + "): " + ticker.last.humanize() + "$"
   } else {
-    return message + "\nPrice(BTC): " + ticker.last + ", Price(USD): " + this.quickConvert(ticker.last, base, 'USD') + "$"
+    return message + "\nPrice(BTC): " + ticker.last.humanize() + ", Price(USD): " + this.quickConvert(ticker.last, base, 'USD').humanize() + "$"
   }
 }
 
@@ -784,13 +784,13 @@ GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market,
   diff = lastTicker.volume - firstTicker.volume
   change = this.detektor.volume_change(firstTicker, lastTicker)
   message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market) + "$)"
-  message += "\nVol. changed by *" + diff.toFixed(2) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
-  message += "\nVolume: " + lastTicker.volume.toFixed(4) + " (*" + ((change - 1) * 100).toFixed(2) + "%*)"
-  message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
-  message += "\nA: " + firstTicker.ask.toFixed(8) + " " + this.telegram_arrow(firstTicker.ask, lastTicker.ask) + " " + lastTicker.ask.toFixed(8)
-  message += "\nL: " + firstTicker.last.toFixed(8) + " " + this.telegram_arrow(firstTicker.last, lastTicker.last) + " " + lastTicker.last.toFixed(8)
+  message += "\nVol. changed by *" + diff.humanize() + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
+  message += "\nVolume: " + lastTicker.volume.humanize() + " (*" + ((change - 1) * 100).humanize() + "%*)"
+  message += "\nB: " + firstTicker.bid.humanize() + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.humanize()
+  message += "\nA: " + firstTicker.ask.humanize() + " " + this.telegram_arrow(firstTicker.ask, lastTicker.ask) + " " + lastTicker.ask.humanize()
+  message += "\nL: " + firstTicker.last.humanize() + " " + this.telegram_arrow(firstTicker.last, lastTicker.last) + " " + lastTicker.last.humanize()
   if (exchange != 'EtherDelta')
-    message += "\n24h H/L: " + lastTicker.high.toFixed(8) + " / " + lastTicker.low.toFixed(8)
+    message += "\n24h H/L: " + lastTicker.high.humanize() + " / " + lastTicker.low.humanize()
   return message
 }
 
