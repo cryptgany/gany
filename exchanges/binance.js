@@ -39,11 +39,10 @@ class Binance extends AbstractExchange {
             if (err || data == undefined || data.filter == undefined) {
                 this.logger.error("Error refreshing binance markets:", err)
             } else {
-                let filteredData = data.filter((e) => { return e.symbol.match(/(ETH|BTC)$/i)}) // only ETH/BTC markets
-                filteredData.forEach((data) => {
+                data.forEach((data) => {
                     this.pumpEvents.emit('marketupdate', 'TICKER', this.code, this._normalizeMarketName(data.symbol), this._normalize_ticker_data(data));
                 })
-                this.markets = this._normalizeMarketNames(filteredData)
+                this.markets = this._normalizeMarketNames(data)
             }
         }, 'api/v1/ticker/24hr');
     }

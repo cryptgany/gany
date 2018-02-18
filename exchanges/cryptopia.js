@@ -19,10 +19,7 @@ class Cryptopia extends AbstractExchange {
             } else {
                 this.markets = tickers.map((e) => { return e.Label.replace(/\//, '-') })
                 tickers.forEach((ticker) => {
-                    if (this._filter_market(ticker)) {
-                        let market = ticker.Label
-                        this.pumpEvents.emit('marketupdate', 'TICKER', this.code, market.replace(/\//, '-'), this._normalize_ticker_data(ticker));
-                    }
+                    this.pumpEvents.emit('marketupdate', 'TICKER', this.code, ticker.Label.replace(/\//, '-'), this._normalize_ticker_data(ticker));
                 })
             }
         })
@@ -93,10 +90,6 @@ class Cryptopia extends AbstractExchange {
             this.logger.error("Could not parse json", e); // error in the above string (in this case, yes)!
         }
         return parsed_json;
-    }
-
-    _filter_market(data) {
-        return data.Label.match(/BTC/)
     }
 
     marketList() {

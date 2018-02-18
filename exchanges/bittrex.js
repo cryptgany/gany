@@ -37,10 +37,7 @@ class Bittrex extends AbstractExchange {
         this.markets = []
         this.get_markets((info) => {
             if (info.result) {
-                info.result.forEach((market_info) => {
-                    if (market_info.MarketName.match(/^(BTC|ETH|(USDT\-ETH|USDT\-BTC))/) && !market_info.MarketName.match(/BITCNY/) && market_info.BaseVolume >= this.skipVolumes)
-                        this.markets.push(market_info.MarketName);
-                });
+                info.result.forEach((market_info) => { this.markets.push(market_info.MarketName); });
             } else {
                 this.logger.error("Error trying to fetch data from bittrex:", info)
             }
