@@ -40,7 +40,8 @@ EXCHANGES_CONVERSION = { // there should be a better way of doing this
   KUCOIN: 'Kucoin',
   ETHERDELTA: 'EtherDelta',
   COINEXCHANGE: 'CoinExchange',
-  HUOBI: 'Huobi'
+  HUOBI: 'Huobi',
+  ALL: 'All'
 }
 
 function GanyTheBot(logger) {
@@ -299,7 +300,7 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/^\/top/, (msg, match) => {
     let subscriber = undefined
     let message = undefined
-    let exchange = EXCHANGES_CONVERSION[msg.text.toUpperCase().split(' ')[1]] || 'All'
+    let exchange = EXCHANGES_CONVERSION[msg.text.toUpperCase().split(' ')[1] || 'ALL']
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
     }
