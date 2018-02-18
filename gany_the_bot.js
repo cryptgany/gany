@@ -595,7 +595,7 @@ GanyTheBot.prototype.notify_user_got_confirmed = function(subscriber) {
 GanyTheBot.prototype.send_signal = function(client, signal) {
   this.previous_signal(signal.exchange, signal.market, (prev) => {
     text = this.telegram_post_signal(client, signal, prev)
-    this.logger.log(text)
+    // this.logger.log(text)
     if (client.name == 'PRIVATEEX') {
       this.message_gods(text); this.message_mods(text);
     } else {
