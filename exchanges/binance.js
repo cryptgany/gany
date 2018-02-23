@@ -58,7 +58,7 @@ class Binance extends AbstractExchange {
     }
 
     _normalizeMarketName(name) {
-        return name.split(/(ETH|BTC)$/i).slice(0,2).join('-')
+        return name.split(/(ETH|BTC|BNB|USDT)$/i).slice(0,2).join('-')
     }
 
     _normalize_ticker_data(data) {
