@@ -22,7 +22,7 @@ class IDEX extends AbstractExchange {
 			try {
 				let _marketsData = {}
 				Object.keys(marketsData).forEach((name) => {
-					if (name.match(/^ETH/) && marketsData[name].last != 'N/A') {_marketsData[name] = marketsData[name]}
+					if (name.match(/^ETH/) && marketsData[name].last != 'N/A' && marketsData[name].baseVolume != '0') { _marketsData[name] = marketsData[name]}
 				})
 				resolve(_marketsData)
 			} catch(e) { this.logger.error("Error filtering markets for IDEX"); reject(e) }
