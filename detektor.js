@@ -127,7 +127,8 @@ Detektor.prototype.updateConversionTable = function(exchange, market, data) {
 }
 
 // Mathematical conversion, ignoring any other factor
-Detektor.prototype.convert = function(quantity, from, to) {
+Detektor.prototype.convert = function(quantity, from, to, stack) {
+  if (stack >= 3) { return false } // max_stack = 3
   if (from == to) { return quantity }
   if (this.marketExists(from) && this.marketExists(to)) {
     // if we got from and to as base/pair return right away
@@ -136,20 +137,20 @@ Detektor.prototype.convert = function(quantity, from, to) {
 
     if (this.conversionTable[from] && !this.conversionTable[from][to]) {// from exists as a base but to is not pair
       let price = 0
-      let match = Object.keys(this.conversionTable[from]).find((e) => price = this.convert(1, e, to)) // find one of the pairs that can be converted to TO
-      return match ? quantity * (price * this.convert(1, from, match)) : false
+      let match = Object.keys(this.conversionTable[from]).find((e) => price = this.convert(1, e, to, stack+1)) // find one of the pairs that can be converted to TO
+      return match ? quantity * (price * this.convert(1, from, match, stack+1)) : false
     }
     if (this.conversionTable[to] && !this.conversionTable[to][from]) { // to is the base
       let price = 0
-      let match = Object.keys(this.conversionTable[to]).find((e) => price = this.convert(1, from, e)) // find one of the pairs that can be converted to TO
-      return match ? quantity * (price / this.convert(1, to,  match)) : false
+      let match = Object.keys(this.conversionTable[to]).find((e) => price = this.convert(1, from, e, stack+1)) // find one of the pairs that can be converted to TO
+      return match ? quantity * (price / this.convert(1, to,  match, stack+1)) : false
     }
     // neither to or from are base, we need to find a common base and convert
     // try to find a base for FROM
     let fromBase = Object.keys(this.conversionTable).find((e) => this.conversionTable[e][from])
     if (fromBase) { // if there's no base for any of them then there's no way to convert (error?)
-      let fromConvert = this.convert(quantity, from, fromBase)
-      return this.convert(fromConvert, fromBase, to)
+      let fromConvert = this.convert(quantity, from, fromBase, stack+1)
+      return this.convert(fromConvert, fromBase, to, stack+1)
     }
   }
 }
