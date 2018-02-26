@@ -27,6 +27,7 @@ let etherDelta = new ExchangeList.EtherDelta(logger, pump_events);
 let kucoin = new ExchangeList.Kucoin(logger, pump_events);
 let coin_exchange = new ExchangeList.CoinExchange(logger, pump_events);
 let huobi = new ExchangeList.Huobi(logger, pump_events);
+let idex = new ExchangeList.IDEX(logger, pump_events);
 var database = new Database();
 var wallet = new Wallet(logger, gany_the_bot);
 
@@ -45,6 +46,7 @@ if (process.env.ENVIRONMENT == 'production' || process.env.ENVIRONMENT == 'testi
   kucoin.watch()
   coin_exchange.watch()
   huobi.watch()
+  idex.watch()
 }
 Payment.process_payments()
 gany_the_bot.expire_expired_users()
@@ -79,6 +81,9 @@ rules = {
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.10 && matcher.last_change(first_ticker, last_ticker) > 1.025 }
   ],
   "Huobi": [
+    (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.10 && matcher.last_change(first_ticker, last_ticker) > 1.025 }
+  ],
+  "IDEX": [
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.10 && matcher.last_change(first_ticker, last_ticker) > 1.025 }
   ]
 }

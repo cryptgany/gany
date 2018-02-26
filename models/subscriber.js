@@ -27,7 +27,8 @@ var subscriberSchema = mongoose.Schema({
       EtherDelta: { type: Boolean, default: true },
       Kucoin: { type: Boolean, default: true },
       CoinExchange: { type: Boolean, default: true },
-      Huobi: { type: Boolean, default: true }
+      Huobi: { type: Boolean, default: true },
+      IDEX: { type: Boolean, default: true },
     },
     markets: {
       BTC:  { type: Boolean, default: true },

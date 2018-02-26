@@ -29,6 +29,7 @@ EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart firs
   EtherDelta: 8,
   CoinExchange: 9,
   Huobi: 10,
+  IDEX: 11,
 }
 EXCHANGES_CONVERSION = { // there should be a better way of doing this
   BITTREX: 'Bittrex',
@@ -41,6 +42,7 @@ EXCHANGES_CONVERSION = { // there should be a better way of doing this
   ETHERDELTA: 'EtherDelta',
   COINEXCHANGE: 'CoinExchange',
   HUOBI: 'Huobi',
+  IDEX: 'IDEX',
   ALL: 'All'
 }
 

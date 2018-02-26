@@ -9,6 +9,7 @@ var ExchangeList = {
 	Kucoin: require('./exchanges/kucoin'),
 	CoinExchange: require('./exchanges/coin_exchange'),
 	Huobi: require('./exchanges/huobi'),
+	IDEX: require('./exchanges/idex'),
 }
 
 // Refactor me, im too tired to do it
@@ -44,6 +45,10 @@ ExchangeList.CoinExchange.modOnly = true
 ExchangeList.Huobi.ticker_speed = 10
 ExchangeList.Huobi.cycle_time = 20
 ExchangeList.Huobi.modOnly = true
+
+ExchangeList.IDEX.ticker_speed = 10
+ExchangeList.IDEX.cycle_time = 20
+ExchangeList.IDEX.modOnly = true
 
 
 module.exports = ExchangeList
