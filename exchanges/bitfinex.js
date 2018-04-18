@@ -66,7 +66,7 @@ class Bitfinex extends AbstractExchange {
         return {
             high: parseFloat(data[9]),
             low: parseFloat(data[10]),
-            volume: parseFloat(data[8]),
+            volume: parseFloat(data[8] * data[7]),
             last: parseFloat(data[7]),
             ask: parseFloat(data[3]),
             bid: parseFloat(data[1])
