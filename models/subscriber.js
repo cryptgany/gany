@@ -29,6 +29,7 @@ var subscriberSchema = mongoose.Schema({
       CoinExchange: { type: Boolean, default: true },
       Huobi: { type: Boolean, default: true },
       IDEX: { type: Boolean, default: true },
+      Bitfinex: { type: Boolean, default: true },
     },
     markets: {
       BTC:  { type: Boolean, default: true },

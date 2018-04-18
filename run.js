@@ -28,6 +28,7 @@ let kucoin = new ExchangeList.Kucoin(logger, pump_events);
 let coin_exchange = new ExchangeList.CoinExchange(logger, pump_events);
 let huobi = new ExchangeList.Huobi(logger, pump_events);
 let idex = new ExchangeList.IDEX(logger, pump_events);
+let bitfinex = new ExchangeList.Bitfinex(logger, pump_events);
 var database = new Database();
 var wallet = new Wallet(logger, gany_the_bot);
 
@@ -48,6 +49,7 @@ if (process.env.ENVIRONMENT == 'production' || process.env.ENVIRONMENT == 'testi
     coin_exchange.watch()
     huobi.watch()
     idex.watch()
+    bitfinex.watch()
   }, 5000)
 }
 Payment.process_payments()
@@ -87,7 +89,10 @@ rules = {
   ],
   "IDEX": [
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.10 && matcher.last_change(first_ticker, last_ticker) > 1.025 }
-  ]
+  ],
+  "Bitfinex": [
+    (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.25 }
+  ],
 }
 
 detektor = new Detektor(logger, gany_the_bot, pump_events, database, rules)
