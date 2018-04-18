@@ -14,6 +14,8 @@ class Bitfinex extends AbstractExchange {
         }).catch((err) => { this.logger.error("COULD NOT INITIALIZE BITFINEX: ", err) });
     }
 
+    static volume_for(pair) { return pair.split("-")[1] }
+    static symbol_for(pair) { return pair.split("-")[0] }
     static market_url(market) {
         return "https://www.bitfinex.com/t/" + market.replace(/\-/,':')
     }
