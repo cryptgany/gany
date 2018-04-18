@@ -43,11 +43,11 @@ ExchangeList.CoinExchange.ticker_speed = 10
 ExchangeList.CoinExchange.cycle_time = 20
 ExchangeList.CoinExchange.modOnly = true
 
-ExchangeList.Huobi.ticker_speed = 10
+ExchangeList.Huobi.ticker_speed = 20
 ExchangeList.Huobi.cycle_time = 20
 ExchangeList.Huobi.modOnly = true
 
-ExchangeList.IDEX.ticker_speed = 10
+ExchangeList.IDEX.ticker_speed = 20
 ExchangeList.IDEX.cycle_time = 20
 ExchangeList.IDEX.modOnly = true
 
