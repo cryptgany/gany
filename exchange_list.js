@@ -51,7 +51,7 @@ ExchangeList.IDEX.ticker_speed = 10
 ExchangeList.IDEX.cycle_time = 20
 ExchangeList.IDEX.modOnly = true
 
-ExchangeList.Bitfinex.ticker_speed = 10
+ExchangeList.Bitfinex.ticker_speed = 20
 ExchangeList.Bitfinex.cycle_time = 20
 ExchangeList.Bitfinex.modOnly = true
 
