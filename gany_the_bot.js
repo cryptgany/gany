@@ -17,7 +17,7 @@ CHECK_EXPIRED_USERS = 1 // hours
 
 SEE_REGEX_WITH_ONE_PARAM=/^\/see\ ([a-zA-Z0-9]|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))+$/i // /see neo | /see neo-btc
 SEE_REGEX_WITH_TWO_PARAMS=/^\/see\ (([a-zA-Z0-9]{1,6})|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))\ \d+$/i // /see neo 20 | /see neo-btc 20
-FIAT_SYMBOLS = ['USD', 'EUR', 'GBP', 'USDT', 'EURT']
+FIAT_SYMBOLS = ['USD', 'EUR', 'GBP', 'USDT', 'TUSD', 'EURT']
 EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart first
   Bittrex: 1,
   Binance: 2,
