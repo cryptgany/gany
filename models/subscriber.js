@@ -39,6 +39,7 @@ var subscriberSchema = mongoose.Schema({
       ETC:  { type: Boolean, default: true },
       LTC:  { type: Boolean, default: true },
       USDT: { type: Boolean, default: true },
+      TUSD: { type: Boolean, default: true },
       USD: { type: Boolean, default: true },
       GBP: { type: Boolean, default: true },
       EUR: { type: Boolean, default: true },

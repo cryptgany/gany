@@ -30,6 +30,7 @@ EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart firs
   CoinExchange: 9,
   Huobi: 10,
   IDEX: 11,
+  Bitfinex: 12, // this should be higher but we need to wait for data to be collected before putting in higher rank for data-charts generation
 }
 EXCHANGES_CONVERSION = { // there should be a better way of doing this
   BITTREX: 'Bittrex',
@@ -43,6 +44,7 @@ EXCHANGES_CONVERSION = { // there should be a better way of doing this
   COINEXCHANGE: 'CoinExchange',
   HUOBI: 'Huobi',
   IDEX: 'IDEX',
+  BITFINEX: 'Bitfinex',
   ALL: 'All'
 }
 
@@ -911,6 +913,8 @@ GanyTheBot.prototype.configuration_menu_markets = function() {
     reply_markup: JSON.stringify({
       inline_keyboard: [
         [{ text: 'BTC', callback_data: 'configure market BTC' }, { text: 'ETH', callback_data: 'configure market ETH' }, { text: 'NEO', callback_data: 'configure market NEO' }],
+        [{ text: 'USD', callback_data: 'configure market USD' }, { text: 'GBP', callback_data: 'configure market GBP' }, { text: 'EUR', callback_data: 'configure market EUR' }],
+        [{ text: 'USDT', callback_data: 'configure market USDT' }, { text: 'TUSD', callback_data: 'configure market TUSD' }],
         [{ text: 'Go Back', callback_data: 'configure' }]
       ]
     })
