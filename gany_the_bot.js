@@ -561,7 +561,11 @@ GanyTheBot.prototype.start = function() {
   // CALLBACK QUERY //
   // ************** //
   this.telegram_bot.on('callback_query', (msg) => {
+    subscriber = undefined
     if (this.is_subscribed(msg.from.id)) {
+      subscriber = this.find_subscriber(msg.from.id)
+    }
+    if (subscriber) {
       if (msg.data == 'configure subscription')
         if (this.is_subscribed(msg.from.id)) {
           subscriber = this.find_subscriber(msg.from.id)
@@ -589,7 +593,7 @@ GanyTheBot.prototype.start = function() {
       if (msg.data == "configure")
         this.send_message(msg.from.id, "Configuration menu:", this.configuration_menu_options())
       if (msg.data == "configure exchanges")
-        this.send_message(msg.from.id, "Configure which exchanges you want to keep track of:", this.configuration_menu_exchanges())
+        this.send_message(msg.from.id, "Configure which exchanges you want to keep track of:", this.configuration_menu_exchanges(subscriber))
       if (msg.data == "configure markets")
         this.send_message(msg.from.id, "Configure which markets you want to keep track of:", this.configuration_menu_markets())
 
@@ -602,7 +606,7 @@ GanyTheBot.prototype.start = function() {
         if (commands.length == 4) { // was enabled/disabled, show exchanges
           this.telegram_bot.answerCallbackQuery(msg.id, 'Exchange ' + commands[2] + " " + commands[3]);
           _.find(this.subscribers, (s) => {return s.telegram_id == msg.from.id}).change_exchange_status(commands[2], commands[3])
-          this.send_message(msg.from.id, "Configure which exchanges you want to keep track of:", this.configuration_menu_exchanges())
+          this.send_message(msg.from.id, "Configure which exchanges you want to keep track of:", this.configuration_menu_exchanges(subscriber))
         }
       }
       if (msg.data.match(/configure market\ /)) {
@@ -892,18 +896,22 @@ GanyTheBot.prototype.configuration_menu_options = function() {
   };
 }
 
-GanyTheBot.prototype.configuration_menu_exchanges = function() {
+GanyTheBot.prototype.configuration_menu_exchanges = function(subscriber) {
+  var options = []
+  options.push([{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }])
+  options.push([{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }])
+  options.push([{ text: 'Kraken', callback_data: 'configure exchange Kraken' }, { text: 'Binance', callback_data: 'configure exchange Binance' }])
+  options.push([{ text: 'Kucoin', callback_data: 'configure exchange Kucoin' }, { text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' }])
+
+  if (this.is_mod(subscriber.telegram_id)) {
+    options.push([{ text: 'CoinExchange', callback_data: 'configure exchange CoinExchange' }, { text: 'Huobi', callback_data: 'configure exchange Huobi' }])
+    options.push([{ text: 'IDEX', callback_data: 'configure exchange IDEX' }, { text: 'Bitfinex', callback_data: 'configure exchange Bitfinex' }])
+  }
+
+  options.push([{ text: 'Go Back', callback_data: 'configure' }])
   return {
     parse_mode: "Markdown",
-    reply_markup: JSON.stringify({
-      inline_keyboard: [
-        [{ text: 'Bittrex', callback_data: 'configure exchange Bittrex' }, { text: 'Poloniex', callback_data: 'configure exchange Poloniex' }],
-        [{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }],
-        [{ text: 'Kraken', callback_data: 'configure exchange Kraken' }, { text: 'Binance', callback_data: 'configure exchange Binance' }],
-        [{ text: 'Kucoin', callback_data: 'configure exchange Kucoin' }, { text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' }],
-        [{ text: 'Go Back', callback_data: 'configure' }]
-      ]
-    })
+    reply_markup: JSON.stringify({ inline_keyboard: options })
   };
 }
 
