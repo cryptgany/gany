@@ -4,10 +4,14 @@ const request = require('request')
 class Bitfinex extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName) {
         super(logger, pumpEvents)
+        this.markets = []
     }
 
     watch(){
-        this.watchFunction(() => { this.refresh() }, this.ticker_speed * 1000)
+        this.marketList().then((tickers) => {
+            this.markets = tickers
+            this.watchFunction(() => { this.refresh() }, this.ticker_speed * 1000)
+        }).catch((err) => { this.logger.error("COULD NOT INITIALIZE BITFINEX: ", err) });
     }
 
     static market_url(market) {
@@ -15,18 +19,16 @@ class Bitfinex extends AbstractExchange {
     }
 
     refresh() {
-        this.marketList().then((tickers) => {
-            return this.getTickersData(tickers)
-        }).then((data) => {
+        this.getTickersData().then((data) => {
             return this.emit(data)
         }).catch((er) => {
             this.logger.error("Could not fetch bitfinex data:", er)
         })
     }
 
-    getTickersData(tickers) {
+    getTickersData() {
         return new Promise((resolve, reject) => {
-            var tickers_url = tickers.map((e) => 't' + e.toUpperCase()).join(',')
+            var tickers_url = this.markets.map((e) => 't' + e.toUpperCase()).join(',')
             request.get('https://api.bitfinex.com/v2/tickers?symbols=' + tickers_url, (error, response, body) => {
                 if (error) { reject(error) }
                 resolve(JSON.parse(body))
