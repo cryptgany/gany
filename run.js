@@ -82,16 +82,16 @@ rules = {
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.25 }
   ],
   "CoinExchange": [
-    (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.10 && matcher.last_change(first_ticker, last_ticker) > 1.025 }
+    (first_ticker, last_ticker, time, matcher) => { return (time <= 20 * 60) && matcher.volume_change(first_ticker, last_ticker) > 1.25 }
   ],
   "Huobi": [
-    (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.10 && matcher.last_change(first_ticker, last_ticker) > 1.025 }
+    (first_ticker, last_ticker, time, matcher) => { return (time <= 20 * 60) && matcher.volume_change(first_ticker, last_ticker) >= 1.08 }
   ],
   "IDEX": [
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.10 && matcher.last_change(first_ticker, last_ticker) > 1.025 }
   ],
   "Bitfinex": [
-    (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.25 }
+    (first_ticker, last_ticker, time, matcher) => { return (time <= 30 * 60) && matcher.volume_change(first_ticker, last_ticker) >= 1.10 }
   ],
 }
 
