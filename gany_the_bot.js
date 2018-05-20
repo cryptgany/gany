@@ -686,8 +686,10 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
   message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market) + " (" + this.priceInUSD(client.name, signal.market, signal.last_ticker.last) + ")"
   message += "\nVol. up by *" + diff.humanize({significance: true}) + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
   message += "\nVolume: " + signal.last_ticker.volume.humanize() + " (*" + ((signal.change - 1) * 100).humanize({significance: true}) + "%*)"
-  message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
-  message += "\nA: " + signal.first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.ask, signal.last_ticker.ask) + " " + signal.last_ticker.ask.toFixed(8)
+  if (signal.first_ticker.bid)
+    message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
+  if (signal.first_ticker.ask)
+    message += "\nA: " + signal.first_ticker.ask.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.ask, signal.last_ticker.ask) + " " + signal.last_ticker.ask.toFixed(8)
   message += "\nL: " + signal.first_ticker.last.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.last, signal.last_ticker.last) + " " + signal.last_ticker.last.toFixed(8)
   if (client.name != 'EtherDelta')
     message += "\n24h H/L:" + signal.last_ticker.high.toFixed(8) + " / " + signal.last_ticker.low.toFixed(8)
@@ -712,8 +714,10 @@ GanyTheBot.prototype.telegramPostPriceCheck = function(exchange, market, ticker)
 
 GanyTheBot.prototype.telegram_post_volume_analysis = function(exchange, market, ticker_info) {
   message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, ticker_info.last) + ")"
-  message += "\nB: " + ticker_info.bid.toFixed(8)
-  message += "\nA: " + ticker_info.ask.toFixed(8)
+  if (ticker_info.bid)
+    message += "\nB: " + ticker_info.bid.toFixed(8)
+  if (ticker_info.ask)
+    message += "\nA: " + ticker_info.ask.toFixed(8)
   message += "\nL: " + ticker_info.last.toFixed(8)
   message += "\nVolume: " + ticker_info.volume.humanize() + " " + ExchangeList[exchange].volume_for(market)
   if (exchange != 'EtherDelta')
@@ -727,8 +731,10 @@ GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market,
   message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, lastTicker.last) + ")"
   message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
   message += "\nVolume: " + lastTicker.volume.humanize() + " (*" + ((change - 1) * 100).humanize({significance: true}) + "%*)"
-  message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
-  message += "\nA: " + firstTicker.ask.toFixed(8) + " " + this.telegram_arrow(firstTicker.ask, lastTicker.ask) + " " + lastTicker.ask.toFixed(8)
+  if (firstTicker.bid)
+    message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
+  if (firstTicker.ask)
+    message += "\nA: " + firstTicker.ask.toFixed(8) + " " + this.telegram_arrow(firstTicker.ask, lastTicker.ask) + " " + lastTicker.ask.toFixed(8)
   message += "\nL: " + firstTicker.last.toFixed(8) + " " + this.telegram_arrow(firstTicker.last, lastTicker.last) + " " + lastTicker.last.toFixed(8)
   if (exchange != 'EtherDelta')
     message += "\n24h H/L: " + lastTicker.high.toFixed(8) + " / " + lastTicker.low.toFixed(8)
