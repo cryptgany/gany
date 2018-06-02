@@ -86,8 +86,8 @@ class IDEX extends AbstractExchange {
             low: parseFloat(data.low),
             volume: parseFloat(data.baseVolume),
             last: parseFloat(data.last),
-            ask: parseFloat(data.lowestAsk),
-            bid: parseFloat(data.highestBid)
+            ask: null, // parseFloat(data.lowestAsk), we are removing this cuz it's a random number
+            bid: null, // parseFloat(data.highestBid)
         }
     }
 }
