@@ -3,8 +3,6 @@ const app = express();
 
 app.use(express.static(__dirname + '/charts'));
 
-
-
 app.get('/', (req, res) => {
 	res.sendFile('index.html')
 })
