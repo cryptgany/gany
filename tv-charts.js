@@ -34,7 +34,7 @@ app.get('/symbols', (req, res) => {
 		exchange: exchange,
 		timezone: "America/Panama",
 		minmov: 1,
-		pricescale: 1000000,
+		pricescale: 1000000, // TODO: THIS SHOULD BE PARSED DEPENDING ON CURRENCY DECIMALS
 		minmov2: 0,
 		fractional: false,
 		has_intraday: true,
