@@ -1,4 +1,5 @@
 express = require('express');
+const TickerData = require('./models/ticker_data.js')
 const app = express();
 
 app.use(express.static(__dirname + '/charts'));
@@ -25,7 +26,7 @@ app.get('/symbols', (req, res) => {
 	console.log("Request to /symbols:", req.url)
 	res.send({
 		name: "BTC-USD",
-		ticker: "BTC-USD",
+		ticker: "BTC-USDT_Binance",
 		description: "Bitcoin - USD",
 		type: "bitcoin",
 		exchange: "Binance",
@@ -35,7 +36,7 @@ app.get('/symbols', (req, res) => {
 		minmov2: 0,
 		fractional: false,
 		has_intraday: true,
-		has_no_volume: false,
+		has_no_volume: true,
 		pointvalue: 1,
 		session: "24x7",
 		supported_resolutions: ["60"],
@@ -43,7 +44,18 @@ app.get('/symbols', (req, res) => {
 })
 
 app.get('/history', (req, res) => {
-	console.log("Request to /history:", req.url)
+	console.log("Request to history:", req.url)
+	// /history?symbol=BTC-USD&resolution=60&from=1350568800&to=1351040399
+	symbol = req.query.symbol.split("_")
+	resolution = req.query.resolution
+	pair = symbol[0]
+	exchange = symbol[1]
+	from = parseInt(req.query.from + '000')
+	to = parseInt(req.query.to + '000')
+	console.log("Fetch for: ", exchange, pair, from, to, resolution)
+	TickerData.find({market: pair, exchange: exchange, ticker_type: 'hour', createdAt: {$gt: from, $lt: to}}, (err, data) => {
+		res.send(convertToTvHistory(data))
+	})
 })
 
 app.get('/time', (req, res) => {
@@ -82,3 +94,15 @@ app.listen(3000, () => console.log('Example app listening on port 3000!'))
 // 	else
 // 		console.log("Saved!")
 // });
+
+function convertToTvHistory(data) {
+	res = {t: [], o: [], h: [], l: [], c: [], s: "ok"} // requires: v: volume array
+	data.forEach((d) => {
+		res.t.push(Math.floor(d.createdAt / 1000))
+		res.o.push(d.open)
+		res.h.push(d.high)
+		res.l.push(d.low)
+		res.c.push(d.close)
+	})
+	return res
+}
