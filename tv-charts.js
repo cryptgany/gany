@@ -13,26 +13,28 @@ app.get('/config', (req, res) => {
 		exchanges: [{value: 'Binance', name: 'Binance', desc: 'Binance exchange'}, {value: 'Bittrex', name: 'Bittrex', desc: 'Bittrex exchange'}],
 		symbols_types: [{name: 'bitcoin', value: 'bitcoin'}],
 		supported_resolutions: ["60"],
-		supports_marks: true,
+		supports_marks: false,
 		supports_time: true,
 		supports_group_request: false,
 		supports_search: true,
-		supports_timescale_marks: true
+		supports_timescale_marks: false
 	}
 	res.send(desc)
 })
 
 app.get('/symbols', (req, res) => {
 	console.log("Request to /symbols:", req.url)
+	symbol = req.query.symbol.split("_")
+	market = symbol[0]; exchange = symbol[1]
 	res.send({
-		name: "BTC-USD",
-		ticker: "BTC-USDT_Binance",
-		description: "Bitcoin - USD",
+		name: market,
+		ticker: req.query.symbol,
+		description: market,
 		type: "bitcoin",
-		exchange: "Binance",
+		exchange: exchange,
 		timezone: "America/Panama",
 		minmov: 1,
-		pricescale: 100,
+		pricescale: 1000000,
 		minmov2: 0,
 		fractional: false,
 		has_intraday: true,
