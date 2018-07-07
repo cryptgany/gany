@@ -1,4 +1,4 @@
-var datafeed = {
+var ganyfeed = {
 	onReady: function(callback) {
 		console.log("Here call to onReady ", callback)
 	},
