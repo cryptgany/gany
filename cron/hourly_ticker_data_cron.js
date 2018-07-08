@@ -27,7 +27,7 @@ var hourlyTickerDataJob = new CronJob('00 00 */1 * * *', function() {
             tickerData.volume = tdata.volume
             return tickerData.save()
 
-          }).catch((e) => { logger.error("Error generating hourly data:", e)})
+          }).catch((e) => { logger.error("Error generating hourly data for " + spt[0] + "/" + spt[1] + ":", e)})
         })
       }, count * 30) // very small delay for not fucking up mongo/redis
       count += 1
