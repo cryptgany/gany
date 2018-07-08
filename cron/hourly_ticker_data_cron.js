@@ -24,6 +24,7 @@ var hourlyTickerDataJob = new CronJob('00 00 */1 * * *', function() {
             tickerData.high = tdata.high
             tickerData.low = tdata.low
             tickerData.close = tdata.close
+            tickerData.volume = tdata.volume
             return tickerData.save()
 
           }).catch((e) => { logger.error("Error generating hourly data:", e)})

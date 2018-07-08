@@ -10,7 +10,8 @@ var tickerDataSchema = mongoose.Schema({
     open: Number,
     high: Number,
     low: Number,
-    close: Number
+    close: Number,
+    volume: { type: Number, default: 0 }
 }, { timestamps: true });
 
 TickerDataModel = mongoose.model('ticker_datas', tickerDataSchema)

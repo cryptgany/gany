@@ -68,7 +68,6 @@ class TickerHandler {
             handled_data.minuteLow = this.high_low[exchange][market].minuteLow
             this.high_low[exchange][market] = {minuteHigh: handled_data.last, minuteLow: handled_data.last}
             this.minutes_data[exchange][market].push(handled_data)
-
             // create ticker data
             Ticker.store(exchange, market, handled_data)
 
