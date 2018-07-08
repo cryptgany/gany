@@ -14,7 +14,6 @@ var dailyTickerDataJob = new CronJob('00 30 00 */1 * *', function() { // run at 
       setTimeout(() => {
         spt = exchangeMarket.split('.')
         logger.log("Saving daily data for", spt[0], spt[1])
-
         TickerData.find({exchange: spt[0], market: spt[1], ticker_type: 'hour'}).limit(24).sort([['createdAt', 'descending']]).exec((err, data) => {
           Ticker.getDailyHighLowResume(data.reverse()).then((tdata) => {
             tickerData = new TickerData()
@@ -25,6 +24,7 @@ var dailyTickerDataJob = new CronJob('00 30 00 */1 * *', function() { // run at 
             tickerData.high = tdata.high
             tickerData.low = tdata.low
             tickerData.close = tdata.close
+            tickerData.volume = tdata.volume
             return tickerData.save()
 
           }).catch((e) => { logger.error("Error generating daily data:", e)})

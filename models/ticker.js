@@ -40,7 +40,7 @@ class Ticker {
                         low = d.last
                 })
 
-                resolve({open: data[0].last, high: high, low: low, close: data[data.length-1].last})
+                resolve({open: data[0].last, high: high, low: low, close: data[data.length-1].last, volume: data[data.length-1].volume})
             } catch (e) { reject(e) }
         })
     }
@@ -56,7 +56,7 @@ class Ticker {
                         low = d.low
                 })
 
-                resolve({open: data[0].open, high: high, low: low, close: data[data.length-1].close})
+                resolve({open: data[0].open, high: high, low: low, close: data[data.length-1].close, volume: data[data.length-1].volume})
             } catch (e) { reject(e) }
         })
     }
