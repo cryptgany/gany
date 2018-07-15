@@ -12,7 +12,7 @@ app.get('/config', (req, res) => {
 	var desc = {
 		exchanges: [{value: 'Binance', name: 'Binance', desc: 'Binance exchange'}, {value: 'Bittrex', name: 'Bittrex', desc: 'Bittrex exchange'}],
 		symbols_types: [{name: 'bitcoin', value: 'bitcoin'}],
-		supported_resolutions: ["60"],
+		supported_resolutions: ["60", "1D"],
 		supports_marks: false,
 		supports_time: true,
 		supports_group_request: false,
@@ -38,10 +38,10 @@ app.get('/symbols', (req, res) => {
 		minmov2: 0,
 		fractional: false,
 		has_intraday: true,
-		has_no_volume: true,
+		has_no_volume: false,
 		pointvalue: 1,
 		session: "24x7",
-		supported_resolutions: ["60"],
+		supported_resolutions: ["60", "1D"],
 	})
 })
 
@@ -49,13 +49,14 @@ app.get('/history', (req, res) => {
 	console.log("Request to history:", req.url)
 	// /history?symbol=BTC-USD&resolution=60&from=1350568800&to=1351040399
 	symbol = req.query.symbol.split("_")
+	time_type = req.query.resolution == '60' ? 'hour' : 'day'
 	resolution = req.query.resolution
 	pair = symbol[0]
 	exchange = symbol[1]
 	from = parseInt(req.query.from + '000')
 	to = parseInt(req.query.to + '000')
 	console.log("Fetch for: ", exchange, pair, from, to, resolution)
-	TickerData.find({market: pair, exchange: exchange, ticker_type: 'hour', createdAt: {$gt: from, $lt: to}}, (err, data) => {
+	TickerData.find({market: pair, exchange: exchange, ticker_type: time_type, createdAt: {$gt: from, $lt: to}}, (err, data) => {
 		res.send(convertToTvHistory(data))
 	})
 })
@@ -98,13 +99,14 @@ app.listen(3000, () => console.log('Example app listening on port 3000!'))
 // });
 
 function convertToTvHistory(data) {
-	res = {t: [], o: [], h: [], l: [], c: [], s: "ok"} // requires: v: volume array
+	res = {t: [], o: [], h: [], l: [], c: [], v: [], s: "ok"} // requires: v: volume array
 	data.forEach((d) => {
 		res.t.push(Math.floor(d.createdAt / 1000))
 		res.o.push(d.open)
 		res.h.push(d.high)
 		res.l.push(d.low)
 		res.c.push(d.close)
+		res.v.push(d.volume)
 	})
 	return res
 }
