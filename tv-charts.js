@@ -99,7 +99,7 @@ app.listen(3000, () => console.log('Example app listening on port 3000!'))
 // });
 
 function convertToTvHistory(data) {
-	res = {t: [], o: [], h: [], l: [], c: [], v: [], s: "ok"} // requires: v: volume array
+	res = {t: [], o: [], h: [], l: [], c: [], v: [], s: data.length > 0 ? "ok" : "no_data"} // requires: v: volume array
 	data.forEach((d) => {
 		res.t.push(Math.floor(d.createdAt / 1000))
 		res.o.push(d.open)
