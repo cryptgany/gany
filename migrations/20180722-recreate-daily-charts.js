@@ -14,7 +14,7 @@ let errs = [];
 let callStack = []; // call stack
 
 Ticker.getExchangeMarkets((err,exchangeMarkets) => {
-  exchangeMarkets.forEach((exchangeMarket) => {
+  exchangeMarkets.filter((e) => e.match(/\./)).forEach((exchangeMarket) => {
     callStack.push(() => { return new Promise((resolve, reject) => {
       let spt = exchangeMarket.split('.')
       TickerData.find({exchange: spt[0], market: spt[1], ticker_type: 'hour'}).sort([['createdAt', 'descending']]).exec((err, data) => {
@@ -58,7 +58,7 @@ Ticker.getExchangeMarkets((err,exchangeMarkets) => {
 
 
 function runStack(id = 0) {
-  callStack[id]().then((r) => {runStack(id+1)}).catch( (exchangeMarket, e) => { cnt += 1; logger.error("Error generating daily data for " + exchangeMarket + ":", e)} )
+  callStack[id]().then((r) => {runStack(id+1)}).catch( (exchangeMarket, e) => { cnt += 1; logger.error("Error generating daily data for " + exchangeMarket + ":", e); runStack(id+1);} )
 }
 
 runStack()
