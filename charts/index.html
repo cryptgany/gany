@@ -26,11 +26,12 @@
 				var widget = window.tvWidget = new TradingView.widget({
 					// debug: true, // uncomment this line to see Library errors and warnings in the console
 					fullscreen: true,
-					symbol: 'AAPL',
-					interval: 'D',
+					symbol: getParameterByName("market") + "_" + getParameterByName("exchange"),
+					interval: getParameterByName("time") || '60',
 					container_id: "tv_chart_container",
 					//	BEWARE: no trailing slash is expected in feed URL
-					datafeed: new Datafeeds.UDFCompatibleDatafeed("https://demo_feed.tradingview.com"),
+					// datafeed: new Datafeeds.UDFCompatibleDatafeed("https://demo_feed.tradingview.com"),
+					datafeed: new Datafeeds.UDFCompatibleDatafeed("http://localhost:3000"),
 					library_path: "charting_library/",
 					locale: getParameterByName('lang') || "en",
 					//	Regression Trend-related functionality is not implemented yet, so it's hidden for a while
