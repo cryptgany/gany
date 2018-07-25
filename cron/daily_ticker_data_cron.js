@@ -9,6 +9,8 @@ var logger = new Logger();
 var dailyTickerDataJob = new CronJob('00 30 00 */1 * *', function() { // run at 12:30 so we don't interfere with hourly cron workers
   logger.log("Starting Daily Ticker Data Job")
   let count = 0
+  let tempDate = new Date()
+  tempDate = new Date(tempDate.getFullYear(), tempDate.getMonth(), tempDate.getDate(), 0,0,0,0) // consistence over daily charts time
   Ticker.getExchangeMarkets((err,exchangeMarkets) => {
     exchangeMarkets.forEach((exchangeMarket) => {
       setTimeout(() => {
@@ -25,6 +27,7 @@ var dailyTickerDataJob = new CronJob('00 30 00 */1 * *', function() { // run at 
             tickerData.low = tdata.low
             tickerData.close = tdata.close
             tickerData.volume = tdata.volume
+            tickerData.createdAt = tempDate
             return tickerData.save()
 
           }).catch((e) => { logger.error("Error generating daily data for " + spt[0] + "/" + spt[1] + ":", e)})
