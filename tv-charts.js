@@ -1,12 +1,40 @@
 express = require('express');
 const TickerData = require('./models/ticker_data.js')
 const app = express();
+require('dotenv').config();
 
 app.use(express.static(__dirname + '/charts'));
 
 app.get('/', (req, res) => {
 	res.sendFile('index.html')
 })
+const Influx = require('influx');
+
+const influx = new Influx.InfluxDB({
+ host: process.env.INFLUX_HOST,
+ username: process.env.INFLUX_USER,
+ password: process.env.INFLUX_PASS,
+ database: 'gany',
+  schema: [
+    {
+      measurement: 'ticker_data',
+      fields: {
+        open: Influx.FieldType.FLOAT,
+        high: Influx.FieldType.FLOAT,
+        low: Influx.FieldType.FLOAT,
+        close: Influx.FieldType.FLOAT,
+        volume: Influx.FieldType.FLOAT,
+        volume24: Influx.FieldType.FLOAT,
+      },
+      tags: [ // BTC-NEO, Binance, 1D|1H|1|3|5|15
+        'market', 'exchange', 'type'
+      ]
+    }
+  ]
+})
+
+
+
 
 app.get('/config', (req, res) => {
 	var desc = {
@@ -41,7 +69,7 @@ app.get('/symbols', (req, res) => {
 		has_no_volume: false,
 		pointvalue: 1,
 		session: "24x7",
-		supported_resolutions: ["60", "1D"],
+		supported_resolutions: ['1', "60", "1D"],
 	})
 })
 
@@ -50,15 +78,33 @@ app.get('/history', (req, res) => {
 	// /history?symbol=BTC-USD&resolution=60&from=1350568800&to=1351040399
 	symbol = req.query.symbol.split("_")
 	time_type = req.query.resolution == '60' ? 'hour' : 'day'
-	resolution = req.query.resolution
-	pair = symbol[0]
-	exchange = symbol[1]
-	from = parseInt(req.query.from + '000')
-	to = parseInt(req.query.to + '000')
-	console.log("Fetch for: ", exchange, pair, from, to, resolution)
-	TickerData.find({market: pair, exchange: exchange, ticker_type: time_type, createdAt: {$gt: from, $lt: to}}, (err, data) => {
-		res.send(convertToTvHistory(data))
-	})
+	if (req.query.resolution == '1') {
+		let resolution = parseInt(req.query.resolution)
+		let pair = symbol[0]
+		let exchange = symbol[1]
+		let from = new Date(parseInt(req.query.from + '000'))
+		let to = new Date(parseInt(req.query.to + '000'))
+		console.log("Fetch for: ", exchange, pair, from, to, resolution)
+
+		nanoFrom = Influx.toNanoDate(from.getTime()  + '000000')
+		nanoTo = Influx.toNanoDate(to.getTime()  + '000000')
+
+		influx.query(`select * from ticker_data where market='${pair}' and exchange='${exchange}' and time >= '${nanoFrom.toNanoISOString()}' and time <= '${nanoTo.toNanoISOString()}'`).then(results => {
+		  console.log(results)
+		  res.send(convertToTvHistory(results))
+		})
+
+	} else {
+		resolution = req.query.resolution
+		pair = symbol[0]
+		exchange = symbol[1]
+		from = parseInt(req.query.from + '000')
+		to = parseInt(req.query.to + '000')
+		console.log("Fetch for: ", exchange, pair, from, to, resolution)
+		TickerData.find({market: pair, exchange: exchange, ticker_type: time_type, createdAt: {$gt: from, $lt: to}}, (err, data) => {
+			res.send(convertToTvHistory(data))
+		})
+	}
 })
 
 app.get('/time', (req, res) => {
@@ -101,7 +147,7 @@ app.listen(3000, () => console.log('Example app listening on port 3000!'))
 function convertToTvHistory(data) {
 	res = {t: [], o: [], h: [], l: [], c: [], v: [], s: data.length > 0 ? "ok" : "no_data"} // requires: v: volume array
 	data.forEach((d) => {
-		res.t.push(Math.floor(d.createdAt / 1000))
+		res.t.push(Math.floor((d.createdAt || new Date(d.time.toNanoISOString())) / 1000))
 		res.o.push(d.open)
 		res.h.push(d.high)
 		res.l.push(d.low)

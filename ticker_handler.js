@@ -2,6 +2,7 @@
 require('./protofunctions.js')
 const Ticker = require('./models/ticker')
 const TickerData = require('./models/ticker_data')
+const InfluxTicker = require('./models/influx_ticker')
 const ExchangeList = require('./exchange_list')
 /*
     Handles all the ticker related information through time.
@@ -79,23 +80,35 @@ class TickerHandler {
 
     // To be called every 1 minute
     storeMinuteDataOnInflux() {
+        this.logger.info("Gathering data for influx...")
         let influxData = []
+        let date = new Date();
         Object.keys(this.last_minute_data).forEach((exchange) => {
             Object.keys(this.last_minute_data[exchange]).forEach((market) => {
                 let handled_data = this.last_minute_data[exchange][market].last()
-                let open = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange)).last || handled_data.last
-                handled_data.open = open || this.last_minute_data[exchange][market][0].last
+                let open = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange)).last
+                handled_data.open = open || handled_data.last
                 handled_data.close = handled_data.last
                 handled_data.minuteHigh = this.high_low[exchange][market].minuteHigh
                 handled_data.minuteLow = this.high_low[exchange][market].minuteLow
                 influxData.push({
-                    // setup data here
+                    measurement: 'ticker_data',
+                    tags: { market: market, exchange: exchange, type: '1' },
+                    fields: {
+                        open: handled_data.open,
+                        high: handled_data.minuteHigh,
+                        low: handled_data.minuteLow,
+                        close: handled_data.close,
+                        volume: 0, // will be calculated after
+                        volume24: handled_data.volume
+                    },
+                    timestamp: date
                 })
-
-                // push to server
             })
         })
-    }
+        this.logger.log("Storing minute data on influx...")
+        InfluxTicker.storeMany(influxData, () => { this.logger.log("Tickers stored into influx for", influxData.length, "exchange-markets")})
+     }
 
     isPremiumExchange(exchange) {
         return this.premiumClients.indexOf(exchange) != -1
