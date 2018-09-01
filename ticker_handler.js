@@ -80,7 +80,7 @@ class TickerHandler {
 
     // To be called every 1 minute
     storeMinuteDataOnInflux() {
-        this.logger.log("Gathering data for influx...")
+        this.logger.log("Storing minute data on influx...")
         var influxData = []
         var date = new Date();
         Object.keys(this.last_minute_data).forEach((exchange) => {
@@ -106,32 +106,15 @@ class TickerHandler {
                 })
             })
         })
-        this.logger.log("Calculating minute volume")
-        // > data[0]
-        //     [ groupsTagsKeys: [],
-        //       groupRows: [],
-        //       group: [Function: groupMethod],
-        //       groups: [Function: groupsMethod] ]
-        //     > data[0].groupsTagsKeys
-        //     []
-        InfluxTicker.queryLastVolumeForAll().then((results) => {
+        // Calculating volume (minute volume)
+        InfluxTicker.queryLastVolumeForAll().then((results) => { // expects the function to return last 24h volume for 1 minute data
             influxData.forEach((dataRow) => {
                 let ret = results.find((result) => result.exchange == dataRow.tags.exchange && result.market == dataRow.tags.market)
                 if (ret) {
                     let volume = dataRow.fields.volume24 - ret.last
                     dataRow.fields.volume = volume < 0 ? 0 : volume
-                    console.log("Found ret,", ret.exchange, ret.market, ret.last, dataRow.fields.volume24, volume)
                 }
             })
-            //> pepe WHEN THERE IS NO DATA
-            // [ groupsTagsKeys: [],
-              // groupRows: [],
-              // group: [Function: groupMethod],
-              // groups: [Function: groupsMethod] ]
-            // > pepe[0]
-            // undefined
-            this.logger.log("Inserting records:", influxData[10])
-            this.logger.log("Storing minute data on influx...")
             InfluxTicker.storeMany(influxData, () => { this.logger.log("Tickers stored into influx for", influxData.length, "exchange-markets")})
         })
     }
