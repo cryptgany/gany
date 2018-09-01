@@ -45,6 +45,10 @@ class InfluxTicker { // replace me with "Ticker" once "TickerData" and "Ticker" 
     return influx.query(sql)
   }
 
+  static toNanoDate(args) {
+    return Influx.toNanoDate(args)
+  }
+
   static queryLastVolumeForAll() { // returns promise, ".last" as the last volume24 for each exchange market
     return InfluxTicker.query(`select exchange, market, LAST(volume24) from ticker_data GROUP BY exchange, market`)
   }

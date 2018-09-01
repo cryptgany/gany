@@ -2,39 +2,13 @@ express = require('express');
 const TickerData = require('./models/ticker_data.js')
 const app = express();
 require('dotenv').config();
+const InfluxTicker = require('./models/influx_ticker')
 
 app.use(express.static(__dirname + '/charts'));
 
 app.get('/', (req, res) => {
 	res.sendFile('index.html')
 })
-const Influx = require('influx');
-
-const influx = new Influx.InfluxDB({
- host: process.env.INFLUX_HOST,
- username: process.env.INFLUX_USER,
- password: process.env.INFLUX_PASS,
- database: 'gany',
-  schema: [
-    {
-      measurement: 'ticker_data',
-      fields: {
-        open: Influx.FieldType.FLOAT,
-        high: Influx.FieldType.FLOAT,
-        low: Influx.FieldType.FLOAT,
-        close: Influx.FieldType.FLOAT,
-        volume: Influx.FieldType.FLOAT,
-        volume24: Influx.FieldType.FLOAT,
-      },
-      tags: [ // BTC-NEO, Binance, 1D|1H|1|3|5|15
-        'market', 'exchange', 'type'
-      ]
-    }
-  ]
-})
-
-
-
 
 app.get('/config', (req, res) => {
 	var desc = {
@@ -86,10 +60,10 @@ app.get('/history', (req, res) => {
 		let to = new Date(parseInt(req.query.to + '000'))
 		console.log("Fetch for: ", exchange, pair, from, to, resolution)
 
-		nanoFrom = Influx.toNanoDate(from.getTime()  + '000000')
-		nanoTo = Influx.toNanoDate(to.getTime()  + '000000')
+		nanoFrom = InfluxTicker.toNanoDate(from.getTime()  + '000000')
+		nanoTo = InfluxTicker.toNanoDate(to.getTime()  + '000000')
 
-		influx.query(`select * from ticker_data where market='${pair}' and exchange='${exchange}' and time >= '${nanoFrom.toNanoISOString()}' and time <= '${nanoTo.toNanoISOString()}'`).then(results => {
+		InfluxTicker.query(`select * from ticker_data where market='${pair}' and exchange='${exchange}' and time >= '${nanoFrom.toNanoISOString()}' and time <= '${nanoTo.toNanoISOString()}'`).then(results => {
 		  console.log(results)
 		  res.send(convertToTvHistory(results))
 		})
