@@ -45,6 +45,10 @@ class InfluxTicker { // replace me with "Ticker" once "TickerData" and "Ticker" 
     return influx.query(sql)
   }
 
+  static queryLastVolumeForAll() {
+    return InfluxTicker.query("select exchange, market, LAST(volume24) from ticker_data GROUP BY exchange, market")
+  }
+
   static getByTime(exchange, market, type, from, to) {
     let _query = `select * from ticker_data
       where market='${pair}'
