@@ -83,7 +83,7 @@ class TickerHandler {
         Object.keys(this.last_minute_data).forEach((exchange) => {
             Object.keys(this.last_minute_data[exchange]).forEach((market) => {
                 let handled_data = this.last_minute_data[exchange][market].last()
-                let open = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange)).last
+                let open = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange)).last || handled_data.last
                 handled_data.open = open || this.last_minute_data[exchange][market][0].last
                 handled_data.close = handled_data.last
                 handled_data.minuteHigh = this.high_low[exchange][market].minuteHigh
