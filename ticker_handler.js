@@ -123,7 +123,10 @@ class TickerHandler {
                 handled_data.minuteHigh = this.high_low[exchange][market].minuteHigh
                 handled_data.minuteLow = this.high_low[exchange][market].minuteLow
                 let vol = this.getLastMinuteMinuteVolume(exchange, market)
+                var calcVol = ( (previousElem && previousElem.volume) || 0 ) - lastElem.volume
+                calcVol = calcVol < 0 ? 0 : calcVol
                 console.log("vol in storeminutedatainflux:", vol)
+                console.log("calcVol in storeminutedatainflux:", calcVol)
                 influxData.push({
                     measurement: 'ticker_data',
                     tags: { market: market, exchange: exchange, type: '1' },
@@ -132,7 +135,7 @@ class TickerHandler {
                         high: handled_data.minuteHigh,
                         low: handled_data.minuteLow,
                         close: handled_data.close,
-                        volume: vol,
+                        volume: vol > calcVol ? vol : calcVol,
                         volume24: handled_data.volume
                     },
                     timestamp: date
