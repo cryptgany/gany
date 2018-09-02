@@ -69,8 +69,34 @@ class TickerHandler {
             handled_data.minuteLow = this.high_low[exchange][market].minuteLow
             this.high_low[exchange][market] = {minuteHigh: handled_data.last, minuteLow: handled_data.last}
             this.minutes_data[exchange][market].push(handled_data)
-            // create ticker data
+            // create ticker data (redis)
             Ticker.store(exchange, market, handled_data)
+            
+            // // ***************** //
+            // // store on influxdb //
+            // // ***************** //
+            // // Prepare data
+            // var minuteVolume = 0;
+
+            // // for minute volume: get last elements of data from gany, see volume variations between them
+            // this.last_minute_data[exchange][market].length
+            // var influxData = {
+            //     measurement: 'ticker_data',
+            //     tags: { market: market, exchange: exchange, type: '1' },
+            //     fields: {
+            //         open: handled_data.open,
+            //         high: handled_data.minuteHigh,
+            //         low: handled_data.minuteLow,
+            //         close: handled_data.close,
+            //         volume: 0, // will be calculated after
+            //         volume24: handled_data.volume
+            //     },
+            //     timestamp: date
+            // }
+ 
+            // // ************************ //
+            // // END of store on influxdb //
+            // // ************************ //
 
             this.minute_counter_by_exchange_market[exchange+market] = 0
         }
@@ -87,10 +113,17 @@ class TickerHandler {
             Object.keys(this.last_minute_data[exchange]).forEach((market) => {
                 var handled_data = this.last_minute_data[exchange][market].last()
                 var lastElem = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange))
-                handled_data.open = lastElem ? lastElem.last : handled_data.last
+                var previousElem = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange)+1)
+                console.log("for open previousElem: ", (previousElem && previousElem.last))
+                console.log("for open lastElem: ", (lastElem && lastElem.last))
+                console.log("for open handled_data: ", (handled_data && handled_data.last))
+                console.log("handled_data: ", handled_data)
+                handled_data.open = (previousElem && previousElem.last) || (lastElem && lastElem.last) || handled_data.last
                 handled_data.close = handled_data.last
                 handled_data.minuteHigh = this.high_low[exchange][market].minuteHigh
                 handled_data.minuteLow = this.high_low[exchange][market].minuteLow
+                let vol = this.getLastMinuteMinuteVolume(exchange, market)
+                console.log("vol in storeminutedatainflux:", vol)
                 influxData.push({
                     measurement: 'ticker_data',
                     tags: { market: market, exchange: exchange, type: '1' },
@@ -99,24 +132,27 @@ class TickerHandler {
                         high: handled_data.minuteHigh,
                         low: handled_data.minuteLow,
                         close: handled_data.close,
-                        volume: 0, // will be calculated after
+                        volume: vol,
                         volume24: handled_data.volume
                     },
                     timestamp: date
                 })
             })
         })
+        this.influx_data = influxData
+        InfluxTicker.storeMany(influxData, () => { this.logger.log("Tickers stored into influx for", influxData.length, "exchange-markets")})
         // Calculating volume (minute volume)
-        InfluxTicker.queryLastVolumeForAll().then((results) => { // expects the function to return last 24h volume for 1 minute data
-            influxData.forEach((dataRow) => {
-                let ret = results.find((result) => result.exchange == dataRow.tags.exchange && result.market == dataRow.tags.market)
-                if (ret) {
-                    let volume = dataRow.fields.volume24 - ret.last
-                    dataRow.fields.volume = volume < 0 ? 0 : volume
-                }
-            })
-            InfluxTicker.storeMany(influxData, () => { this.logger.log("Tickers stored into influx for", influxData.length, "exchange-markets")})
-        })
+        // InfluxTicker.queryLastVolumeForAll().then((results) => { // expects the function to return last 24h volume for 1 minute data
+        //     influxData.forEach((dataRow) => {
+        //         let ret = results.find((result) => result.exchange == dataRow.tags.exchange && result.market == dataRow.tags.market)
+        //         if (ret) {
+        //             let volume = dataRow.fields.volume24 - ret.last
+        //             dataRow.fields.volume = getLastMinuteMinuteVolume()
+        //             dataRow.fields.open = ret.close
+        //         }
+        //     })
+        //     InfluxTicker.storeMany(influxData, () => { this.logger.log("Tickers stored into influx for", influxData.length, "exchange-markets")})
+        // })
     }
 
     isPremiumExchange(exchange) {
@@ -133,6 +169,26 @@ class TickerHandler {
     getLastMinuteThElement(exchange, market, time) {
         let length = this.last_minute_data[exchange][market].length
         return this.last_minute_data[exchange][market][length - time]
+    }
+
+    getLastMinuteMinuteVolume(exchange, market) {
+        let length = this.last_minute_data[exchange][market].length
+        var vol = 0;
+        let begin = length - this.oneMinuteLength(exchange) < 0 ? 0 : length - this.oneMinuteLength(exchange)
+        var elems = this.last_minute_data[exchange][market].slice(begin, length)
+        var lastElem = elems[0]
+        console.log("length: ", length)
+        console.log("begin: ", begin)
+        console.log("elems: ", elems)
+        console.log("lastElem: ", lastElem)
+        // console.log("this.last_minute_data: ", this.last_minute_data)
+        for(var i = 0; i < ( this.oneMinuteLength(exchange) - 1 ); i++) {
+            let _vol =  elems[i].volume - lastElem.volume
+            lastElem = elems[i]
+            vol += _vol < 0 ? 0 : _vol
+        }
+        console.log("vol: ", vol)
+        return vol
     }
 
     // should iteratively return time and data
