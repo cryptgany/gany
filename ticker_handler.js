@@ -71,33 +71,6 @@ class TickerHandler {
             this.minutes_data[exchange][market].push(handled_data)
             // create ticker data (redis)
             Ticker.store(exchange, market, handled_data)
-            
-            // // ***************** //
-            // // store on influxdb //
-            // // ***************** //
-            // // Prepare data
-            // var minuteVolume = 0;
-
-            // // for minute volume: get last elements of data from gany, see volume variations between them
-            // this.last_minute_data[exchange][market].length
-            // var influxData = {
-            //     measurement: 'ticker_data',
-            //     tags: { market: market, exchange: exchange, type: '1' },
-            //     fields: {
-            //         open: handled_data.open,
-            //         high: handled_data.minuteHigh,
-            //         low: handled_data.minuteLow,
-            //         close: handled_data.close,
-            //         volume: 0, // will be calculated after
-            //         volume24: handled_data.volume
-            //     },
-            //     timestamp: date
-            // }
- 
-            // // ************************ //
-            // // END of store on influxdb //
-            // // ************************ //
-
             this.minute_counter_by_exchange_market[exchange+market] = 0
         }
         // si ya tenemos 1 minuto de data, guardar en "minute_data" as minute data
