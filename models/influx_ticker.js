@@ -54,6 +54,8 @@ class InfluxTicker { // replace me with "Ticker" once "TickerData" and "Ticker" 
   }
 
   static getByTime(exchange, market, type, from, to) {
+    let nanoFrom = Influx.toNanoDate(from.getTime()  + '000000')
+    let nanoTo = Influx.toNanoDate(to.getTime()  + '000000')
     let _query = `select * from ticker_data
       where market='${pair}'
       and exchange='${exchange}'
