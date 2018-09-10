@@ -114,19 +114,11 @@ class TickerHandler {
                 var handled_data = this.last_minute_data[exchange][market].last()
                 var lastElem = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange))
                 var previousElem = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange)+1)
-                console.log("for open previousElem: ", (previousElem && previousElem.last))
-                console.log("for open lastElem: ", (lastElem && lastElem.last))
-                console.log("for open handled_data: ", (handled_data && handled_data.last))
-                console.log("handled_data: ", handled_data)
                 handled_data.open = (previousElem && previousElem.last) || (lastElem && lastElem.last) || handled_data.last
                 handled_data.close = handled_data.last
                 handled_data.minuteHigh = this.high_low[exchange][market].minuteHigh
                 handled_data.minuteLow = this.high_low[exchange][market].minuteLow
                 let vol = this.getLastMinuteMinuteVolume(exchange, market)
-                var calcVol = ( (previousElem && previousElem.volume) || 0 ) - lastElem.volume
-                calcVol = calcVol < 0 ? 0 : calcVol
-                console.log("vol in storeminutedatainflux:", vol)
-                console.log("calcVol in storeminutedatainflux:", calcVol)
                 influxData.push({
                     measurement: 'ticker_data',
                     tags: { market: market, exchange: exchange, type: '1' },
@@ -135,7 +127,7 @@ class TickerHandler {
                         high: handled_data.minuteHigh,
                         low: handled_data.minuteLow,
                         close: handled_data.close,
-                        volume: vol > calcVol ? vol : calcVol,
+                        volume: vol || 0,
                         volume24: handled_data.volume
                     },
                     timestamp: date
@@ -180,17 +172,11 @@ class TickerHandler {
         let begin = length - this.oneMinuteLength(exchange) < 0 ? 0 : length - this.oneMinuteLength(exchange)
         var elems = this.last_minute_data[exchange][market].slice(begin, length)
         var lastElem = elems[0]
-        console.log("length: ", length)
-        console.log("begin: ", begin)
-        console.log("elems: ", elems)
-        console.log("lastElem: ", lastElem)
-        // console.log("this.last_minute_data: ", this.last_minute_data)
         for(var i = 0; i < ( this.oneMinuteLength(exchange) - 1 ); i++) {
             let _vol =  elems[i].volume - lastElem.volume
             lastElem = elems[i]
             vol += _vol < 0 ? 0 : _vol
         }
-        console.log("vol: ", vol)
         return vol
     }
 
