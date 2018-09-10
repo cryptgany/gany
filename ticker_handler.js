@@ -146,7 +146,7 @@ class TickerHandler {
         var elems = this.last_minute_data[exchange][market].slice(begin, length)
         var lastElem = elems[0]
         for(var i = 0; i < ( this.oneMinuteLength(exchange) - 1 ); i++) {
-            let _vol =  elems[i].volume - lastElem.volume
+            let _vol = ( elems[i] && (elems[i].volume - lastElem.volume) ) || 0
             lastElem = elems[i]
             vol += _vol < 0 ? 0 : _vol
         }
