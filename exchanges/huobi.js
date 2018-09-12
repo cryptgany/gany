@@ -2,7 +2,7 @@ const AbstractExchange = require('./exchange');
 var request = require('request');
 const MARKET_INFO = 'https://api.huobi.pro/v1/common/symbols'
 const MARKETS_DATA = 'https://api.huobi.pro/market/detail/merged?symbol='
-
+// const TICKERS_URL = 'https://api.huobi.pro/market/tickers'
 
 class Huobi extends AbstractExchange {
 	constructor(logger, pumpEvents, exchangeName) {
@@ -21,13 +21,21 @@ class Huobi extends AbstractExchange {
     }
 
     getMarketData() {
+        var i = 0;
 		Object.keys(this.marketsInfo).forEach((marketName) => {
-			this._makeRequest(MARKETS_DATA + marketName).then((data) => {
-				if (data.status != 'error') { // weirdly sends some random pairs that they don't support
-					this.storeMarketData(this.marketsInfo[marketName], this._normalize_ticker_data(data.tick))
-					this.emitData(this.marketsInfo[marketName])
-				}
-			}).catch((e) => { this.logger.error("Error fetching Huobi data:", marketName, e)})
+            i += 1;
+            setTimeout(() => {
+                this._makeRequest(MARKETS_DATA + marketName).then((data) => {
+                    if (data.status != 'error') { // weirdly sends some random pairs that they don't support
+                        this.storeMarketData(this.marketsInfo[marketName], this._normalize_ticker_data(data.tick))
+                        this.emitData(this.marketsInfo[marketName])
+                    }
+                }).catch((e) => {
+                    if (e == 'not_found_marked') {
+                        // THIS IS EXPECTED, some endpoints DO REALLY do 404, we ignore the error and continue
+                    } else { this.logger.error("Error fetching Huobi data:", marketName, e) }
+                })
+            }, i * 50)
 		})
     }
 
@@ -45,7 +53,7 @@ class Huobi extends AbstractExchange {
         this.getMarketInfo().then((result) => {
             this.storeMarketInfo(result.data)
             this.getMarketData()
-        }).catch((e) => { this.logger.error("Error updating markets for CoinExchange", e); this.emitAllData() }) // either way send last info we had to not change ticker data order
+        }).catch((e) => { this.logger.error("Error updating markets for Huobi", e); this.emitAllData() }) // either way send last info we had to not change ticker data order
     }
 
     marketList() {
@@ -63,10 +71,14 @@ class Huobi extends AbstractExchange {
     _makeRequest(url) {
         return new Promise((resolve, reject) => {
             request(url, function (error, response, body) {
-                if (error)
-                    reject(error)
-                else {
-                    try { resolve(JSON.parse(body)) } catch(e) { reject(e)}
+                if (body.match(/404\ Not\ Found/)) {
+                    reject("not_found_marked")
+                } else {
+                    if (error)
+                        reject(error)
+                    else {
+                        try { resolve(JSON.parse(body)) } catch(e) { reject(e)}
+                    }
                 }
             })
         })

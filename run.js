@@ -95,6 +95,8 @@ rules = {
   ],
 }
 
+setInterval(() => { detektor.ticker_handler.storeMinuteDataOnInflux() }, 60 * 1000)
+
 detektor = new Detektor(logger, gany_the_bot, pump_events, database, rules)
 gany_the_bot.detektor = detektor
 detektor.restore_snapshot()
