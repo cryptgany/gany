@@ -507,60 +507,89 @@ GanyTheBot.prototype.start = function() {
       }
   })
 
+
+  // Chart command
   this.telegram_bot.onText(/^\/chart/, async (msg, match) => {
+
+
     if (this.is_paid_subscriber(msg.chat.id)) {
       subscriber = undefined
       if (this.is_subscribed(msg.from.id)) {
         subscriber = this.find_subscriber(msg.from.id)
       }
-      data = msg.text.split(' ')
-      const [ command, symbol1, symbol2, exchange, interval ] = data;
-      
-      if(data.length < 2){
-        return this.send_message(msg.chat.id,`Command format:\n
-/chart pair exchange interval strategies\n
-/chart btc usd coinbase\n
-/chart btc usd coinbase 60 ichimokucloud rsi zigzag`)
+
+      data = msg.text.toUpperCase().split(' ')
+      let [ command, market, exchange, interval ] = data;
+
+      // Reply to messages are gonna get auto charted
+      if(msg.reply_to_message){
+        // Parse the text from the message
+        const replyData = msg.reply_to_message.text.split(' ');
+        market = replyData[2]
+        exchange = replyData[0]
+        interval = '15'
       }
+
       
+
+      // Just ran /chart and wasnt a reply to
+      if(!market){
+        // lets give them a message that points them to a nicer format. Conditioned users to give us less problems
+        return this.send_message(msg.chat.id, 'Command format:\n/chart btc\n/chart ltc-btc\n/chart xlm-btc binance\n/chart arn-eth binance 30')
+      }
+
+
+      // FIX: /chart neo 30
+      // Tough one is the interval catch. If there is a single letter e.g. W or D, or if it contains a digit, then its an inteval
+      // Example case /chart neo 30, typical parsing would think 30 is the exchange
+      if((data[2] && parseInt(data[2])) || (data[2] && data[2].length < 3)){
+        // We have an interval sat in the positon of an exchange
+        interval = exchange;
+        exchange = null;
+      }
+
+      // FIX: /chart neo ichimokucloud rsi bb
+      // Catch times where there is no interval so we think a study is an exchange 
+      // If data 
+      if(data[2] && Charts.isAChartStudy(data[2])){
+        exchange = null;
+      }
+
+      // Check we have the correct markets and catch any /chart btc type scenarios
+      if(!market.includes('-')) {
+        switch(market){
+          case('ETH'):
+            market = 'ETH-BTC'
+            break;
+          case('BTC'):
+            market = 'BTC-USD'
+            exchange = 'Coinbase'
+            break;
+          case('NEO'):
+            market = 'NEO-BTC'
+            break;
+          default:
+           market = `${market}-BTC`
+        }
+      }
+
+      // If no exchange specified lets just look one up because gany is cool!
+      if(!exchange){
+        let exchanges = this.detektor.get_market_data(market, subscriber)
+        if(exchanges.length == 0){
+          return this.send_message(msg.chat.id, `Sorry couldn't automatically find an exchange for that coin, please specify one e.g. /chart arn-btc binance`)
+        }
+        exchange = exchanges[0].exchange;
+      }
+
+      // Since our studies function in gany-charts will ditch anything that isnt a valid study,
+      // We can user the power of awesome to pass all the text into it and let it handle the rest.
+      const studies = data.join('_');
+
       // For now injecting dependencies, could switch this to event emitter.
-      Charts.genChart(this.telegram_bot, msg.chat.id, `${symbol1}/${symbol2}`,exchange, interval)
+      Charts.genChart(this.telegram_bot, msg.chat.id, market, exchange, interval, studies)
       
       
-
-      //let market = data[1].toUpperCase().replace(/\/CHART\ /, '')
-      //chart_type = (data[3] == 'minute' || data[3] == 'minutes') ? 'minute' : 'hour'
-      // if (market == 'ETH')
-      //   market = 'ETH-BTC'
-      // if (market == 'BTC')
-      //   market = 'BTC-USDT'
-      // if (market == 'NEO')
-      //   market = 'NEO-BTC'
-      // if (market.match(/^[^\-]+$/))
-      //   market = market + "-BTC"
-      // markets = this.detektor.get_market_data(market, subscriber)
-      // if (markets.length == 0)
-      //   message = "Not found."
-      // else {
-      //   markets = this.reduceMarketsByVolume(markets)
-      //   exchange_market = markets.sort((a,b) => { return EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange] })[0]
-      //   time = data[2] ? parseInt(data[2]) : 24*5 // 5 days
-      //   if (chart_type == 'minute') {
-      //     this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, time).then((data) => {
-      //       genChart(exchange_market.exchange, exchange_market.market, data, 'minute').then((img_path) => {
-          //     this.telegram_bot.sendPhoto(msg.chat.id, img_path)
-          //   }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
-          // })
-        // }
-        // if (chart_type == 'hour') {
-        //   this.detektor.getHourMarketData(exchange_market.exchange, exchange_market.market, 'hour', time).then((data) => {
-        //     genChart(exchange_market.exchange, exchange_market.market, data, 'hour').then((img_path) => {
-        //       this.telegram_bot.sendPhoto(msg.chat.id, img_path)
-        //     }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
-        //   })
-        // }
-     // }
-
     } else {
       this.send_message(msg.chat.id, "Sorry, this feature is only for paid members.")
     }
