@@ -8,7 +8,8 @@ const _ = require('underscore')
 var moment = require('moment')
 
 // require('./node_modules/chart.js/dist/Chart.bundle.js');
-const genChart = require('./charts')
+const Charts = require('./charts')
+//const tvChart = require('./tv-charts');
 
 require('./protofunctions.js')
 var moment = require('moment');
@@ -506,45 +507,60 @@ GanyTheBot.prototype.start = function() {
       }
   })
 
-  this.telegram_bot.onText(/^\/chart/, (msg, match) => {
+  this.telegram_bot.onText(/^\/chart/, async (msg, match) => {
     if (this.is_paid_subscriber(msg.chat.id)) {
       subscriber = undefined
       if (this.is_subscribed(msg.from.id)) {
         subscriber = this.find_subscriber(msg.from.id)
       }
       data = msg.text.split(' ')
-      let market = data[1].toUpperCase().replace(/\/CHART\ /, '')
-      chart_type = (data[3] == 'minute' || data[3] == 'minutes') ? 'minute' : 'hour'
-      if (market == 'ETH')
-        market = 'ETH-BTC'
-      if (market == 'BTC')
-        market = 'BTC-USDT'
-      if (market == 'NEO')
-        market = 'NEO-BTC'
-      if (market.match(/^[^\-]+$/))
-        market = market + "-BTC"
-      markets = this.detektor.get_market_data(market, subscriber)
-      if (markets.length == 0)
-        message = "Not found."
-      else {
-        markets = this.reduceMarketsByVolume(markets)
-        exchange_market = markets.sort((a,b) => { return EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange] })[0]
-        time = data[2] ? parseInt(data[2]) : 24*5 // 5 days
-        if (chart_type == 'minute') {
-          this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, time).then((data) => {
-            genChart(exchange_market.exchange, exchange_market.market, data, 'minute').then((img_path) => {
-              this.telegram_bot.sendPhoto(msg.chat.id, img_path)
-            }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
-          })
-        }
-        if (chart_type == 'hour') {
-          this.detektor.getHourMarketData(exchange_market.exchange, exchange_market.market, 'hour', time).then((data) => {
-            genChart(exchange_market.exchange, exchange_market.market, data, 'hour').then((img_path) => {
-              this.telegram_bot.sendPhoto(msg.chat.id, img_path)
-            }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
-          })
-        }
+      const [ command, symbol1, symbol2, exchange, interval ] = data;
+      
+      if(data.length < 2){
+        return this.send_message(msg.chat.id,`Command format:\n
+/chart pair exchange interval strategies\n
+/chart btc usd coinbase\n
+/chart btc usd coinbase 60 ichimokucloud rsi zigzag`)
       }
+      
+      // For now injecting dependencies, could switch this to event emitter.
+      Charts.genChart(this.telegram_bot, msg.chat.id, `${symbol1}/${symbol2}`,exchange, interval)
+      
+      
+
+      //let market = data[1].toUpperCase().replace(/\/CHART\ /, '')
+      //chart_type = (data[3] == 'minute' || data[3] == 'minutes') ? 'minute' : 'hour'
+      // if (market == 'ETH')
+      //   market = 'ETH-BTC'
+      // if (market == 'BTC')
+      //   market = 'BTC-USDT'
+      // if (market == 'NEO')
+      //   market = 'NEO-BTC'
+      // if (market.match(/^[^\-]+$/))
+      //   market = market + "-BTC"
+      // markets = this.detektor.get_market_data(market, subscriber)
+      // if (markets.length == 0)
+      //   message = "Not found."
+      // else {
+      //   markets = this.reduceMarketsByVolume(markets)
+      //   exchange_market = markets.sort((a,b) => { return EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange] })[0]
+      //   time = data[2] ? parseInt(data[2]) : 24*5 // 5 days
+      //   if (chart_type == 'minute') {
+      //     this.detektor.getMinuteMarketData(exchange_market.exchange, exchange_market.market, time).then((data) => {
+      //       genChart(exchange_market.exchange, exchange_market.market, data, 'minute').then((img_path) => {
+          //     this.telegram_bot.sendPhoto(msg.chat.id, img_path)
+          //   }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
+          // })
+        // }
+        // if (chart_type == 'hour') {
+        //   this.detektor.getHourMarketData(exchange_market.exchange, exchange_market.market, 'hour', time).then((data) => {
+        //     genChart(exchange_market.exchange, exchange_market.market, data, 'hour').then((img_path) => {
+        //       this.telegram_bot.sendPhoto(msg.chat.id, img_path)
+        //     }).catch((e)=>{ this.logger.error("Error on chart generation", e)})
+        //   })
+        // }
+     // }
+
     } else {
       this.send_message(msg.chat.id, "Sorry, this feature is only for paid members.")
     }
