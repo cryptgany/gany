@@ -1,7 +1,6 @@
 const phantom = require('phantom');
 const findRemoveSync = require('find-remove')
 
-
 // Constants and Configuration
 const chartWebsite = 'https://flamboyant-mclean-510776.netlify.com'
 const chartFileDir = './tmp/images'
@@ -25,6 +24,7 @@ function genFileLocation() {
 // [MAIN] Function takes a screenshot of generated chart based on charting parameters and returns the file name and location
 const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange = 'Coinbase', interval = 'D', studies = '') => {
 
+  bot.sendChatAction(chatTargetID, 'upload_photo')
   // For now market from gany is BTC-USD type, but coinmarketcal and TV want / seperator. 
   // Convert market format purely as we may switch this in future so easier to do it here.
   pair = pair.replace('-','/')
@@ -33,7 +33,7 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
   const instance = await phantom.create(['--disk-cache=true']);  
   const page = await instance.createPage();
   const imagePath = genFileLocation();
-  const resourceWait  = 2000;
+  const resourceWait  = 300;
   const maxRenderWait = 1000;
 
   // Counter for resource requests

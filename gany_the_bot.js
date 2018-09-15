@@ -528,9 +528,13 @@ GanyTheBot.prototype.start = function() {
         market = replyData[2]
         exchange = replyData[0]
         interval = '15'
+        
+        // If only it were this easy, Bittrex reverses its pairs :|
+        if(exchange === 'Bittrex'){
+          const splitMarkets = market.split('-');
+          market = `${splitMarkets[1]}-${splitMarkets[0]}`
+        }
       }
-
-      
 
       // Just ran /chart and wasnt a reply to
       if(!market){
