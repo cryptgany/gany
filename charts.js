@@ -34,16 +34,6 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
   const instance = await phantom.create(['--disk-cache=true']);  
   const page = await instance.createPage();
   const imagePath = genFileLocation();
-<<<<<<< HEAD
-=======
-  const resourceWait  = 500;
-  const maxRenderWait = 1500;
-
-  // Counter for resource requests
-  let count = 0;
-  let forcedRenderTimeout;
-  let renderTimeout;
->>>>>>> e2f6863fefcfd24f0bc715ffb927872aba0de7b0
 
   // Delete any old chart files
   deleteOldFiles()
