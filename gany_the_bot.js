@@ -508,10 +508,7 @@ GanyTheBot.prototype.start = function() {
 
   // Chart command
   this.telegram_bot.onText(/^\/chart/, async (msg, match) => {
-
-
-    if (this.is_paid_subscriber(msg.chat.id)) {
-      subscriber = undefined
+      let subscriber = undefined
       if (this.is_subscribed(msg.from.id)) {
         subscriber = this.find_subscriber(msg.from.id)
       }
@@ -590,11 +587,6 @@ GanyTheBot.prototype.start = function() {
 
       // For now injecting dependencies, could switch this to event emitter.
       Charts.genChart(this.telegram_bot, msg.chat.id, market, exchange, interval, studies)
-      
-      
-    } else {
-      this.send_message(msg.chat.id, "Sorry, this feature is only for paid members.")
-    }
   })
 
   this.telegram_bot.onText(/^\/listpaidusers/, (msg, match) => {
