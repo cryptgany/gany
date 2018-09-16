@@ -34,13 +34,6 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
   const instance = await phantom.create(['--disk-cache=true']);  
   const page = await instance.createPage();
   const imagePath = genFileLocation();
-  const resourceWait  = 300;
-  const maxRenderWait = 1000;
-
-  // Counter for resource requests
-  let count = 0;
-  let forcedRenderTimeout;
-  let renderTimeout;
 
   // Delete any old chart files
   deleteOldFiles()
@@ -54,22 +47,14 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
           instance.exit();
   }
 
-  // Register listener for requested being sent (debug)
-  await page.on('onResourceRequested', function (requestData) {
-    count += 1;
-    console.info('> ' + requestData.id + ' - ' + requestData.url);
-    clearTimeout(renderTimeout)
-  });
+  await page.on('onCallback', function(data){
+    console.log('CALLBACK: ' + JSON.stringify(data));
+    doRender();
+  })
 
 
   await page.on('onResourceReceived', async function (responseData) {
-    if (!responseData.stage || responseData.stage === 'end') {
-      count -= 1;
       console.log(responseData.id + ' ' + responseData.status + ' - ' + responseData.url);
-      if (count === 0) {
-          renderTimeout = setTimeout(doRender, resourceWait);
-      }
-  }
   })
 
 
@@ -90,14 +75,8 @@ await page.on('onLoadFinished', async(status) => {
   const status = await page.open(chartReqURL);
   if (status !== "success") {
     console.log('Unable to load url');
-    phantom.exit();
-  } else {
-      forcedRenderTimeout = setTimeout(async function () {
-          console.log(count);
-          await doRender()
-      }, maxRenderWait);
-  }
-
+    phantom.exit()
+  };
 }
 
 
