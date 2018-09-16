@@ -53,6 +53,8 @@ class InfluxTicker { // replace me with "Ticker" once "TickerData" and "Ticker" 
     return InfluxTicker.query(`select exchange, market, LAST(volume24) from ticker_data GROUP BY exchange, market`)
   }
 
+  static timeSql(datetime) { return Influx.toNanoDate(datetime.getTime()  + '000000').toNanoISOString() }
+
   static getByTime(exchange, market, type, from, to) {
     let nanoFrom = Influx.toNanoDate(from.getTime()  + '000000')
     let nanoTo = Influx.toNanoDate(to.getTime()  + '000000')
