@@ -7,9 +7,7 @@ const ExchangeList = require('./exchange_list')
 const _ = require('underscore')
 var moment = require('moment')
 
-// require('./node_modules/chart.js/dist/Chart.bundle.js');
 const Charts = require('./charts')
-//const tvChart = require('./tv-charts');
 
 require('./protofunctions.js')
 var moment = require('moment');
