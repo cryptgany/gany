@@ -529,8 +529,8 @@ GanyTheBot.prototype.start = function() {
         exchange = replyData[0]
         interval = '15'
         
-        // If only it were this easy, Bittrex reverses its pairs :|
-        if(exchange === 'Bittrex'){
+        // We need a better way to do this, some exchanges reverse pairs which doesnt match coinmarketcap API
+        if(['Bittrex','IDEX','Poloniex','EtherDelta'].includes(exchange)){
           const splitMarkets = market.split('-');
           market = `${splitMarkets[1]}-${splitMarkets[0]}`
         }
