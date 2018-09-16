@@ -1,8 +1,9 @@
+require('dotenv').config();
 const phantom = require('phantom');
 const findRemoveSync = require('find-remove')
 
 // Constants and Configuration
-const chartWebsite = 'https://flamboyant-mclean-510776.netlify.com'
+const chartWebsite = process.env.GANY_CHARTS_CONNECTION || 'http://localhost:3000'
 const chartFileDir = './tmp/images'
 
 
