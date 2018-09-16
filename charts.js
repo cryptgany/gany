@@ -34,8 +34,8 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
   const instance = await phantom.create(['--disk-cache=true']);  
   const page = await instance.createPage();
   const imagePath = genFileLocation();
-  const resourceWait  = 300;
-  const maxRenderWait = 1000;
+  const resourceWait  = 500;
+  const maxRenderWait = 1500;
 
   // Counter for resource requests
   let count = 0;
