@@ -1,154 +1,109 @@
-const ChartjsNode = require('chartjs-node');
-require('./vendor/Chart.Financial');
-var moment = require('moment')
+require('dotenv').config();
+const phantom = require('phantom');
+const findRemoveSync = require('find-remove')
 
-function randomNumber(min = 0, max = 999999999) {
-    return Math.random() * (max - min) + min;
+// Constants and Configuration
+const chartWebsite = process.env.GANY_CHARTS_CONNECTION || 'http://localhost:3000'
+const chartFileDir = './tmp/images'
+
+
+// Function reviews the chart storage directory and removes any old images
+function deleteOldFiles() {
+  // Remove files from the chartFileDir that are older than 15 minutes
+  findRemoveSync(chartFileDir, {age: {seconds: 180}, extensions: '.png', limit: 100})
 }
 
-function genChart(exchange, market, data, type = 'minute') {// type = minute/hour/day
-    var name = randomNumber() + "_chart.png"
-    if (type == 'minute')
-        var dateFormat = 'hh:mm';
-    if (type == 'hour')
-        var dateFormat = 'MMM Do HH:00';
-    var date = moment(new Date(), dateFormat);
-    date.format(dateFormat)
-    var formattedData = []
-    var time = 1
-    if (data.length >= 72) {
-        returned = reduceDataSize(data, type);
-        data = returned[0]
-        time = returned[1]
+
+// Function returns a randomly generated file name and fixed directory path based on chartFileDir
+function genFileLocation() {
+  const fileName = `${Math.random().toString().replace('0.', '')}.png`
+  return `${chartFileDir}/${fileName}`
+}
+
+
+
+// [MAIN] Function takes a screenshot of generated chart based on charting parameters and returns the file name and location
+const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange = 'Coinbase', interval = 'D', studies = '') => {
+
+  bot.sendChatAction(chatTargetID, 'upload_photo')
+  // For now market from gany is BTC-USD type, but coinmarketcal and TV want / seperator. 
+  // Convert market format purely as we may switch this in future so easier to do it here.
+  pair = pair.replace('-','/')
+
+  const chartReqURL = `${chartWebsite}/?interval=${interval.toUpperCase()}&pair=${pair.toUpperCase()}&exchange=${exchange.toUpperCase()}&studies=${studies}`
+  const instance = await phantom.create(['--disk-cache=true']);  
+  const page = await instance.createPage();
+  const imagePath = genFileLocation();
+
+  // Delete any old chart files
+  deleteOldFiles()
+
+  // Adjust viewport size
+  await page.property('viewportSize', {width: 900, height: 600})
+
+  async function doRender(){
+    await page.render(imagePath);
+          bot.sendPhoto(chatTargetID, imagePath);
+          instance.exit();
+  }
+
+  await page.on('onCallback', function(data){
+    console.log('CALLBACK: ' + JSON.stringify(data));
+    doRender();
+  })
+
+
+  await page.on('onResourceReceived', async function (responseData) {
+      console.log(responseData.id + ' ' + responseData.status + ' - ' + responseData.url);
+  })
+
+
+  // Register listener for any page errors, easy bomb out exit
+  await page.on('onError', async (errString = '') => {
+    console.error(errString);
+    await instance.exit();
+    return null;
+  })
+
+
+await page.on('onLoadFinished', async(status) => {
+  console.log('load finished');
+})
+
+
+  // Open page
+  const status = await page.open(chartReqURL);
+  if (status !== "success") {
+    console.log('Unable to load url');
+    phantom.exit()
+  };
+}
+
+
+// Supported trading view studies
+const studyArray = [{ ShortName: 'ACCD', LongName: 'Accumulation/Distribution' }, { ShortName: 'studyADR', LongName: 'ADR' }, { ShortName: 'AROON', LongName: 'Aroon' }, { ShortName: 'ATR', LongName: 'Average True Range' }, { ShortName: 'AwesomeOscillator', LongName: 'Awesome Oscillator' }, { ShortName: 'BB', LongName: 'Bollinger Bands' }, { ShortName: 'BollingerBandsR', LongName: 'Bollinger Bands %B' }, { ShortName: 'BollingerBandsWidth', LongName: 'Bollinger Bands Width' }, { ShortName: 'CMF', LongName: 'Chaikin Money Flow' }, { ShortName: 'ChaikinOscillator', LongName: 'Chaikin Oscillator' }, { ShortName: 'chandeMO', LongName: 'Chande Momentum Oscillator' }, { ShortName: 'ChoppinessIndex', LongName: 'Choppiness Index' }, { ShortName: 'CCI', LongName: 'Commodity Channel Index' }, { ShortName: 'CRSI', LongName: 'ConnorsRSI' }, { ShortName: 'CorrelationCoefficient', LongName: 'Correlation Coefficient' }, { ShortName: 'DetrendedPriceOscillator', LongName: 'Detrended Price Oscillator' }, { ShortName: 'DM', LongName: 'Directional Movement' }, { ShortName: 'DONCH', LongName: 'Donchian Channels' }, { ShortName: 'DoubleEMA', LongName: 'Double EMA' }, { ShortName: 'EaseOfMovement', LongName: 'Ease Of Movement' }, { ShortName: 'EFI', LongName: 'Elder\'s Force Index' }, { ShortName: 'ElliottWave', LongName: 'Elliott Wave' }, { ShortName: 'ENV', LongName: 'Envelope' }, { ShortName: 'FisherTransform', LongName: 'Fisher Transform' }, { ShortName: 'HV', LongName: 'Historical Volatility' }, { ShortName: 'hullMA', LongName: 'Hull Moving Average' }, { ShortName: 'IchimokuCloud', LongName: 'Ichimoku Cloud' }, { ShortName: 'KLTNR', LongName: 'Keltner Channels' }, { ShortName: 'KST', LongName: 'Know Sure Thing' }, { ShortName: 'LinearRegression', LongName: 'Linear Regression' }, { ShortName: 'MACD', LongName: 'MACD' }, { ShortName: 'MOM', LongName: 'Momentum' }, { ShortName: 'MF', LongName: 'Money Flow' }, { ShortName: 'MoonPhases', LongName: 'Moon Phases' }, { ShortName: 'MASimple', LongName: 'Moving Average' }, { ShortName: 'MAExp', LongName: 'Moving Average Exponentional' }, { ShortName: 'MAWeighted', LongName: 'Moving Average Weighted' }, { ShortName: 'OBV', LongName: 'On Balance Volume' }, { ShortName: 'PSAR', LongName: 'Parabolic SAR' }, { ShortName: 'PivotPointsHighLow', LongName: 'Pivot Points High Low' }, { ShortName: 'PivotPointsStandard', LongName: 'Pivot Points Standard' }, { ShortName: 'PriceOsc', LongName: 'Price Oscillator' }, { ShortName: 'PriceVolumeTrend', LongName: 'Price Volume Trend' }, { ShortName: 'ROC', LongName: 'Rate Of Change' }, { ShortName: 'RSI', LongName: 'Relative Strength Index' }, { ShortName: 'VigorIndex', LongName: 'Relative Vigor Index' }, { ShortName: 'VolatilityIndex', LongName: 'Relative Volatility Index' }, { ShortName: 'SMIErgodicIndicator', LongName: 'SMI Ergodic Indicator' }, { ShortName: 'SMIErgodicOscillator', LongName: 'SMI Ergodic Oscillator' }, { ShortName: 'Stochastic', LongName: 'Stochastic' }, { ShortName: 'StochasticRSI', LongName: 'Stochastic RSI' }, { ShortName: 'TripleEMA', LongName: 'Triple EMA' }, { ShortName: 'Trix', LongName: 'TRIX' }, { ShortName: 'UltimateOsc', LongName: 'Ultimate Oscillator' }, { ShortName: 'VSTOP', LongName: 'Volatility Stop' }, { ShortName: 'Volume', LongName: 'Volume' }, { ShortName: 'VWAP', LongName: 'VWAP' }, { ShortName: 'MAVolumeWeighted', LongName: 'VWMA' }, { ShortName: 'WilliamR', LongName: 'Williams %R' }, { ShortName: 'WilliamsAlligator', LongName: 'Williams Alligator' }, { ShortName: 'WilliamsFractal', LongName: 'Williams Fractal' }, { ShortName: 'ZigZag', LongName: 'Zig Zag' }]
+
+function convertStudyNames(studyShortNames = []){
+  // Example studies = ['ACCD','AROON']
+  const longStudyNames = studyShortNames.map((studyShortName) => {
+    const foundStudy = studyArray.find(study => study.ShortName.toUpperCase() === studyShortName.toUpperCase())
+    if(!foundStudy){
+      return false
     }
-    // data = data.reverse()
-    data.forEach((d) => {
-        formattedData.push({
-            t: date,
-            o: d.open,
-            h: d.minuteHigh || d.high,
-            l: d.minuteLow  || d.low,
-            c: d.close
-        })
-        if (type == 'minute') {
-            date = date.clone().subtract(time, 'm');
-        } else {
-            date = date.clone().subtract(time, 'h');
-        }
-    })
-    chartJsOptions = {
-        type: 'financial',
-        data: {
-            datasets: [{
-                label: exchange + " - " + market + " | CryptGany ~ CryptoWise.net",
-                data: formattedData
-            }]
-        },
-        options: {
-            scales: {
-                xAxes: [{
-                type: 'time',
-                    time: {
-                        displayFormats: {
-                           'millisecond': dateFormat,
-                           'second': dateFormat,
-                           'minute': dateFormat,
-                           'hour': dateFormat,
-                           'day': dateFormat,
-                           'week': dateFormat,
-                           'month': dateFormat,
-                           'quarter': dateFormat,
-                           'year': dateFormat,
-                        }
-                    }
-                }],
-                yAxes: [
-                    {
-                        ticks: {
-                            callback: function(label, index, labels) {
-                                return label.toFixed(8);
-                            }
-                        },
-                    }
-                ]
-            }
-        }
-    }
-
-    // 600x600 canvas size
-    var chartNode = new ChartjsNode(800, 500);
-    return chartNode.drawChart(chartJsOptions).then(() => {
-        // chart is created
-
-        // get image as png buffer
-        return chartNode.getImageBuffer('image/png');
-    }).then(buffer => {
-        Array.isArray(buffer) // => true
-        // as a stream
-        return chartNode.getImageStream('image/png');
-    }).then(streamResult => {
-        // using the length property you can do things like
-        // directly upload the image to s3 by using the
-        // stream and length properties
-        streamResult.stream // => Stream object
-        streamResult.length // => Integer length of stream
-        // write to a file
-        return chartNode.writeImageToFile('image/png', './tmp/images/' + name);
-    }).then(() => {
-        return './tmp/images/' + name
-        // chart is now written to the file path
-        // ./testimage.png
-    });
+    return foundStudy.LongName;
+  }).filter(x => (x !== false ))
+  return longStudyNames;
 }
 
-function reduceDataSize(data, type) {
-    var newSize = parseInt(data.length / 36)
-    var newData = []
-    data.eachPair(newSize, (e) => {
-        newData.push(sumFinancialValues(e, type))
-    })
-    return [newData, newSize]
+function isAChartStudy(testString = ""){
+  const foundStudy = studyArray.find(study => study.ShortName.toUpperCase() === testString.toUpperCase());
+  if(!foundStudy){
+    return false
+  }
+  return true;
 }
 
-function sumFinancialValues(data, type) {
-    var o = data[data.length - 1].open
-    if (type == 'minute') {
-        var h = data[0].minuteHigh
-        var l = data[0].minuteLow
-    } else {
-        var h = data[0].high
-        var l = data[0].low
-    }
-
-    var c = data[0].close
-    data.forEach((e) => {
-        if (type == 'minute') {
-            if (e.minuteHigh > h)
-                h = e.minuteHigh;
-            if (e.minuteLow < l)
-                l = e.minuteLow;
-        } else {
-            if (e.high > h)
-                h = e.high;
-            if (e.low < l)
-                l = e.low;
-        }
-    })
-    return {open: o, high: h, low: l, close: c}
+module.exports = {
+  genChart,
+  isAChartStudy,
 }
-
-Array.prototype.eachPair = function(n, callback) { // return in groups of n
-    var count = 0; var idx = 0; var lgt = this.length
-    var cache = []
-    this.forEach((e) => {
-        cache.push(e)
-        count += 1; idx += 1
-        if (count >= n || idx == lgt) {
-            callback(cache)
-            cache = []
-            count = 0
-        }
-    })
-}
-
-module.exports = genChart;

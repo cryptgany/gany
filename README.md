@@ -56,6 +56,20 @@ GANY_KEY= HTTP_API_KEY_GIVEN_BY_BOTFATHER
 PERSONAL_CHANNEL= PERSONAL_ID_GIVEN_BY_/whatsmyid
 ```
 
+- Add Gany-Charts
+
+```sh
+$ git clone http://github.com/carlosero/gany-charts
+$ npm install
+$ npm run-script build
+$ node index.js
+```
+
+Add Gany-Charts url to .env
+```sh
+GANY_CHARTS_CONNECTION=http://chartsmodulelocation:3000
+```
+
 - Save changes with:
 ```sh
 $ npm install
