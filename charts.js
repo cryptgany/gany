@@ -78,7 +78,7 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
   const status = await page.open(chartReqURL);
   if (status !== "success") {
     console.log('Unable to load url');
-    phantom.exit()
+    instance.exit()
   };
 }
 
