@@ -38,6 +38,9 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
   // Delete any old chart files
   deleteOldFiles()
 
+  // ensure phantom process ends if nothing below triggers
+  setTimeout(() => { console.log("Killing phantomjs instance if it's still around"); instance.exit(); }, 20000);
+
   // Adjust viewport size
   await page.property('viewportSize', {width: 900, height: 600})
 
@@ -66,16 +69,16 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
   })
 
 
-await page.on('onLoadFinished', async(status) => {
-  console.log('load finished');
-})
+  await page.on('onLoadFinished', async(status) => {
+    console.log('load finished');
+  })
 
 
   // Open page
   const status = await page.open(chartReqURL);
   if (status !== "success") {
     console.log('Unable to load url');
-    phantom.exit()
+    instance.exit()
   };
 }
 
