@@ -13,7 +13,7 @@ let hourlyTickerDataJob = new CronJob('00 00 */1 * * *', function() {
   time.setHours(time.getHours() - 1) // 1 hour ago
 
   let influxData = []
-  InfluxTicker.getResumeByTypeAndTime(60, time).then((data) => {
+  InfluxTicker.getResumeByTypeAndTime(1, time).then((data) => {
     data.forEach((row) => {
       let fields = {high: row.high, low: row.low, open: row.open, close: row.close, volume: row.volume, volume24: row.volume24}
       influxData.push({
