@@ -55,6 +55,14 @@ class InfluxTicker { // replace me with "Ticker" once "TickerData" and "Ticker" 
 
   static timeSql(datetime) { return Influx.toNanoDate(datetime.getTime()  + '000000').toNanoISOString() }
 
+  static getResumeByTypeAndTime(type, from, to = new Date()) {
+    let query = 'select FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, '
+    query += "SUM(volume) as volume, LAST(volume24) as volume24 "
+    query += `from ticker_data where type='${type}' and time >= '${InfluxTicker.timeSql(from)}' and time <= '${InfluxTicker.timeSql(to)}' `
+    query += "group by exchange, market"
+    return this.query(query)
+  }
+
   static getByTime(exchange, market, type, from, to) {
     let nanoFrom = Influx.toNanoDate(from.getTime()  + '000000')
     let nanoTo = Influx.toNanoDate(to.getTime()  + '000000')
