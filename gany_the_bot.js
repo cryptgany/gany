@@ -515,7 +515,7 @@ GanyTheBot.prototype.start = function() {
 
       data = msg.text.toUpperCase().split(' ')
       let [ command, market, exchange, interval ] = data;
-
+     
       // Reply to messages are gonna get auto charted
       if(msg.reply_to_message){
         // Parse the text from the message
@@ -584,9 +584,15 @@ GanyTheBot.prototype.start = function() {
       // Since our studies function in gany-charts will ditch anything that isnt a valid study,
       // We can user the power of awesome to pass all the text into it and let it handle the rest.
       const studies = data.join('_');
+      
+      // See if we have LOG
+      let logScale = 0
+      if(data.includes('LOG')){
+         logScale = 1
+      }
 
       // For now injecting dependencies, could switch this to event emitter.
-      Charts.genChart(this.telegram_bot, msg.chat.id, market, exchange, interval, studies)
+      Charts.genChart(this.telegram_bot, msg.chat.id, market, exchange, interval, studies, logScale)
   })
 
   this.telegram_bot.onText(/^\/listpaidusers/, (msg, match) => {

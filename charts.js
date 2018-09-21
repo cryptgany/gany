@@ -23,14 +23,14 @@ function genFileLocation() {
 
 
 // [MAIN] Function takes a screenshot of generated chart based on charting parameters and returns the file name and location
-const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange = 'Coinbase', interval = 'D', studies = '') => {
+const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange = 'Coinbase', interval = 'D', studies = '', logScale = 1) => {
 
   bot.sendChatAction(chatTargetID, 'upload_photo')
   // For now market from gany is BTC-USD type, but coinmarketcal and TV want / seperator. 
   // Convert market format purely as we may switch this in future so easier to do it here.
   pair = pair.replace('-','/')
 
-  const chartReqURL = `${chartWebsite}/?interval=${interval.toUpperCase()}&pair=${pair.toUpperCase()}&exchange=${exchange.toUpperCase()}&studies=${studies}`
+  const chartReqURL = `${chartWebsite}/?interval=${interval.toUpperCase()}&pair=${pair.toUpperCase()}&exchange=${exchange.toUpperCase()}&studies=${studies}&logscale=${logScale}`
   const instance = await phantom.create(['--disk-cache=true']);  
   const page = await instance.createPage();
   const imagePath = genFileLocation();
@@ -62,10 +62,17 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
 
 
   // Register listener for any page errors, easy bomb out exit
-  await page.on('onError', async (errString = '') => {
-    console.error(errString);
+  await page.on('onError', async (msg, trace) => {
+    var msgStack = ['PHANTOM ERROR: ' + msg];
+    if (trace && trace.length) {
+      msgStack.push('TRACE:');
+      trace.forEach(function(t) {
+        msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line + (t.function ? ' (in function ' + t.function +')' : ''));
+      });
+    }
+    console.log(msgStack.join('\n'));
+
     await instance.exit();
-    return null;
   })
 
 
@@ -73,6 +80,9 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
     console.log('load finished');
   })
 
+  await page.on('onConsoleMessage', async(msg, lineNum, sourceId) => {
+    console.log(`[Console]: ${sourceId} ${lineNum} ${msg}`);
+  })
 
   // Open page
   const status = await page.open(chartReqURL);
