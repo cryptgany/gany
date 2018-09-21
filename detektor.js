@@ -185,8 +185,4 @@ Detektor.prototype.getMinuteMarketData = function(exchange, market, time) {
   return this.ticker_handler.getMinuteMarketData(exchange, market, time)
 }
 
-Detektor.prototype.getHourMarketData = function(exchange, market, ticker_type, time) {
-  return this.ticker_handler.getHourMarketData(exchange, market, ticker_type, time)
-}
-
 module.exports = Detektor;
