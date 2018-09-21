@@ -1,5 +1,6 @@
 require('dotenv').config();
-const phantom = require('phantom');
+//const phantom = require('phantom');
+const puppeteer = require('puppeteer');
 const findRemoveSync = require('find-remove')
 
 // Constants and Configuration
@@ -20,81 +21,52 @@ function genFileLocation() {
   return `${chartFileDir}/${fileName}`
 }
 
-
-
 // [MAIN] Function takes a screenshot of generated chart based on charting parameters and returns the file name and location
-const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange = 'Coinbase', interval = 'D', studies = '', logScale = 1) => {
+const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange = 'Coinbase', interval = 'D', studies = '', logScale = 1, theme = 'Light') => {
 
   bot.sendChatAction(chatTargetID, 'upload_photo')
   // For now market from gany is BTC-USD type, but coinmarketcal and TV want / seperator. 
   // Convert market format purely as we may switch this in future so easier to do it here.
   pair = pair.replace('-','/')
 
-  const chartReqURL = `${chartWebsite}/?interval=${interval.toUpperCase()}&pair=${pair.toUpperCase()}&exchange=${exchange.toUpperCase()}&studies=${studies}&logscale=${logScale}`
-  const instance = await phantom.create(['--disk-cache=true']);  
-  const page = await instance.createPage();
+  const chartReqURL = `${chartWebsite}/?interval=${interval.toUpperCase()}&pair=${pair.toUpperCase()}&exchange=${exchange.toUpperCase()}&studies=${studies}&logScale=${logScale}&theme=${theme}`
   const imagePath = genFileLocation();
 
   // Delete any old chart files
   deleteOldFiles()
 
   // ensure phantom process ends if nothing below triggers
-  setTimeout(() => { console.log("Killing phantomjs instance if it's still around"); instance.exit(); }, 20000);
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
 
-  // Adjust viewport size
-  await page.property('viewportSize', {width: 900, height: 600})
+  setTimeout(() => { console.log("Killing browser instance if it's still around"); browser.close(); }, 20000);
 
   async function doRender(){
-    await page.render(imagePath);
-          bot.sendPhoto(chatTargetID, imagePath);
-          instance.exit();
+      await page.screenshot({path: imagePath});
+      await browser.close();
+      bot.sendPhoto(chatTargetID, imagePath);
+      console.log(`Screenshot File: ${imagePath}`)
   }
 
-  await page.on('onCallback', function(data){
-    console.log('CALLBACK: ' + JSON.stringify(data));
-    doRender();
-  })
+  console.log(`Opening page: ${chartReqURL}`)
+  await page.goto(chartReqURL).catch(err => console.log(err));
+
+  page.on('console', async (msg) => {
+    //console.log(msg);
+    if (msg._type === "log" && msg._text === "Take screenshot!"){
+        await doRender()
+    }   
+  });
 
 
-  await page.on('onResourceReceived', async function (responseData) {
-      console.log(responseData.id + ' ' + responseData.status + ' - ' + responseData.url);
-  })
 
-
-  // Register listener for any page errors, easy bomb out exit
-  await page.on('onError', async (msg, trace) => {
-    var msgStack = ['PHANTOM ERROR: ' + msg];
-    if (trace && trace.length) {
-      msgStack.push('TRACE:');
-      trace.forEach(function(t) {
-        msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line + (t.function ? ' (in function ' + t.function +')' : ''));
-      });
-    }
-    console.log(msgStack.join('\n'));
-
-    await instance.exit();
-  })
-
-
-  await page.on('onLoadFinished', async(status) => {
-    console.log('load finished');
-  })
-
-  await page.on('onConsoleMessage', async(msg, lineNum, sourceId) => {
-    console.log(`[Console]: ${sourceId} ${lineNum} ${msg}`);
-  })
-
-  // Open page
-  const status = await page.open(chartReqURL);
-  if (status !== "success") {
-    console.log('Unable to load url');
-    instance.exit()
-  };
 }
 
 
+
+
 // Supported trading view studies
-const studyArray = [{ ShortName: 'ACCD', LongName: 'Accumulation/Distribution' }, { ShortName: 'studyADR', LongName: 'ADR' }, { ShortName: 'AROON', LongName: 'Aroon' }, { ShortName: 'ATR', LongName: 'Average True Range' }, { ShortName: 'AwesomeOscillator', LongName: 'Awesome Oscillator' }, { ShortName: 'BB', LongName: 'Bollinger Bands' }, { ShortName: 'BollingerBandsR', LongName: 'Bollinger Bands %B' }, { ShortName: 'BollingerBandsWidth', LongName: 'Bollinger Bands Width' }, { ShortName: 'CMF', LongName: 'Chaikin Money Flow' }, { ShortName: 'ChaikinOscillator', LongName: 'Chaikin Oscillator' }, { ShortName: 'chandeMO', LongName: 'Chande Momentum Oscillator' }, { ShortName: 'ChoppinessIndex', LongName: 'Choppiness Index' }, { ShortName: 'CCI', LongName: 'Commodity Channel Index' }, { ShortName: 'CRSI', LongName: 'ConnorsRSI' }, { ShortName: 'CorrelationCoefficient', LongName: 'Correlation Coefficient' }, { ShortName: 'DetrendedPriceOscillator', LongName: 'Detrended Price Oscillator' }, { ShortName: 'DM', LongName: 'Directional Movement' }, { ShortName: 'DONCH', LongName: 'Donchian Channels' }, { ShortName: 'DoubleEMA', LongName: 'Double EMA' }, { ShortName: 'EaseOfMovement', LongName: 'Ease Of Movement' }, { ShortName: 'EFI', LongName: 'Elder\'s Force Index' }, { ShortName: 'ElliottWave', LongName: 'Elliott Wave' }, { ShortName: 'ENV', LongName: 'Envelope' }, { ShortName: 'FisherTransform', LongName: 'Fisher Transform' }, { ShortName: 'HV', LongName: 'Historical Volatility' }, { ShortName: 'hullMA', LongName: 'Hull Moving Average' }, { ShortName: 'IchimokuCloud', LongName: 'Ichimoku Cloud' }, { ShortName: 'KLTNR', LongName: 'Keltner Channels' }, { ShortName: 'KST', LongName: 'Know Sure Thing' }, { ShortName: 'LinearRegression', LongName: 'Linear Regression' }, { ShortName: 'MACD', LongName: 'MACD' }, { ShortName: 'MOM', LongName: 'Momentum' }, { ShortName: 'MF', LongName: 'Money Flow' }, { ShortName: 'MoonPhases', LongName: 'Moon Phases' }, { ShortName: 'MASimple', LongName: 'Moving Average' }, { ShortName: 'MAExp', LongName: 'Moving Average Exponentional' }, { ShortName: 'MAWeighted', LongName: 'Moving Average Weighted' }, { ShortName: 'OBV', LongName: 'On Balance Volume' }, { ShortName: 'PSAR', LongName: 'Parabolic SAR' }, { ShortName: 'PivotPointsHighLow', LongName: 'Pivot Points High Low' }, { ShortName: 'PivotPointsStandard', LongName: 'Pivot Points Standard' }, { ShortName: 'PriceOsc', LongName: 'Price Oscillator' }, { ShortName: 'PriceVolumeTrend', LongName: 'Price Volume Trend' }, { ShortName: 'ROC', LongName: 'Rate Of Change' }, { ShortName: 'RSI', LongName: 'Relative Strength Index' }, { ShortName: 'VigorIndex', LongName: 'Relative Vigor Index' }, { ShortName: 'VolatilityIndex', LongName: 'Relative Volatility Index' }, { ShortName: 'SMIErgodicIndicator', LongName: 'SMI Ergodic Indicator' }, { ShortName: 'SMIErgodicOscillator', LongName: 'SMI Ergodic Oscillator' }, { ShortName: 'Stochastic', LongName: 'Stochastic' }, { ShortName: 'StochasticRSI', LongName: 'Stochastic RSI' }, { ShortName: 'TripleEMA', LongName: 'Triple EMA' }, { ShortName: 'Trix', LongName: 'TRIX' }, { ShortName: 'UltimateOsc', LongName: 'Ultimate Oscillator' }, { ShortName: 'VSTOP', LongName: 'Volatility Stop' }, { ShortName: 'Volume', LongName: 'Volume' }, { ShortName: 'VWAP', LongName: 'VWAP' }, { ShortName: 'MAVolumeWeighted', LongName: 'VWMA' }, { ShortName: 'WilliamR', LongName: 'Williams %R' }, { ShortName: 'WilliamsAlligator', LongName: 'Williams Alligator' }, { ShortName: 'WilliamsFractal', LongName: 'Williams Fractal' }, { ShortName: 'ZigZag', LongName: 'Zig Zag' }]
+const studyArray = [{ ShortName: 'ACCD', LongName: 'Accumulation/Distribution' }, { ShortName: 'AD', LongName: 'Advance/Decline' }, { ShortName: 'ADX', LongName: 'Average Directional Index' }, { ShortName: 'ALMA', LongName: 'Arnaud Legoux Moving Average' }, { ShortName: 'AO', LongName: 'Awesome Oscillator' }, { ShortName: 'AROON', LongName: 'Aroon' }, { ShortName: 'ASI', LongName: 'Accumulative Swing Index' }, { ShortName: 'ATR', LongName: 'Average True Range' }, { ShortName: 'BB', LongName: 'Bollinger Bands' }, { ShortName: 'BBR', LongName: 'Bollinger Bands %B' }, { ShortName: 'BBW', LongName: 'Bollinger Bands Width' }, { ShortName: 'BoP', LongName: 'Balance of Power' }, { ShortName: 'CC', LongName: 'Correlation Coeff' }, { ShortName: 'CCI', LongName: 'Commodity Channel Index' }, { ShortName: 'CI', LongName: 'Choppiness Index' }, { ShortName: 'CKS', LongName: 'Chande Kroll Stop' }, { ShortName: 'CLOUD', LongName: 'Ichimoku Cloud' }, { ShortName: 'CMF', LongName: 'Chaikin Money Flow' }, { ShortName: 'CMO', LongName: 'Chande Momentum Oscillator' }, { ShortName: 'CO', LongName: 'Chaikin Oscillator' }, { ShortName: 'CopCurve', LongName: 'Coppock Curve' }, { ShortName: 'CRSI', LongName: 'Connors RSI' }, { ShortName: 'CZ', LongName: 'Chop Zone' }, { ShortName: 'DEMA', LongName: 'Double Exponential Moving Average' }, { ShortName: 'DM', LongName: 'Directional Movement Index' }, { ShortName: 'DONCH', LongName: 'Donchian Channels' }, { ShortName: 'DPO', LongName: 'Detrended Price Oscillator' }, { ShortName: 'EFI', LongName: 'Elders Force Index' }, { ShortName: 'EMAC', LongName: 'EMA Cross' }, { ShortName: 'ENV', LongName: 'Envelope' }, { ShortName: 'EOM', LongName: 'Ease of Movement' }, { ShortName: 'FT', LongName: 'Fisher Transform' }, { ShortName: 'HMA', LongName: 'Hull MA' }, { ShortName: 'HV', LongName: 'Historical Volatility' }, { ShortName: 'KELC', LongName: 'Keltner Channels' }, { ShortName: 'KLINGO', LongName: 'Klinger Oscillator' }, { ShortName: 'KST', LongName: 'Know Sure Thing' }, { ShortName: 'LRC', LongName: 'Linear Regression Curve' }, { ShortName: 'LSMA', LongName: 'Least Squares Moving Average' }, { ShortName: 'MA', LongName: 'Moving Average' }, { ShortName: 'MAC', LongName: 'Moving Average Channel' }, { ShortName: 'MACD', LongName: 'MACD' }, { ShortName: 'MAEMAX', LongName: 'MA with EMA Cross' }, { ShortName: 'MAEXP', LongName: 'Moving Average Exponential' }, { ShortName: 'MASSI', LongName: 'Mass Index' }, { ShortName: 'MAWEIGHT', LongName: 'Moving Average Weighted' }, { ShortName: 'MAX', LongName: 'MA Cross' }, { ShortName: 'MCDYN', LongName: 'McGinley Dynamic' }, { ShortName: 'MF', LongName: 'Money Flow' }, { ShortName: 'MOM', LongName: 'Momentum' }, { ShortName: 'NV', LongName: 'Net Volume' }, { ShortName: 'OBV', LongName: 'On Balance Volume' }, { ShortName: 'PC', LongName: 'Price Channel' }, { ShortName: 'PIVOTS', LongName: 'Pivot Points Standard' }, { ShortName: 'POSC', LongName: 'Price Oscillator' }, { ShortName: 'PSAR', LongName: 'Parabolic SAR' }, { ShortName: 'PVT', LongName: 'Price Volume Trend' }, { ShortName: 'ROC', LongName: 'Rate Of Change' }, { ShortName: 'RSI', LongName: 'Relative Strength Index' }, { ShortName: 'RVI', LongName: 'Relative Vigor Index' }, { ShortName: 'RVOI', LongName: 'Relative Volatility Index' }, { ShortName: 'ShortName', LongName: 'Long name' }, { ShortName: 'SMIIO', LongName: 'SMI Ergodic Indicator/Oscillator' }, { ShortName: 'SMMA', LongName: 'Smoothed Moving Average' }, { ShortName: 'Stoch', LongName: 'Stochastic' }, { ShortName: 'StochRSI', LongName: 'Stochastic RSI' }, { ShortName: 'SuperTrend', LongName: 'SuperTrend' }, { ShortName: 'TEMA', LongName: 'Triple EMA' }, { ShortName: 'Trix', LongName: 'TRIX' }, { ShortName: 'TSI', LongName: 'True Strength Indicator' }, { ShortName: 'ULTO', LongName: 'Ultimate Oscillator' }, { ShortName: 'VOLO', LongName: 'Volume Oscillator' }, { ShortName: 'Volume', LongName: 'Volume' }, { ShortName: 'VORTI', LongName: 'Vortex Indicator' }, { ShortName: 'VWAP', LongName: 'VWAP' }, { ShortName: 'VWMA', LongName: 'VWMA' }, { ShortName: 'WILLALLI', LongName: 'Williams Alligator' }, { ShortName: 'WILLFRAC', LongName: 'Williams Fractals' }, { ShortName: 'WILLR', LongName: 'Willams %R' }, { ShortName: 'ZigZag', LongName: 'Zig Zag' }]
 
 function convertStudyNames(studyShortNames = []){
   // Example studies = ['ACCD','AROON']
@@ -108,6 +80,14 @@ function convertStudyNames(studyShortNames = []){
   return longStudyNames;
 }
 
+function getStudyListString(){
+  let replyString = ""
+  studyArray.forEach((study, index) => {
+    replyString += `${study.LongName} (${study.ShortName})\n`
+  }) 
+  return replyString;
+}
+
 function isAChartStudy(testString = ""){
   const foundStudy = studyArray.find(study => study.ShortName.toUpperCase() === testString.toUpperCase());
   if(!foundStudy){
@@ -119,4 +99,5 @@ function isAChartStudy(testString = ""){
 module.exports = {
   genChart,
   isAChartStudy,
+  getStudyListString,
 }

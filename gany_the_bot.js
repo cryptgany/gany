@@ -509,12 +509,40 @@ GanyTheBot.prototype.start = function() {
   // Chart command
   this.telegram_bot.onText(/^\/chart/, async (msg, match) => {
       let subscriber = undefined
+      let command, market, exchange, theme = '';
+      let logScale = 0;
+      let data = msg.text.toUpperCase().split(' ')
+
+
+     
+      
+
       if (this.is_subscribed(msg.from.id)) {
         subscriber = this.find_subscriber(msg.from.id)
       }
 
-      data = msg.text.toUpperCase().split(' ')
-      let [ command, market, exchange, interval ] = data;
+      // Send them some help info.
+      if(data[1] === 'INDICATORS'){
+        const replyMsg = `<b>Chart Indicator List</b>\nUse the short name in brackets in the /chart command.\n\n<b>Example:</b>\n<code>/chart btc cloud bb rsi\n\n</code><code>${Charts.getStudyListString()}</code>`;
+        return this.send_message(msg.chat.id, replyMsg, {parse_mode: 'HTML'})
+      }
+  
+      
+      
+      // See if we have Log scale request and remove from data array.
+            if(data.includes('LOG')){
+               logScale = 1
+               data = data.filter(e => e!=='LOG')
+            }
+      
+            // See if we have a theme Light / Dark and remove from data array.
+            if(data.includes('DARK')){
+              theme = 'Dark'
+              data = data.filter(e => e!=='DARK')
+            }
+
+      // Map remaining items
+      [ command, market, exchange, interval ] = data;
      
       // Reply to messages are gonna get auto charted
       if(msg.reply_to_message){
@@ -528,6 +556,11 @@ GanyTheBot.prototype.start = function() {
         if(['Bittrex','IDEX','Poloniex','EtherDelta'].includes(exchange)){
           const splitMarkets = market.split('-');
           market = `${splitMarkets[1]}-${splitMarkets[0]}`
+        }
+
+        // Gany stroes Huobi.pro as Huobi, but the exchange is actually called huobipro
+        if(exchange === 'Huobi'){
+          exchange = 'huobipro'
         }
       }
 
@@ -584,15 +617,9 @@ GanyTheBot.prototype.start = function() {
       // Since our studies function in gany-charts will ditch anything that isnt a valid study,
       // We can user the power of awesome to pass all the text into it and let it handle the rest.
       const studies = data.join('_');
-      
-      // See if we have LOG
-      let logScale = 0
-      if(data.includes('LOG')){
-         logScale = 1
-      }
 
       // For now injecting dependencies, could switch this to event emitter.
-      Charts.genChart(this.telegram_bot, msg.chat.id, market, exchange, interval, studies, logScale)
+      Charts.genChart(this.telegram_bot, msg.chat.id, market, exchange, interval, studies, logScale, theme)
   })
 
   this.telegram_bot.onText(/^\/listpaidusers/, (msg, match) => {
