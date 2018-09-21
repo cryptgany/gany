@@ -23,7 +23,7 @@ var dailyTickerDataJob = new CronJob('00 30 00 */1 * *', function() { // run at 
       })
     })
 
-    TickerData.storeMany(influxData, () => { logger.log("Daily tickers stored into influx for", influxData.length, "exchange-markets")})
+    TickerData.storeManyInBatches(influxData, () => { logger.log("Daily tickers stored into influx for", influxData.length, "exchange-markets")})
   })
 }, function () {
   /* This function is executed when the job stops */

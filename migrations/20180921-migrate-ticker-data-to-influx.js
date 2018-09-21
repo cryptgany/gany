@@ -21,16 +21,17 @@ let OldTickerData = mongoose.model('ticker_datas', tickerDataSchema)
 
 // We find by day so it brings an usable amount of records
 var now = new Date();
-var daysOfYear = [];
-for (var to = new Date(2017, 4, 1); to <= now; to.setDate(to.getDate() + 1)) {
-	var from = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-	var influxData = []
+
+function work(date) {
+	let influxData = []
+	let from = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 	from.setDate(from.getDate() - 1)
 	from.setSeconds(from.getSeconds() + 1)
-	console.log("Working for date:", to)
-	OldTickerData.find({ticker_type: 'hour', createdAt: { $gte: from, $lte: to }}, (err, tickers) => {
+	console.log("Working for date:", date)
+	OldTickerData.find({ticker_type: 'hour', createdAt: { $gte: from, $lte: date }}, (err, tickers) => {
+		console.log("Response from mongo: ", tickers.length)
 		tickers.forEach((ticker) => {
-			var fields = {high: ticker.high, low: ticker.low, open: ticker.open, close: ticker.close, volume: 0, volume24: ticker.volume}
+			let fields = {high: ticker.high, low: ticker.low, open: ticker.open, close: ticker.close, volume: 0, volume24: ticker.volume}
 			influxData.push({
 				measurement: 'ticker_data',
 				tags: { market: ticker.market, exchange: ticker.exchange, type: '60' },
@@ -38,20 +39,13 @@ for (var to = new Date(2017, 4, 1); to <= now; to.setDate(to.getDate() + 1)) {
 				timestamp: ticker.createdAt
 			})
 		})
-		TickerData.storeMany(influxData, () => { logger.log("Stored", influxData.length, "exchange-markets")})
+		TickerData.storeManyInBatches(influxData, () => {
+			console.log("Stored", influxData.length, "exchange-markets, running next date")
+			let newDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+			newDate.setDate(newDate.getDate() + 1)
+			work(newDate)
+		})
 	})
 }
 
-
-
-function storeIterative(type, from, to) {
-	OldTickerData.find({ticker_type: type, createdAt: { $gte: from, $lte: to }}, (err, tickers) => {
-	})
-}
-
-> new Date(2018, 7, 0)
-2018-07-31T05:00:00.000Z
-> new Date(2018, 6, 1)
-
-
-storeIterative('hour', new Date(2017,1,1,0,0,0), new Date(2017,7,0,23,59,59))
+work(new Date(2017, 4, 1))
