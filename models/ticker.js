@@ -28,38 +28,6 @@ class Ticker {
     static getExchangeMarkets(callback) {
         client.keys('*', callback)
     }
-    static getHourlyHighLowResume(data) { // data = any ticker ary from any exchange with high/low data, returns OHLC
-        return new Promise((resolve, reject) => {
-            try {
-                let high = 0
-                let low = data[0].last
-                data.forEach((d) => {
-                    if (d.last > high)
-                        high = d.last
-                    if (d.last < low)
-                        low = d.last
-                })
-
-                resolve({open: data[0].last, high: high, low: low, close: data[data.length-1].last, volume: data[data.length-1].volume})
-            } catch (e) { reject(e) }
-        })
-    }
-    static getDailyHighLowResume(data) { // data = any ticker ary from any exchange with high/low data, returns OHLC
-        return new Promise((resolve, reject) => {
-            try {
-                let high = 0
-                let low = data[0].low
-                data.forEach((d) => {
-                    if (d.high > high)
-                        high = d.high
-                    if (d.low < low)
-                        low = d.low
-                })
-
-                resolve({open: data[0].open, high: high, low: low, close: data[data.length-1].close, volume: data[data.length-1].volume})
-            } catch (e) { reject(e) }
-        })
-    }
 }
 
 module.exports = Ticker;

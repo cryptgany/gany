@@ -1,41 +1,35 @@
 const Logger = require('../logger');
 
-var CronJob = require('cron').CronJob;
-var Ticker = require('../models/ticker')
-var TickerData = require('../models/ticker_data')
+let CronJob = require('cron').CronJob;
+let TickerData = require('../models/ticker_data')
 
-var logger = new Logger();
+let logger = new Logger();
 
-var hourlyTickerDataJob = new CronJob('00 00 */1 * * *', function() {
+let hourlyTickerDataJob = new CronJob('00 00 */1 * * *', function() {
   logger.log("Starting Hourly Ticker Data Job")
-  let count = 0
-  Ticker.getExchangeMarkets((err,exchangeMarkets) => {
-    exchangeMarkets.forEach((exchangeMarket) => {
-      setTimeout(() => {
-        spt = exchangeMarket.split('.')
-        logger.log("Saving hourly data for", spt[0], spt[1])
-        Ticker.getRange(spt[0], spt[1], 0, 59, (err, data) => {
-          Ticker.getHourlyHighLowResume(data.reverse()).then((tdata) => { // we reverse it because that way the [0] element is the real first one
-            tickerData = new TickerData()
-            tickerData.exchange = spt[0]
-            tickerData.market = spt[1]
-            tickerData.ticker_type = 'hour'
-            tickerData.open = tdata.open
-            tickerData.high = tdata.high
-            tickerData.low = tdata.low
-            tickerData.close = tdata.close
-            tickerData.volume = tdata.volume
-            return tickerData.save()
 
-          }).catch((e) => { logger.error("Error generating hourly data for " + spt[0] + "/" + spt[1] + ":", e)})
-        })
-      }, count * 30) // very small delay for not fucking up mongo/redis
-      count += 1
+  let now = new Date() // ticker time
+  let time = new Date() // query calculation
+  time.setHours(time.getHours() - 1) // 1 hour ago
+
+  let influxData = []
+  TickerData.getResumeByTypeAndTime(1, time).then((data) => {
+    data.forEach((row) => {
+      let fields = {high: row.high, low: row.low, open: row.open, close: row.close, volume: row.volume, volume24: row.volume24}
+      influxData.push({
+        measurement: 'ticker_data',
+        tags: { market: row.market, exchange: row.exchange, type: '60' },
+        fields: fields,
+        timestamp: now
+      })
     })
+
+    TickerData.storeMany(influxData, () => { logger.log("Hourly tickers stored into influx for", influxData.length, "exchange-markets")})
   })
-  }, function () {
+
+}, function () {
     /* This function is executed when the job stops */
-  },
-  true,
-  'America/Los_Angeles'
+},
+true,
+'America/Los_Angeles'
 );
