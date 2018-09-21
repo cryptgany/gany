@@ -65,7 +65,7 @@ $ npm run-script build
 $ node index.js
 ```
 
-- (Install puppeteer dependencies)[https://medium.com/mockingbot/run-puppeteer-chrome-headless-on-ec2-amazon-linux-ami-6c9c6a17bee6]
+- [Install puppeteer dependencies](https://medium.com/mockingbot/run-puppeteer-chrome-headless-on-ec2-amazon-linux-ami-6c9c6a17bee6)
 
 Add Gany-Charts url to .env
 ```sh
