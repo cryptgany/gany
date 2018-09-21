@@ -1,45 +1,34 @@
 const Logger = require('../logger');
 
-var CronJob = require('cron').CronJob;
-var Ticker = require('./models/ticker')
-var TickerData = require('../models/ticker_data')
-var InfluxTicker = require('../models/influx_ticker')
+let CronJob = require('cron').CronJob;
+let InfluxTicker = require('../models/influx_ticker')
 
-var logger = new Logger();
+let logger = new Logger();
 
-var hourlyTickerDataJob = new CronJob('00 00 */1 * * *', function() {
+let hourlyTickerDataJob = new CronJob('00 00 */1 * * *', function() {
 	logger.log("Starting Hourly Ticker Data Job")
 
-	var now = new Date() // ticker time
-	var time = new Date() // query calculation
+	let now = new Date() // ticker time
+	let time = new Date() // query calculation
 	time.setHours(time.getHours() - 1) // 1 hour ago
 
-	var ret = []
-	var tree = {}
-	var influxData = []
-	InfluxTicker.query(`select * from ticker_data where type='1' and time >= '${InfluxTicker.timeSql(time)}'`).then((data) => {
-		// set tree with data
-		data.forEach((row) => { // it's already sorted in ascending order, 58, 59, 00, 01, etc
-			tree[row.exchange] = tree[row.exchange] || {}
-			tree[row.exchange][row.market] = tree[row.exchange][row.market] || []
-			tree[row.exchange][row.market].push(row)
-		})
-
-
-		Object.keys(tree).forEach((exchange) => {
-			Object.keys(tree[exchange]).forEach((market) => {
-				Ticker.getHourlyHighLowResume(tree[exchange][market]).then((resume) => { // we reverse it because that way the [0] element is the real first one
-					influxData.push({
-	                    measurement: 'ticker_data',
-	                    tags: { market: market, exchange: exchange, type: '60' },
-	                    fields: resume,
-	                    timestamp: now
-	                })
-				})
+	let influxData = []
+	let query = 'select FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, '
+	query += "SUM(volume) as volume, LAST(volume24) as volume24 from ticker_data where type='1' and time >= '"
+	query += InfluxTicker.timeSql(time)
+	query += "' group by exchange, market"
+	InfluxTicker.query(query).then((data) => {
+		data.forEach((row) => {
+			let fields = {high: row.high, low: row.low, open: row.open, close: row.close, volume: row.volume, volume24: row.volume24}
+			influxData.push({
+				measurement: 'ticker_data',
+				tags: { market: row.market, exchange: row.exchange, type: '60' },
+				fields: fields,
+				timestamp: now
 			})
 		})
 
-		InfluxTicker.storeMany(influxData, (ret) => { this.logger.log("Hourly tickers stored into influx for", influxData.length, "exchange-markets", ret)})
+		InfluxTicker.storeMany(influxData, () => { logger.log("Hourly tickers stored into influx for", influxData.length, "exchange-markets")})
 	})
 
 }, function () {
