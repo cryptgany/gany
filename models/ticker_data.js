@@ -1,7 +1,10 @@
 require('dotenv').config();
+const Logger = require('../logger');
 const Influx = require('influx');
 const INSERT_BATCH_SIZE = 5000; // https://github.com/influxdata/docs.influxdata.com/issues/454
 const SLEEP_BETWEEN_INSERTS = 300; // Some small MS to wait before sending additional batches to server
+
+let logger = new Logger();
 
 var config = {
   database: 'gany',
@@ -44,19 +47,19 @@ class TickerData { // replace me with "Ticker" once "TickerData" and "Ticker" cl
   }
 
   static storeManyInBatches(values, callback) {
-    var i, j, temparray = 0;
-    var cycle = 0;
-    for (i = 0, j = values.length; i < j; i += INSERT_BATCH_SIZE) {
-        temparray = values.slice(i, i+INSERT_BATCH_SIZE);
+    let cycle = 0;
+    let batchCount = values.length;
+    for (let i = 0; i < batchCount; i += INSERT_BATCH_SIZE) {
+        let temparray = values.slice(i, i+INSERT_BATCH_SIZE);
+        let batchN = cycle;
         // do whatever
         setTimeout(() => {
-          console.log("Running batch", cycle)
+          logger.log("Uploading batch", batchN, "for", temparray.length, "records")
           influx.writePoints(temparray, {precision: 's'}).then(function() {})
-        }, cycle * SLEEP_BETWEEN_INSERTS)
-
+          if ((i+INSERT_BATCH_SIZE) >= batchCount) { callback() } // submitted last batch
+        }, batchN * SLEEP_BETWEEN_INSERTS)
         cycle += 1;
     }
-    callback()
   }
 
   static query(sql) { // returns promise
