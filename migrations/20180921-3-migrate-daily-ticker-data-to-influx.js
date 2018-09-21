@@ -26,8 +26,9 @@ let OldTickerData = mongoose.model('ticker_datas', tickerDataSchema)
 var now = new Date(2018, 8, 21);
 let logger = new Logger();
 
+// HOURLY data
 function work(date) {
-	if (from < now) {
+	if (date < now) {
 		let influxData = []
 		let from = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 		from.setDate(from.getDate() - 1)
@@ -35,14 +36,14 @@ function work(date) {
 		let newDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()) // for next loop
 		newDate.setDate(newDate.getDate() + 1)
 		logger.log("Working for date:", date)
-		OldTickerData.find({ticker_type: 'hour', createdAt: { $gte: from, $lte: date }}, (err, tickers) => {
+		OldTickerData.find({ticker_type: 'day', createdAt: { $gte: from, $lte: date }}, (err, tickers) => {
 			logger.log("Response from mongo: ", tickers.length)
 			if (tickers.length > 0) {
 				tickers.forEach((ticker) => {
 					let fields = {high: ticker.high, low: ticker.low, open: ticker.open, close: ticker.close, volume: 0, volume24: ticker.volume}
 					influxData.push({
 						measurement: 'ticker_data',
-						tags: { market: ticker.market, exchange: ticker.exchange, type: '60' },
+						tags: { market: ticker.market, exchange: ticker.exchange, type: '1D' },
 						fields: fields,
 						timestamp: ticker.createdAt
 					})
