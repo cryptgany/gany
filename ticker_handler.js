@@ -2,7 +2,6 @@
 require('./protofunctions.js')
 const Ticker = require('./models/ticker')
 const TickerData = require('./models/ticker_data')
-const InfluxTicker = require('./models/influx_ticker')
 const ExchangeList = require('./exchange_list')
 /*
     Handles all the ticker related information through time.
@@ -108,19 +107,7 @@ class TickerHandler {
             })
         })
         this.influx_data = influxData
-        InfluxTicker.storeMany(influxData, () => { this.logger.log("Tickers stored into influx for", influxData.length, "exchange-markets")})
-        // Calculating volume (minute volume)
-        // InfluxTicker.queryLastVolumeForAll().then((results) => { // expects the function to return last 24h volume for 1 minute data
-        //     influxData.forEach((dataRow) => {
-        //         let ret = results.find((result) => result.exchange == dataRow.tags.exchange && result.market == dataRow.tags.market)
-        //         if (ret) {
-        //             let volume = dataRow.fields.volume24 - ret.last
-        //             dataRow.fields.volume = getLastMinuteMinuteVolume()
-        //             dataRow.fields.open = ret.close
-        //         }
-        //     })
-        //     InfluxTicker.storeMany(influxData, () => { this.logger.log("Tickers stored into influx for", influxData.length, "exchange-markets")})
-        // })
+        TickerData.storeMany(influxData, () => { this.logger.log("Tickers stored into influx for", influxData.length, "exchange-markets")})
     }
 
     isPremiumExchange(exchange) {
@@ -306,20 +293,6 @@ class TickerHandler {
     getMinuteMarketData(exchange, market, time) {
         return new Promise((resolve, reject) => {
             Ticker.getRange(exchange, market, 0, time, (err, data) => {
-                if (err)
-                    reject(err)
-                else
-                    if (data.length == 0)
-                        reject('no_time_data')
-                    else
-                        resolve(data)
-            })
-        })
-    }
-
-    getHourMarketData(exchange, market, ticker_type, time) {
-        return new Promise((resolve, reject) => {
-            TickerData.find({exchange: exchange, market: market, ticker_type: ticker_type}).limit(time).sort([['createdAt', 'descending']]).exec((err, data) => {
                 if (err)
                     reject(err)
                 else
