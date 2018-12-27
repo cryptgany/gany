@@ -84,6 +84,18 @@ class TickerData { // replace me with "Ticker" once "TickerData" and "Ticker" cl
     return this.query(query)
   }
 
+  static getVolumeDifference(type, time) { // time: 0-60 in minutes
+    let from = new Date()
+    from.setMinutes(from.getMinutes()-time)
+    let to = new Date()
+
+    let query = 'select FIRST(volume24) as open_volume, LAST(volume24) as close_volume from ticker_data '
+    query += `where type='${type}' and time >= '${this.timeSql(from)}' and time <= '${this.timeSql(to)}' `
+    query += "group by exchange, market"
+
+    return this.query(query)
+  }
+
   static getByTime(exchange, market, type, from, to) {
     let nanoFrom = Influx.toNanoDate(from.getTime()  + '000000')
     let nanoTo = Influx.toNanoDate(to.getTime()  + '000000')

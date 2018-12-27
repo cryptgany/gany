@@ -2,6 +2,7 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./models/subscriber');
+const TickerData = require('./models/ticker_data');
 const Signal = require('./models/signal')
 const ExchangeList = require('./exchange_list')
 const _ = require('underscore')
@@ -322,7 +323,7 @@ GanyTheBot.prototype.start = function() {
   // /topchange 30 (brings top change currencies over 30 minutes)
   this.telegram_bot.onText(/^\/topchange/, (msg, match) => {
     let subscriber = undefined
-    let exchange = 'All'
+    let exchange = 'All' // to be implemented
     let message = undefined
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
@@ -335,28 +336,23 @@ GanyTheBot.prototype.start = function() {
       let markets = this.detektor.getAllMarkets(subscriber, exchange)
       if (markets.length == 0) {
         this.send_message(msg.chat.id, 'No markets found.')
-      } else { // time is validated and markets found
-        if (time < 60 * 24) { // data extract from memory (1 day)
-          let result = []
-          console.log("markets length is", markets.length)
-          console.log("first market is", markets[0])
-          // markets length is 627
-          // first market is { exchange: 'Binance',
-          //   market: 'ETH-BTC',
-          //   ticker: 
-          //    { high: 0.035344,
-          //      low: 0.033409,
-          //      volume: 9987.62507817,
-          //      last: 0.034205,
-          //      ask: 0.03421,
-          //      bid: 0.034201,
-          //      updated: 2018-12-26T23:56:10.148Z } }
-
-          markets.forEach((market) => {
-
+      } else { // time is validated and markets found. data extract from influx
+        if (time < 60 * 24) {
+          TickerData.getVolumeDifference('1', time).then((markets) => {
+            //  { 2018-12-27T00:02:23.933Z
+            //    _nanoISO: '2018-12-27T00:02:23.933Z',
+            //    getNanoTime: [Function: getNanoTimeFromISO],
+            //    toNanoISOString: [Function: toNanoISOStringFromISO] },
+            // open_volume: 27.9437244,
+            // close_volume: 35.83863579,
+            // exchange: 'Bittrex',
+            // market: 'ETH-ZRX' }
+            this.logger.log("before")
+            this.logger.log(this.reduceVolumeComparisonResults(markets))
+            this.logger.log("after")
+            this.send_message(this.reduceVolumeComparisonResults(markets))
           })
-          this.send_message(msg.chat.id, 'Work in progress')
-        } else { // data extract from influx
+        } else {
           this.send_message(msg.chat.id, 'Work in progress')
         }
       }
@@ -872,13 +868,25 @@ GanyTheBot.prototype.reduceMarketsByVolume = function(markets, amount = 4) {
   markets = markets.sort((a,b) => this.btcVolumeFor(b) - this.btcVolumeFor(a))
   return markets.slice(0, amount)
 }
+
+GanyTheBot.prototype.reduceVolumeComparisonResults = function(markets, amount = 4) {
+  markets = markets.sort((a,b) => {
+    a_rate = (this.btcVolume(a, a.close_volume) / this.btcVolume(a, a.open_volume))
+    b_rate = (this.btcVolume(b, b.close_volume) / this.btcVolume(b, b.open_volume))
+    return b_rate - a_rate
+  })
+  return markets.slice(0, amount)
+}
 GanyTheBot.prototype.reduceMarketsByImportance = function(markets) {
   markets.sort((a,b) => EXCHANGES_FOR_CHARTS[a.exchange] - EXCHANGES_FOR_CHARTS[b.exchange])
   return markets.slice(0, 4)
 }
-GanyTheBot.prototype.btcVolumeFor = function(market) {
+GanyTheBot.prototype.btcVolume = function(market, amount) {
   baseVol = ExchangeList[market.exchange].volume_for(market.market)
-  return this.detektor.convert(this.tickerFor(market).volume, baseVol, 'BTC')
+  return this.detektor.convert(amount, baseVol, 'BTC')
+}
+GanyTheBot.prototype.btcVolumeFor = function(market) {
+  return this.btcVolume(market, this.tickerFor(market).volume)
 }
 GanyTheBot.prototype.baseVolumeFor = function(market) {
   let ticker = market.ticker || market.lastTicker
