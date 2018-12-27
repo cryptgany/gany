@@ -335,27 +335,8 @@ GanyTheBot.prototype.start = function() {
     } else {
       if (time < 60 * 24) {
         TickerData.getTimeComparisson('1', time).then((markets) => {
-          // open_volume: 0,
-          // close_volume: 0.0801038699999026,
-          // open_volume24: 1454.50064447,
-          // close_volume24: 1451.53356168,
-          // open_high: 0.00001077,
-          // close_high: 0.00001078,
-          // open_low: 0.00001076,
-          // close_low: 0.00001077,
-          // open_open: 0.00001075,
-          // close_open: 0.00001077,
-          // open_close: 0.00001077,
-          // close_close: 0.00001077,
-          // exchange: 'Binance',
-          // market: 'ADA-BTC' }
-
-          console.log("here befor")
           let pepe = this.reduceVolumeComparisonResults(markets)
-          console.log("pepe is ", pepe)
           let result = pepe.map((e) => this.telegramInfluxPostComparisson(e, time)).join("\n\n")
-          console.log("result is", result)
-
 
           this.send_message(msg.chat.id, result)
         })
