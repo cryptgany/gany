@@ -277,7 +277,7 @@ GanyTheBot.prototype.start = function() {
     }
   })
 
-  this.telegram_bot.onText(/^\/price/, (msg, match) => {
+  this.telegram_bot.onText(/^\/price\ /, (msg, match) => {
     let subscriber = undefined
     let message = undefined
     if (this.is_subscribed(msg.from.id)) {
@@ -321,7 +321,7 @@ GanyTheBot.prototype.start = function() {
   })
 
   // /topvol 30 (brings top change currencies over 30 minutes)
-  this.telegram_bot.onText(/^\/topvol/, (msg, match) => {
+  this.telegram_bot.onText(/^\/volchange/, (msg, match) => {
     let subscriber = undefined
     let exchange = 'All' // to be implemented
     let message = undefined
@@ -336,7 +336,33 @@ GanyTheBot.prototype.start = function() {
       if (time < 60 * 24) {
         TickerData.getTimeComparisson('1', time).then((markets) => {
           let pepe = this.reduceVolumeComparisonResults(markets)
-          let result = pepe.map((e) => this.telegramInfluxPostComparisson(e, time)).join("\n\n")
+          let result = pepe.map((e) => this.telegramInfluxVolPostComparisson(e, time)).join("\n\n")
+
+          this.send_message(msg.chat.id, result)
+        })
+      } else {
+        this.send_message(msg.chat.id, 'Work in progress')
+      }
+    }
+  })
+
+  // /pricechange 30 (brings top change currencies over 30 minutes)
+  this.telegram_bot.onText(/^\/pricechange/, (msg, match) => {
+    let subscriber = undefined
+    let exchange = 'All' // to be implemented
+    let message = undefined
+    if (this.is_subscribed(msg.from.id)) {
+      subscriber = this.find_subscriber(msg.from.id)
+    }
+    let data = msg.text.toUpperCase().split(' ')
+    let time = parseInt(data[1])
+    if (time.toString() != data[1] || time < 1) { // we will handle hours with influxdb
+      this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
+    } else {
+      if (time < 60 * 24) {
+        TickerData.getTimeComparisson('1', time).then((markets) => {
+          let pepe = this.reducePriceComparisonResults(markets)
+          let result = pepe.map((e) => this.telegramInfluxPricePostComparisson(e, time)).join("\n\n")
 
           this.send_message(msg.chat.id, result)
         })
@@ -840,14 +866,31 @@ GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market,
   return message
 }
 
-GanyTheBot.prototype.telegramInfluxPostComparisson = function(data, time) {
+GanyTheBot.prototype.telegramInfluxVolPostComparisson = function(data, time) {
   let exchange = data.exchange
   let market = data.market
   diff = data.close_volume24 - data.open_volume24
   change = data.close_volume24 / data.open_volume24
   message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
   message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
-  message += "\nVolume: " + data.close_volume24.humanize() + " (*" + ((change - 1) * 100).humanize({significance: true}) + "%*)"
+  message += "\nVolume: " + data.close_volume24.humanize() + ' ' + ExchangeList[exchange].volume_for(market) + " (*" + ((change - 1) * 100).humanize({significance: true}) + "%*)"
+  message += "\nL: " + data.open_close.toFixed(8) + " " + this.telegram_arrow(data.open_close, data.close_close) + " " + data.close_close.toFixed(8)
+  if (exchange != 'EtherDelta')
+    message += "\n24h H/L: " + data.close_high.toFixed(8) + " / " + data.close_low.toFixed(8)
+  return message
+}
+
+GanyTheBot.prototype.telegramInfluxPricePostComparisson = function(data, time) {
+  let exchange = data.exchange
+  let market = data.market
+  diff_vol = data.close_volume24 - data.open_volume24
+  change_vol = data.close_volume24 / data.open_volume24
+  diff_price = data.close_close - data.open_close
+  change_price = data.close_close / data.open_close
+  message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
+  message += "\nVol. changed by *" + diff_vol.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
+  message += "\nPrice changed by *" + diff_price.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " " + " (*" + ((change_price - 1) * 100).humanize({significance: true}) + "%*)"
+  message += "\nVolume: " + data.close_volume24.humanize() + ' ' + ExchangeList[exchange].volume_for(market) + " (*" + ((change_vol - 1) * 100).humanize({significance: true}) + "%*)"
   message += "\nL: " + data.open_close.toFixed(8) + " " + this.telegram_arrow(data.open_close, data.close_close) + " " + data.close_close.toFixed(8)
   if (exchange != 'EtherDelta')
     message += "\n24h H/L: " + data.close_high.toFixed(8) + " / " + data.close_low.toFixed(8)
@@ -873,6 +916,15 @@ GanyTheBot.prototype.reduceVolumeComparisonResults = function(markets, amount = 
   markets = markets.sort((a,b) => {
     a_rate = (this.btcVolume(a, a.close_volume24) / this.btcVolume(a, a.open_volume24))
     b_rate = (this.btcVolume(b, b.close_volume24) / this.btcVolume(b, b.open_volume24))
+    return b_rate - a_rate
+  })
+  return markets.slice(0, amount)
+}
+
+GanyTheBot.prototype.reducePriceComparisonResults = function(markets, amount = 4) { // price uses 'close'
+  markets = markets.sort((a,b) => {
+    a_rate = (this.btcVolume(a, a.close_close) / this.btcVolume(a, a.open_close))
+    b_rate = (this.btcVolume(b, b.close_close) / this.btcVolume(b, b.open_close))
     return b_rate - a_rate
   })
   return markets.slice(0, amount)
