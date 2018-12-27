@@ -335,8 +335,9 @@ GanyTheBot.prototype.start = function() {
     } else {
       if (time < 60 * 24) {
         TickerData.getTimeComparisson('1', time).then((markets) => {
-          let pepe = this.reduceVolumeComparisonResults(markets)
-          let result = pepe.map((e) => this.telegramInfluxVolPostComparisson(e, time)).join("\n\n")
+          let filtered = markets.filter((m) => m.open_volume24 != 0 ) // skip all those random new markets
+          filtered = this.reduceVolumeComparisonResults(filtered)
+          let result = filtered.map((e) => this.telegramInfluxVolPostComparisson(e, time)).join("\n\n")
 
           this.send_message(msg.chat.id, result)
         })
@@ -361,8 +362,9 @@ GanyTheBot.prototype.start = function() {
     } else {
       if (time < 60 * 24) {
         TickerData.getTimeComparisson('1', time).then((markets) => {
-          let pepe = this.reducePriceComparisonResults(markets)
-          let result = pepe.map((e) => this.telegramInfluxPricePostComparisson(e, time)).join("\n\n")
+          let filtered = markets.filter((m) => m.open_volume24 != 0 ) // skip all those random new markets
+          filtered = this.reducePriceComparisonResults(filtered)
+          let result = filtered.map((e) => this.telegramInfluxPricePostComparisson(e, time)).join("\n\n")
 
           this.send_message(msg.chat.id, result)
         })
