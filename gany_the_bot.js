@@ -300,7 +300,7 @@ GanyTheBot.prototype.start = function() {
     this.send_message(msg.chat.id, message)
   })
 
-  this.telegram_bot.onText(/^\/top/, (msg, match) => {
+  this.telegram_bot.onText(/^\/top(?!change)/, (msg, match) => {
     let subscriber = undefined
     let message = undefined
     let exchange = EXCHANGES_CONVERSION[msg.text.toUpperCase().split(' ')[1] || 'ALL']
@@ -317,6 +317,51 @@ GanyTheBot.prototype.start = function() {
       }).join("\n\n")
     }
     this.send_message(msg.chat.id, message)
+  })
+
+  // /topchange 30 (brings top change currencies over 30 minutes)
+  this.telegram_bot.onText(/^\/topchange/, (msg, match) => {
+    let subscriber = undefined
+    let exchange = 'All'
+    let message = undefined
+    if (this.is_subscribed(msg.from.id)) {
+      subscriber = this.find_subscriber(msg.from.id)
+    }
+    let data = msg.text.toUpperCase().split(' ')
+    let time = parseInt(data[1])
+    if (time.toString() != data[1] || time < 1) { // we will handle hours with influxdb
+      this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
+    } else {
+      let markets = this.detektor.getAllMarkets(subscriber, exchange)
+      if (markets.length == 0) {
+        this.send_message(msg.chat.id, 'No markets found.')
+      } else { // time is validated and markets found
+        if (time < 60 * 24) { // data extract from memory (1 day)
+          let result = []
+          console.log("markets length is", markets.length)
+          console.log("first market is", markets[0])
+          // markets length is 627
+          // first market is { exchange: 'Binance',
+          //   market: 'ETH-BTC',
+          //   ticker: 
+          //    { high: 0.035344,
+          //      low: 0.033409,
+          //      volume: 9987.62507817,
+          //      last: 0.034205,
+          //      ask: 0.03421,
+          //      bid: 0.034201,
+          //      updated: 2018-12-26T23:56:10.148Z } }
+
+          markets.forEach((market) => {
+
+          })
+          this.send_message(msg.chat.id, 'Work in progress')
+        } else { // data extract from influx
+          this.send_message(msg.chat.id, 'Work in progress')
+        }
+      }
+
+    }
   })
 
   this.telegram_bot.onText(/^\/(stop|block)/, (msg, match) => {
