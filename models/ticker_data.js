@@ -84,6 +84,23 @@ class TickerData { // replace me with "Ticker" once "TickerData" and "Ticker" cl
     return this.query(query)
   }
 
+  static getTimeComparisson(type, time) { // time: 0-60 in minutes
+    let from = new Date()
+    from.setMinutes(from.getMinutes()-time)
+    let to = new Date()
+
+    let query = 'select FIRST(volume) as open_volume, LAST(volume) as close_volume, '
+    query += 'FIRST(volume24) as open_volume24, LAST(volume24) as close_volume24, '
+    query += 'FIRST(high) as open_high, LAST(high) as close_high, '
+    query += 'FIRST(low) as open_low, LAST(low) as close_low, '
+    query += 'FIRST(open) as open_open, LAST(open) as close_open, '
+    query += 'FIRST(close) as open_close, LAST(close) as close_close from ticker_data '
+    query += `where type='${type}' and time >= '${this.timeSql(from)}' and time <= '${this.timeSql(to)}' `
+    query += "group by exchange, market"
+
+    return this.query(query)
+  }
+
   static getByTime(exchange, market, type, from, to) {
     let nanoFrom = Influx.toNanoDate(from.getTime()  + '000000')
     let nanoTo = Influx.toNanoDate(to.getTime()  + '000000')
