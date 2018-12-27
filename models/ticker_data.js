@@ -84,7 +84,7 @@ class TickerData { // replace me with "Ticker" once "TickerData" and "Ticker" cl
     return this.query(query)
   }
 
-  static getTimeComparisson(type, time) { // time: 0-60 in minutes
+  static getTimeComparisson(type, exchange = 'All', time) { // time: 0-60 in minutes
     let from = new Date()
     from.setMinutes(from.getMinutes()-time)
     let to = new Date()
@@ -96,6 +96,8 @@ class TickerData { // replace me with "Ticker" once "TickerData" and "Ticker" cl
     query += 'FIRST(open) as open_open, LAST(open) as close_open, '
     query += 'FIRST(close) as open_close, LAST(close) as close_close from ticker_data '
     query += `where type='${type}' and time >= '${this.timeSql(from)}' and time <= '${this.timeSql(to)}' `
+    if (exchange != 'All')
+      query += ` and exchange = '${exchange}' `
     query += "group by exchange, market"
 
     return this.query(query)

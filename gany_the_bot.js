@@ -322,19 +322,19 @@ GanyTheBot.prototype.start = function() {
 
   // /topvol 30 (brings top change currencies over 30 minutes)
   this.telegram_bot.onText(/^\/volchange/, (msg, match) => {
+    let data = msg.text.toUpperCase().split(' ')
     let subscriber = undefined
-    let exchange = 'All' // to be implemented
+    let exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
     let message = undefined
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
     }
-    let data = msg.text.toUpperCase().split(' ')
-    let time = parseInt(data[1])
-    if (time.toString() != data[1] || time < 1) { // we will handle hours with influxdb
+    let time = parseInt(data[2])
+    if (time.toString() != data[2] || time < 1) { // we will handle hours with influxdb
       this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
     } else {
       if (time < 60 * 24) {
-        TickerData.getTimeComparisson('1', time).then((markets) => {
+        TickerData.getTimeComparisson('1', exchange, time).then((markets) => {
           let filtered = markets.filter((m) => m.open_volume24 != 0 ) // skip all those random new markets
           filtered = this.reduceVolumeComparisonResults(filtered)
           let result = filtered.map((e) => this.telegramInfluxVolPostComparisson(e, time)).join("\n\n")
@@ -349,19 +349,19 @@ GanyTheBot.prototype.start = function() {
 
   // /pricechange 30 (brings top change currencies over 30 minutes)
   this.telegram_bot.onText(/^\/pricechange/, (msg, match) => {
+    let data = msg.text.toUpperCase().split(' ')
     let subscriber = undefined
-    let exchange = 'All' // to be implemented
+    let exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
     let message = undefined
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
     }
-    let data = msg.text.toUpperCase().split(' ')
-    let time = parseInt(data[1])
-    if (time.toString() != data[1] || time < 1) { // we will handle hours with influxdb
+    let time = parseInt(data[2])
+    if (time.toString() != data[2] || time < 1) { // we will handle hours with influxdb
       this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
     } else {
       if (time < 60 * 24) {
-        TickerData.getTimeComparisson('1', time).then((markets) => {
+        TickerData.getTimeComparisson('1', exchange, time).then((markets) => {
           let filtered = markets.filter((m) => m.open_volume24 != 0 ) // skip all those random new markets
           filtered = this.reducePriceComparisonResults(filtered)
           let result = filtered.map((e) => this.telegramInfluxPricePostComparisson(e, time)).join("\n\n")
@@ -567,10 +567,6 @@ GanyTheBot.prototype.start = function() {
       let command, market, exchange, theme = '';
       let logScale = 0;
       let data = msg.text.toUpperCase().split(' ')
-
-
-     
-      
 
       if (this.is_subscribed(msg.from.id)) {
         subscriber = this.find_subscriber(msg.from.id)
