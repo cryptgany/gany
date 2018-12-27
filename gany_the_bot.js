@@ -324,13 +324,21 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/^\/volchange/, (msg, match) => {
     let data = msg.text.toUpperCase().split(' ')
     let subscriber = undefined
-    let exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
+    let exchange = data[1]
+    let time = undefined
     let message = undefined
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
     }
-    let time = parseInt(data[2])
-    if (time.toString() != data[2] || time < 1) { // we will handle hours with influxdb
+    if (parseInt(data[1]).toString() != data[1]) {// it's an exchange
+      exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
+      time = parseInt(data[2])
+    } else {
+      exchange = 'All'
+      time = parseInt(data[1])
+    }
+
+    if (time < 1) { // we will handle hours with influxdb
       this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
     } else {
       if (time < 60 * 24) {
@@ -351,13 +359,21 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/^\/pricechange/, (msg, match) => {
     let data = msg.text.toUpperCase().split(' ')
     let subscriber = undefined
-    let exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
+    let exchange = data[1]
+    let time = data[2]
     let message = undefined
     if (this.is_subscribed(msg.from.id)) {
       subscriber = this.find_subscriber(msg.from.id)
     }
-    let time = parseInt(data[2])
-    if (time.toString() != data[2] || time < 1) { // we will handle hours with influxdb
+    if (parseInt(data[1]).toString() != data[1]) {// it's an exchange
+      exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
+      time = parseInt(data[2])
+    } else {
+      exchange = 'All'
+      time = parseInt(data[1])
+    }
+
+    if (time < 1) { // we will handle hours with influxdb
       this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
     } else {
       if (time < 60 * 24) {
