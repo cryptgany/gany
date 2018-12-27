@@ -579,8 +579,6 @@ GanyTheBot.prototype.start = function() {
         const replyMsg = `<b>Chart Indicator List</b>\nUse the short name in brackets in the /chart command.\n\n<b>Example:</b>\n<code>/chart btc cloud bb rsi\n\n</code><code>${Charts.getStudyListString()}</code>`;
         return this.send_message(msg.chat.id, replyMsg, {parse_mode: 'HTML'})
       }
-  
-      
       
       // See if we have Log scale request and remove from data array.
             if(data.includes('LOG')){
@@ -875,8 +873,6 @@ GanyTheBot.prototype.telegramInfluxVolPostComparisson = function(data, time) {
   message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
   message += "\nVolume: " + data.close_volume24.humanize() + ' ' + ExchangeList[exchange].volume_for(market) + " (*" + ((change - 1) * 100).humanize({significance: true}) + "%*)"
   message += "\nL: " + data.open_close.toFixed(8) + " " + this.telegram_arrow(data.open_close, data.close_close) + " " + data.close_close.toFixed(8)
-  if (exchange != 'EtherDelta')
-    message += "\n24h H/L: " + data.close_high.toFixed(8) + " / " + data.close_low.toFixed(8)
   return message
 }
 
@@ -892,8 +888,6 @@ GanyTheBot.prototype.telegramInfluxPricePostComparisson = function(data, time) {
   message += "\nPrice changed by *" + diff_price.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " " + " (*" + ((change_price - 1) * 100).humanize({significance: true}) + "%*)"
   message += "\nVolume: " + data.close_volume24.humanize() + ' ' + ExchangeList[exchange].volume_for(market) + " (*" + ((change_vol - 1) * 100).humanize({significance: true}) + "%*)"
   message += "\nL: " + data.open_close.toFixed(8) + " " + this.telegram_arrow(data.open_close, data.close_close) + " " + data.close_close.toFixed(8)
-  if (exchange != 'EtherDelta')
-    message += "\n24h H/L: " + data.close_high.toFixed(8) + " / " + data.close_low.toFixed(8)
   return message
 }
 
