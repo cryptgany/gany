@@ -11,6 +11,7 @@
   "dependencies": {
     "async": "^2.5.0",
     "binance": "^1.0.2",
+    "bitcoin-receive-payments": "0.0.39",
     "bitcoinjs-lib": "^3.2.0",
     "blockchain.info": "^2.10.1",
     "ccxt": "=1.1.91",
