@@ -1,5 +1,8 @@
 require('dotenv').config();
 
+const Coinpayments = require("coinpayments");
+const client = new Coinpayments({key: process.env.COINPAYMENTS_KEY, secret: process.env.COINPAYMENTS_SECRET});
+
 var mongoose = require('mongoose');
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
 
@@ -24,6 +27,11 @@ paymentSchema.statics.pending = function(callback) {
 }
 
 paymentSchema.statics.newPayment = function(symbol, user_id) { // start payment processing for User X on XLM/BTC/NEO/etc
+client.getDepositAddress({currency: 'LTCT'}).then(console.log).catch();
+
+
+client.getCallbackAddress({currency: 'LTCT', ipn_url: 'https://test-whatever.com'}).then().catch();
+
 
 }
 
