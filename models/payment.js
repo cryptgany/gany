@@ -41,10 +41,10 @@ paymentSchema.statics.getPaymentAddress = function(symbol, amount, user_id) {
 	// When payment is received on coinpayments, we should receive a POST to whatever we send as "ipn_url"
 	// https://www.npmjs.com/package/coinpayments#get-callback-address
 	return new Promise((resolve, reject) => {
-		client.getCallbackAddress({currency: symbol, ipn_url: COINPAYMENTS_POST_URL}).then((address)=> {
-			let pmt = new this({telegram_id: user_id, address: address, symbol: symbol, amount: amount})
+		client.getCallbackAddress({currency: symbol, ipn_url: COINPAYMENTS_POST_URL}).then((data)=> {
+			let pmt = new this({telegram_id: user_id, address: data.address, symbol: symbol, amount: amount})
 			pmt.save((err) => {
-				if (err) { reject(err) } else { resolve(address); }
+				if (err) { reject(err) } else { resolve(data.address); }
 			})
 		}).catch(reject);
 	});
@@ -54,7 +54,9 @@ paymentSchema.statics.setupIPNServer = function() {
 	// Receives POST request with payment updates
 	// more info: https://www.coinpayments.net/merchant-tools-ipn
 	app.post(('/' + COINPAYMENTS_IPN_SERVER_ENDPOINT), (req, res) => {
-		console.log("received: req:", req)
+		console.log("received!")
+		console.log("Headers: ", req.headers)
+		console.log("Query: ", req.query)
 		res.send('An alligator approaches!');
 	});
 
