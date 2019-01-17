@@ -8,6 +8,7 @@ const app = express();
 const COINPAYMENTS_HOST_URL = process.env.COINPAYMENTS_HOST_URL || 'http://localhost'
 const COINPAYMENTS_IPN_SERVER_PORT = process.env.COINPAYMENTS_IPN_SERVER_PORT || 3000
 const COINPAYMENTS_IPN_SERVER_ENDPOINT = process.env.COINPAYMENTS_IPN_SERVER_ENDPOINT || "payme"
+const COINPAYMENTS_POST_URL = COINPAYMENTS_HOST_URL + "/" + COINPAYMENTS_IPN_SERVER_ENDPOINT
 
 
 var mongoose = require('mongoose');
