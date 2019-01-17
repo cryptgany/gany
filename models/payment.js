@@ -2,8 +2,13 @@ require('dotenv').config();
 
 const Coinpayments = require("coinpayments");
 const client = new Coinpayments({key: process.env.COINPAYMENTS_KEY, secret: process.env.COINPAYMENTS_SECRET});
+const express = require('express');
+const app = express();
 
-const COINPAYMENTS_POST_URL = process.env.COINPAYMENTS_POST_URL || 'http://localhost/payme'
+const COINPAYMENTS_HOST_URL = process.env.COINPAYMENTS_HOST_URL || 'http://localhost'
+const COINPAYMENTS_IPN_SERVER_PORT = process.env.COINPAYMENTS_IPN_SERVER_PORT || 3000
+const COINPAYMENTS_IPN_SERVER_ENDPOINT = process.env.COINPAYMENTS_IPN_SERVER_ENDPOINT || "payme"
+
 
 var mongoose = require('mongoose');
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
@@ -11,7 +16,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor'
 var paymentSchema = mongoose.Schema({
 	telegram_id: Number,
 	btc_address: String,
-  address: String,
+	address: String,
 	private_key: String,
 	symbol: String, // btc / xlm / ganytoken / etc (for future usage)
 	completed_at: Date,
@@ -30,18 +35,28 @@ paymentSchema.statics.pending = function(callback) {
 }
 
 paymentSchema.statics.getPaymentAddress = function(symbol, amount, user_id) {
-  // start payment processing for User X on XLM/BTC/NEO/etc
-  // Creates an internal payment model while also starting a callback payment (IPN) on coinpayments
-  // When payment is received on coinpayments, we should receive a POST to whatever we send as "ipn_url"
-  // https://www.npmjs.com/package/coinpayments#get-callback-address
-  return new Promise((resolve, reject) => {
-    client.getCallbackAddress({currency: symbol, ipn_url: COINPAYMENTS_POST_URL}).then((address)=> {
-      let pmt = new this({telegram_id: user_id, address: address, symbol: symbol, amount: amount})
-      pmt.save((err) => {
-        if (err) { reject(err) } else { resolve(address); }
-      })
-    }).catch(reject);
-  });
+	// start payment processing for User X on XLM/BTC/NEO/etc
+	// Creates an internal payment model while also starting a callback payment (IPN) on coinpayments
+	// When payment is received on coinpayments, we should receive a POST to whatever we send as "ipn_url"
+	// https://www.npmjs.com/package/coinpayments#get-callback-address
+	return new Promise((resolve, reject) => {
+		client.getCallbackAddress({currency: symbol, ipn_url: COINPAYMENTS_POST_URL}).then((address)=> {
+			let pmt = new this({telegram_id: user_id, address: address, symbol: symbol, amount: amount})
+			pmt.save((err) => {
+				if (err) { reject(err) } else { resolve(address); }
+			})
+		}).catch(reject);
+	});
+}
+
+paymentSchema.statics.setupIPNServer = function() {
+	// Receives POST request with payment updates
+	// more info: https://www.coinpayments.net/merchant-tools-ipn
+	app.post(('/' + COINPAYMENTS_IPN_SERVER_ENDPOINT), (req, res) => {
+		res.send('An alligator approaches!');
+	});
+
+	app.listen(COINPAYMENTS_IPN_SERVER_PORT, () => { console.log('IPN server listening on port ', COINPAYMENTS_IPN_SERVER_PORT) });
 }
 
 PaymentModel = mongoose.model('payments', paymentSchema);
