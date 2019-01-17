@@ -57,6 +57,10 @@ paymentSchema.statics.setupIPNServer = function() {
 		console.log("received!")
 		console.log("Headers: ", req.headers)
 		console.log("Query: ", req.query)
+		console.log("Path: ", req.path)
+		console.log("params: ", req.params)
+		console.log("originalUrl: ", req.originalUrl)
+		console.log("ip: ", req.ip)
 		res.send('An alligator approaches!');
 	});
 
