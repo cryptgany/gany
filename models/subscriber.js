@@ -1,6 +1,5 @@
 // Handles all the subscription process
 require('dotenv').config();
-var bitcoin = require("bitcoinjs-lib");
 var mongoose = require('mongoose');
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
 
@@ -68,17 +67,7 @@ subscriberSchema.methods.change_market_status = function (market, decision) {
 
 subscriberSchema.methods.generate_btc_address = function() {
   return new Promise((resolve, reject) => {
-    var keyPair = bitcoin.ECPair.makeRandom()
-    var address = keyPair.getAddress();
-    var pkey = keyPair.toWIF();
-    this.btc_address = address
-    this.btc_private_key = pkey
-    this.save(function(err, subscriber){
-      if (err) {
-        console.error(err);
-        reject(err)
-      } else { resolve(subscriber.btc_address) }
-    })
+    resolve("-work in progress-")
   })
 }
 
