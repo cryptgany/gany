@@ -6,7 +6,7 @@ const express = require('express');
 const app = express();
 
 const COINPAYMENTS_HOST_URL = process.env.COINPAYMENTS_HOST_URL || 'http://localhost'
-const COINPAYMENTS_IPN_SERVER_PORT = process.env.COINPAYMENTS_IPN_SERVER_PORT || 3000
+const COINPAYMENTS_IPN_SERVER_PORT = process.env.PORT || 3000
 const COINPAYMENTS_IPN_SERVER_ENDPOINT = process.env.COINPAYMENTS_IPN_SERVER_ENDPOINT || "payme"
 const COINPAYMENTS_POST_URL = COINPAYMENTS_HOST_URL + "/" + COINPAYMENTS_IPN_SERVER_ENDPOINT
 
@@ -54,8 +54,11 @@ paymentSchema.statics.setupIPNServer = function() {
 	// Receives POST request with payment updates
 	// more info: https://www.coinpayments.net/merchant-tools-ipn
 	app.post(('/' + COINPAYMENTS_IPN_SERVER_ENDPOINT), (req, res) => {
+		console.log("received: req:", req)
 		res.send('An alligator approaches!');
 	});
+
+	app.get("/", (req, res) => { res.send("IM Alive!")})
 
 	app.listen(COINPAYMENTS_IPN_SERVER_PORT, () => { console.log('IPN server listening on port ', COINPAYMENTS_IPN_SERVER_PORT) });
 }
