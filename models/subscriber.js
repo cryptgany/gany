@@ -16,6 +16,7 @@ var subscriberSchema = mongoose.Schema({
     subscription_type: { type: String, default: 'basic', enum: ['basic', 'advanced', 'pro'] },
     blocked: { type: Boolean, default: false },
     balance: { type: Number, default: 0 }, // Leftover after paying subscription
+    notify_user_paid: { type: Boolean, default: false }, // we iterate over this to see who recently paid so we can tell them
     exchanges: {
       Bittrex: { type: Boolean, default: true },
       Poloniex: { type: Boolean, default: true },
