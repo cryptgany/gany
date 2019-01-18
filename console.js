@@ -6,6 +6,7 @@ const Signal = require('./models/signal.js')
 const Subscriber = require('./models/subscriber.js')
 const Ticker = require('./models/ticker.js')
 const TickerData = require('./models/ticker_data.js')
+const IPNServer = require('./ipn-server.js')
 
 const ExchangeList = require('./exchange_list')
 
@@ -17,3 +18,4 @@ replServer.context.Subscriber = Subscriber;
 replServer.context.Ticker = Ticker;
 replServer.context.TickerData = TickerData;
 replServer.context.ExchangeList = ExchangeList;
+replServer.context.IPNServer = IPNServer;
