@@ -21,25 +21,25 @@ let IPNServer = {}
 
 
 router.post(('/' + COINPAYMENTS_IPN_SERVER_ENDPOINT), function (req, res, next) {
-	// if(!req.get('HMAC') || !req.body || !req.body.ipn_mode || req.body.ipn_mode !== 'hmac' || COINPAYMENTS_KEY !== req.body.merchant) {
-	// 	return next(new Error('Invalid request'));
-	// }
+	if(!req.get('HMAC') || !req.body || !req.body.ipn_mode || req.body.ipn_mode !== 'hmac' || COINPAYMENTS_KEY !== req.body.merchant) {
+		return next(new Error('Invalid request'));
+	}
 
- // 	let isValid, error;
+	let isValid, error;
 
-	// try {
-	// 	isValid = verify(req.get('HMAC'), COINPAYMENTS_IPN_SECRET, req.body);
-	// } catch (e) {
-	// 	error = e;
-	// }
-  
-	// if (error && error instanceof CoinpaymentsIPNError) {
-	// 	return next(error);
-	// }
-  
-	// if (!isValid) {
-	// 	return next(new Error('Hmac calculation does not match'));
-	// }
+	try {
+		isValid = verify(req.get('HMAC'), COINPAYMENTS_IPN_SECRET, req.body);
+	} catch (e) {
+		error = e;
+	}
+
+	if (error && error instanceof CoinpaymentsIPNError) {
+		return next(error);
+	}
+
+	if (!isValid) {
+		return next(new Error('Hmac calculation does not match'));
+	}
 
 	return next();
 }, function (req, res, next) {
