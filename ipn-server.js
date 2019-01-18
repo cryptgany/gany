@@ -21,6 +21,14 @@ let IPNServer = {}
 
 
 router.post(('/' + COINPAYMENTS_IPN_SERVER_ENDPOINT), function (req, res, next) {
+	// TODO: verify with this is failing on test
+	console.log("Comparing !HMAC req:", !req.get('HMAC'))
+	console.log("Comparing !req.body:", !req.body)
+	console.log("Comparing !req.body.ipn_mode:", !req.body.ipn_mode)
+	console.log("Comparing !req.body.ipn_mode is hmac:", req.body.ipn_mode)
+	console.log("Comparing COINPAYMENTS_KEY !== req.body.merchant:", COINPAYMENTS_KEY !== req.body.merchant)
+	console.log("Comparing COINPAYMENTS_KEY:", COINPAYMENTS_KEY)
+	console.log("Comparing req.body.merchant:", req.body.merchant)
 	if(!req.get('HMAC') || !req.body || !req.body.ipn_mode || req.body.ipn_mode !== 'hmac' || COINPAYMENTS_KEY !== req.body.merchant) {
 		return next(new Error('Invalid request'));
 	}
