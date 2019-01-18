@@ -14,6 +14,7 @@ require('./protofunctions.js')
 var moment = require('moment');
 
 CHECK_EXPIRED_USERS = 1 // hours
+CHECK_RECENT_PAID_USERS = 1 // minutes
 
 SEE_REGEX_WITH_ONE_PARAM=/^\/see\ ([a-zA-Z0-9]|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))+$/i // /see neo | /see neo-btc
 SEE_REGEX_WITH_TWO_PARAMS=/^\/see\ (([a-zA-Z0-9]{1,6})|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))\ \d+$/i // /see neo 20 | /see neo-btc 20
@@ -55,13 +56,9 @@ function GanyTheBot(logger) {
   this.token = process.env.GANY_KEY;
   this.subscribers = []
   this.detektor = undefined
-  Subscriber.find({}, (err, subscribers) => {
-    if (err)
-      this.logger.error("Could not get subscribers! fatal error", err)
-    this.subscribers = subscribers
-  })
   this.telegram_bot = new TelegramBot(this.token, {polling: true});
   this.photo = {photo_id:undefined, caption:undefined};
+  this.refreshSubscribers()
 }
 
 GanyTheBot.prototype.start = function() {
@@ -512,11 +509,7 @@ GanyTheBot.prototype.start = function() {
         this.send_message(msg.chat.id, message)
       }
       if (command.match(/^\/detektor update users/)) {
-        Subscriber.find({}, (err, subscribers) => {
-          if (err)
-            this.logger.error("Could not get subscribers! fatal error", err)
-          this.subscribers = subscribers
-        })
+        this.refreshSubscribers();
         this.send_message(msg.chat.id, "Done.")
       }
     }
@@ -1147,6 +1140,21 @@ GanyTheBot.prototype.expire_expired_users = function() {
   })
 }
 
+GanyTheBot.prototype.check_recent_paid_users = function() {
+  date = new Date();
+  setTimeout(() => { this.check_recent_paid_users() }, CHECK_RECENT_PAID_USERS * 60 * 1000) // 1 minute
+  Subscriber.find({notify_user_paid: true}, (err, subscribers) => {
+    if (subscribers.length > 0) {
+      subscribers.forEach((subscriber) => {
+        this.logger.log("Notifying user", subscriber.telegram_id, "of new status of paid")
+        message = "Hello! We received your payment, hope you enjoy CryptGany as much as we do! :)\nIf your have any doubt or question, don't hesitate to ask any on @CryptGanyChat or @CryptoWise.\nOther commands:\n/subscription\n/help"
+        this.send_message(subscriber.telegram_id, message)
+      })
+      this.refreshSubscribers()
+    }
+  })
+}
+
 GanyTheBot.prototype._seconds_to_minutes = function(seconds) {
   var minutes = Math.floor(seconds / 60);
   var seconds = seconds - minutes * 60;
@@ -1191,4 +1199,13 @@ GanyTheBot.prototype.broadcastimg = function(photoid, caption, only_paid = false
     } else { if (sub.blocked == false) { this.telegram_bot.sendPhoto(sub.telegram_id, photoid, {caption: caption}) } }
    });
 }
+
+GanyTheBot.prototype.refreshSubscribers = function() {
+  Subscriber.find({}, (err, subscribers) => {
+    if (err)
+      this.logger.error("Could not get subscribers! fatal error", err)
+    this.subscribers = subscribers
+  })
+}
+
 module.exports = GanyTheBot;

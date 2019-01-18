@@ -51,6 +51,7 @@ if (process.env.ENVIRONMENT == 'production' || process.env.ENVIRONMENT == 'testi
 }
 Payment.setupIPNServer()
 gany_the_bot.expire_expired_users()
+gany_the_bot.check_recent_paid_users()
 
 rules = {
   "Bittrex": [

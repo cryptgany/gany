@@ -102,7 +102,6 @@ paymentSchema.statics.setupIPNServer = function() {
 					})
 				} else { logger.log("payment was already completed") }
 			})
-
 		}
 
 		res.send('received');
