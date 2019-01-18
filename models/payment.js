@@ -58,6 +58,8 @@ paymentSchema.statics.setupIPNServer = function() {
 		console.log("Headers: ", req.headers)
 		console.log("Query: ", req.query)
 		console.log("Path: ", req.path)
+		console.log("baseUrl: ", req.baseUrl)
+		console.log("body: ", req.body)
 		console.log("params: ", req.params)
 		console.log("originalUrl: ", req.originalUrl)
 		console.log("ip: ", req.ip)
