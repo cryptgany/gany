@@ -1,4 +1,5 @@
 require('dotenv').config();
+const util = require('util');
 
 const Coinpayments = require("coinpayments");
 const client = new Coinpayments({key: process.env.COINPAYMENTS_KEY, secret: process.env.COINPAYMENTS_SECRET});
@@ -8,7 +9,7 @@ const app = express();
 const COINPAYMENTS_HOST_URL = process.env.COINPAYMENTS_HOST_URL || 'http://localhost'
 const COINPAYMENTS_IPN_SERVER_PORT = process.env.PORT || 3000
 const COINPAYMENTS_IPN_SERVER_ENDPOINT = process.env.COINPAYMENTS_IPN_SERVER_ENDPOINT || "payme"
-const COINPAYMENTS_POST_URL = COINPAYMENTS_HOST_URL + "/" + COINPAYMENTS_IPN_SERVER_ENDPOINT
+const COINPAYMENTS_POST_URL = process.env.COINPAYMENTS_POST_URL || (COINPAYMENTS_HOST_URL + "/" + COINPAYMENTS_IPN_SERVER_ENDPOINT)
 
 
 var mongoose = require('mongoose');
@@ -40,6 +41,7 @@ paymentSchema.statics.getPaymentAddress = function(symbol, amount, user_id) {
 	// Creates an internal payment model while also starting a callback payment (IPN) on coinpayments
 	// When payment is received on coinpayments, we should receive a POST to whatever we send as "ipn_url"
 	// https://www.npmjs.com/package/coinpayments#get-callback-address
+	console.log("Generating IPN for", COINPAYMENTS_POST_URL)
 	return new Promise((resolve, reject) => {
 		client.getCallbackAddress({currency: symbol, ipn_url: COINPAYMENTS_POST_URL}).then((data)=> {
 			let pmt = new this({telegram_id: user_id, address: data.address, symbol: symbol, amount: amount})
@@ -54,6 +56,7 @@ paymentSchema.statics.setupIPNServer = function() {
 	// Receives POST request with payment updates
 	// more info: https://www.coinpayments.net/merchant-tools-ipn
 	app.post(('/' + COINPAYMENTS_IPN_SERVER_ENDPOINT), (req, res) => {
+		PaymentModel.last_request = req
 		console.log("received!")
 		console.log("Headers: ", req.headers)
 		console.log("Query: ", req.query)
@@ -66,11 +69,13 @@ paymentSchema.statics.setupIPNServer = function() {
 		res.send('An alligator approaches!');
 	});
 
-	app.get("/", (req, res) => { res.send("IM Alive!")})
+	app.get("/", (req, res) => { res.send(util.inspect(PaymentModel.last_request))})
 
 	app.listen(COINPAYMENTS_IPN_SERVER_PORT, () => { console.log('IPN server listening on port ', COINPAYMENTS_IPN_SERVER_PORT) });
 }
 
 PaymentModel = mongoose.model('payments', paymentSchema);
+
+PaymentModel.last_request = {}
 
 module.exports = PaymentModel;
