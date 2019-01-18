@@ -4,7 +4,7 @@ const app = express();
 const { verify } = require('coinpayments-ipn');
 const CoinpaymentsIPNError = require('coinpayments-ipn/lib/error');
 
-const { COINPAYMENTS_KEY, COINPAYMENTS_IPN_SECRET, COINPAYMENTS_IPN_SERVER_ENDPOINT } = process.env;
+const { MERCHANT_ID, COINPAYMENTS_IPN_SECRET, COINPAYMENTS_IPN_SERVER_ENDPOINT } = process.env;
 
 const COINPAYMENTS_IPN_SERVER_PORT = process.env.PORT || 3000
 
@@ -26,10 +26,10 @@ router.post(('/' + COINPAYMENTS_IPN_SERVER_ENDPOINT), function (req, res, next) 
 	console.log("Comparing !req.body:", !req.body)
 	console.log("Comparing !req.body.ipn_mode:", !req.body.ipn_mode)
 	console.log("Comparing !req.body.ipn_mode is hmac:", req.body.ipn_mode)
-	console.log("Comparing COINPAYMENTS_KEY !== req.body.merchant:", COINPAYMENTS_KEY !== req.body.merchant)
-	console.log("Comparing COINPAYMENTS_KEY:", COINPAYMENTS_KEY)
+	console.log("Comparing MERCHANT_ID !== req.body.merchant:", MERCHANT_ID !== req.body.merchant)
+	console.log("Comparing MERCHANT_ID:", MERCHANT_ID)
 	console.log("Comparing req.body.merchant:", req.body.merchant)
-	if(!req.get('HMAC') || !req.body || !req.body.ipn_mode || req.body.ipn_mode !== 'hmac' || COINPAYMENTS_KEY !== req.body.merchant) {
+	if(!req.get('HMAC') || !req.body || !req.body.ipn_mode || req.body.ipn_mode !== 'hmac' || MERCHANT_ID !== req.body.merchant) {
 		return next(new Error('Invalid request'));
 	}
 
