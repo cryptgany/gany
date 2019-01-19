@@ -104,10 +104,10 @@ GanyTheBot.prototype.start = function() {
             this.subscribers.push(subscriber)
             message = 'You are now subscribed! You will start getting notifications soon. Please be patient, the process should be finalized within 10 minutes.'
             message += '\nYou can also configure exchanges using the command: /configure.'
-            message += '\nYou are currently a free user. The full version of CryptGany works with a monthly subscription fee of 0.006 BTC that you can pay using the command /pay.'
-            message += "\nOr you can remain as a free user but you will only receive 25% of all of Gany's notifications. You will be able to use the /configure and /see commands."
+            message += '\nYou are currently a free user. The full version of CryptGany works with a monthly subscription fee that you can pay using the command /pay.'
+            message += "\nOr you can remain as a free user but you will only receive 25% of all of Gany's notifications. You will still be able to use many commands."
             message += '\nGany paid version offers customized alert reviews, 100% notifications and will be implementing more features over time.'
-            message += '\nIf you have any doubts or comments that you would like to ask, join the discussion group at https://t.me/CryptoWarnings'
+            message += '\nIf you have any doubts or comments that you would like to ask, join the discussion group at https://t.me/CryptoWise'
             message += '\nYou can also use the /help command for further information'
             this.send_message(msg.chat.id, message)
           }
@@ -165,25 +165,13 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/^\/pay/, (msg, match) => {
     if (this.is_not_a_group(msg) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
       if (this.is_subscribed(msg.chat.id)) {
-        subscriber = this.find_subscriber(msg.chat.id)
+        let subscriber = this.find_subscriber(msg.chat.id)
         options = { parse_mode: "Markdown" }
-        if (subscriber.btc_address) {
-          message = "Your BTC address for subscription fee is *" + subscriber.btc_address + "*"
-          message += "\nYou have to transfer 0.006 BTC monthly in order to use our full service."
-          message += "\nThis address will not change, you can keep using it for your monthly subscription."
-          message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
-          message += "\nYou can check your current subscription on /subscription"
-          this.send_message(subscriber.telegram_id, message, options)
-        } else {
-          subscriber.generate_btc_address().then((address) => {
-            message = "Your BTC address for subscription payments is *" + address + "*"
-            message += "\nYou have to transfer 0.006 BTC monthly in order to use our full service."
-            message += "\nThis address will not change, you can keep using it for your monthly subscription."
-            message += "\nThis is only intended for usage of the bot, you can not withdraw any money sent to this address."
-            message += "\nYou can check your current subscription on /subscription"
-            this.send_message(subscriber.telegram_id, message, options)
-          }).catch((e) => { this.logger.error("Error trying to generate btc address", e) })
-        }
+        message = "Hello! Thanks for your interest into the paid version, your will surely make profits out of it."
+        message += "\nYou can pay with multiple cryptocurrencies."
+        message += "\nPlease press the button for the cryptocyrrency you want to use for making your payment."
+
+        this.send_message(subscriber.telegram_id, message, this.payment_menu())
       }
     }
   })
@@ -1075,6 +1063,19 @@ GanyTheBot.prototype.configuration_menu_options = function() {
       inline_keyboard: [
         [{ text: 'Configure Exchanges', callback_data: 'configure exchanges' }],
         [{ text: 'Configure Markets', callback_data: 'configure markets' }, { text: 'Subscription', callback_data: 'configure subscription' }]
+      ]
+    })
+  };
+}
+
+
+GanyTheBot.prototype.payment_menu = function() {
+  return {
+    parse_mode: "Markdown",
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: 'BTC', callback_data: 'paywith BTC' }, { text: 'ETH', callback_data: 'paywith ETH' }, { text: 'XLM', callback_data: 'paywith XML' }],
+        [{ text: 'NEO', callback_data: 'paywith NEO' }, { text: 'Tether USDT', callback_data: 'paywith USDT' }, { text: 'XMR', callback_data: 'paywith XMR' }],
       ]
     })
   };
