@@ -43,7 +43,6 @@ paymentSchema.statics.getPaymentAddress = function(symbol, amount, user_id) {
 	// Creates an internal payment model while also starting a callback payment (IPN) on coinpayments
 	// When payment is received on coinpayments, we should receive a POST to whatever we send as "ipn_url"
 	// https://www.npmjs.com/package/coinpayments#get-callback-address
-	console.log("Generating IPN for", COINPAYMENTS_POST_URL)
 	return new Promise((resolve, reject) => {
 		client.getCallbackAddress({currency: symbol, ipn_url: COINPAYMENTS_POST_URL}).then((data)=> {
 			let pmt = new this({telegram_id: user_id, address: data.address, symbol: symbol, amount: amount, status: 'pending'})
@@ -62,7 +61,6 @@ paymentSchema.statics.setupIPNServer = function() {
 		let status = req.body.status
 		let amount = parseFloat(req.body.amount)
 		logger.log("Received IPN for address:", address, "amount:", amount, "status:", status)
-		console.log("parseInt(status) is", parseInt(status))
 
 		if (parseInt(status) >= 100 || status == '2') {
 			logger.log("Processing it, as it's completed")

@@ -61,7 +61,7 @@ class TickerHandler {
             // if we already have one minute of data then store minute data
             this.minutes_data[exchange] = this.minutes_data[exchange] || {}
             this.minutes_data[exchange][market] = this.minutes_data[exchange][market] || []
-            let handled_data = this.last_minute_data[exchange][market].last()
+            let handled_data = this.last_minute_data[exchange][market][this.last_minute_data[exchange][market].length-1]
             handled_data.open = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange)).last
             handled_data.close = handled_data.last
             handled_data.minuteHigh = this.high_low[exchange][market].minuteHigh
@@ -83,7 +83,7 @@ class TickerHandler {
         var date = new Date();
         Object.keys(this.last_minute_data).forEach((exchange) => {
             Object.keys(this.last_minute_data[exchange]).forEach((market) => {
-                var handled_data = this.last_minute_data[exchange][market].last()
+                var handled_data = this.last_minute_data[exchange][market][this.last_minute_data[exchange][market].length-1]
                 var lastElem = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange))
                 var previousElem = this.getLastMinuteThElement(exchange, market, this.oneMinuteLength(exchange)+1)
                 handled_data.open = (previousElem && previousElem.last) || (lastElem && lastElem.last) || handled_data.last
@@ -146,7 +146,7 @@ class TickerHandler {
         let ticker_time = this.cycle_time(exchange)
         let max_time = tickers.length <= ticker_time ? tickers.length : ticker_time
         for(let time = max_time; time > 1; time--) {
-            let ticker = tickers[tickers.length - time] || tickers.first()
+            let ticker = tickers[tickers.length - time] || tickers[0]
             if (ticker) {
                 callback(time * this.exchange_ticker_speed(exchange), ticker)
             }
@@ -277,7 +277,7 @@ class TickerHandler {
                         if (err)
                             reject(err)
                         else
-                            if (exchange == marketDatas.last().exchange && market == marketDatas.last().market) {
+                            if (exchange == marketDatas[marketDatas.length-1].exchange && market == marketDatas[marketDatas.length-1].market) {
                                 // we finished loading
                                 markets = markets.filter((data) => { return data.firstTicker != undefined })
                                 if (markets.length == 0)

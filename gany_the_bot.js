@@ -3,6 +3,7 @@ require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./models/subscriber');
 const TickerData = require('./models/ticker_data');
+const Payment = require('./models/payment');
 const Signal = require('./models/signal')
 const ExchangeList = require('./exchange_list')
 const _ = require('underscore')
@@ -739,6 +740,26 @@ GanyTheBot.prototype.start = function() {
           this.send_message(msg.from.id, "Configure which markets you want to keep track of:", this.configuration_menu_markets())
         }
       }
+      if (msg.data.match('paywith')) {
+        let currency = msg.data.split(" ")[1]
+        // convert currency to USD in amount
+        // generate a payment
+        // tell user how much they have to pay
+        let amount = currency == 'LTCT' ? 1 : this.quickConvert(20, 'USDT', currency)
+        if (amount) {
+          amount = parseFloat(amount.toFixed(8))
+          var message = ''
+          Payment.getPaymentAddress(currency, amount, subscriber.telegram_id).then((address) => {
+            message = `Awesome, please transfer ${amount} ${currency} to address ${address}, we will notify you when your payment gets processed.`
+            message += "Please try to do so right now, as the coin's price changes commonly."
+            this.send_message(msg.from.id, message)
+          }).catch((err) => {
+            this.logger.error("Error on payments:", err)
+            message = 'Sorry, please try again or ask our community @cryptowise about this issue.'
+            this.send_message(msg.from.id, message)
+          })
+        }
+      }
     }
   });
 }
@@ -814,12 +835,12 @@ GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = unde
 GanyTheBot.prototype.telegramPostPriceCheck = function(exchange, market, ticker) {
   let message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market)
   let base = ExchangeList[exchange].volume_for(market)
-  let covnertedBase = this.quickConvert(ticker.last, base, 'USDT')
-  if (!covnertedBase) { return "" } // couldnt process base to USD
+  let convertedBase = this.quickConvert(ticker.last, base, 'USDT')
+  if (!convertedBase) { return "" } // couldnt process base to USD
   if (this.isFiatSymbol(base)) {
     return message + "\nPrice(" + base + "): " + ticker.last.humanizeCurrency(base)
   } else {
-    return message + "\nPrice(BTC): " + ticker.last.humanize() + ", Price(USD): " + covnertedBase.humanizeCurrency('USD')
+    return message + "\nPrice(BTC): " + ticker.last.humanize() + ", Price(USD): " + convertedBase.humanizeCurrency('USD')
   }
 }
 
@@ -884,9 +905,9 @@ GanyTheBot.prototype.quickConvert = function(quantity, from, to) { return this.d
 GanyTheBot.prototype.priceInUSD = function(exchange, market, price) {
   let base = ExchangeList[exchange].volume_for(market)
   // let symbol = ExchangeList[exchange].symbol_for(market)
-  let covnertedBase = this.quickConvert(price, base, 'USDT')
-  if (!covnertedBase) { return "" } // couldnt process base to USD
-  return covnertedBase.humanizeCurrency('USD')
+  let convertedBase = this.quickConvert(price, base, 'USDT')
+  if (!convertedBase) { return "" } // couldnt process base to USD
+  return convertedBase.humanizeCurrency('USD')
 }
 
 GanyTheBot.prototype.reduceMarketsByVolume = function(markets, amount = 4) {
@@ -1063,13 +1084,17 @@ GanyTheBot.prototype.configuration_menu_options = function() {
 
 
 GanyTheBot.prototype.payment_menu = function() {
+  let options = [
+    [{ text: 'BTC', callback_data: 'paywith BTC' }, { text: 'ETH', callback_data: 'paywith ETH' }, { text: 'XVG', callback_data: 'paywith XVG' }],
+    [{ text: 'NEO', callback_data: 'paywith NEO' }, { text: 'Tether USDT', callback_data: 'paywith USDT' }, { text: 'XMR', callback_data: 'paywith XMR' }],
+  ]
+  if (process.env.ENVIRONMENT !== 'production') {
+    options.push([{text: 'LTCT', callback_data: 'paywith LTCT'}])
+  }
   return {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
-      inline_keyboard: [
-        [{ text: 'BTC', callback_data: 'paywith BTC' }, { text: 'ETH', callback_data: 'paywith ETH' }, { text: 'XLM', callback_data: 'paywith XMLC' }],
-        [{ text: 'NEO', callback_data: 'paywith NEO' }, { text: 'Tether USDT', callback_data: 'paywith USDT' }, { text: 'XMR', callback_data: 'paywith XMR' }],
-      ]
+      inline_keyboard: options
     })
   };
 }
