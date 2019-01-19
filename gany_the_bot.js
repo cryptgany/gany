@@ -1067,7 +1067,7 @@ GanyTheBot.prototype.payment_menu = function() {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: 'BTC', callback_data: 'paywith BTC' }, { text: 'ETH', callback_data: 'paywith ETH' }, { text: 'XLM', callback_data: 'paywith XML' }],
+        [{ text: 'BTC', callback_data: 'paywith BTC' }, { text: 'ETH', callback_data: 'paywith ETH' }, { text: 'XLM', callback_data: 'paywith XMLC' }],
         [{ text: 'NEO', callback_data: 'paywith NEO' }, { text: 'Tether USDT', callback_data: 'paywith USDT' }, { text: 'XMR', callback_data: 'paywith XMR' }],
       ]
     })
