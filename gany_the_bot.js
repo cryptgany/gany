@@ -760,13 +760,6 @@ GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse
   });
 }
 
-GanyTheBot.prototype.notify_user_got_confirmed = function(subscriber) {
-  message = "Your subscription got processed!"
-  message += "\nYou will start receiving notifications from now on."
-  message += "\nYou can check your subscription status on /subscription"
-  this.send_message(subscriber.telegram_id, message)
-}
-
 GanyTheBot.prototype.send_signal = function(client, signal) {
   this.previous_signal(signal.exchange, signal.market, (prev) => {
     text = this.telegram_post_signal(client, signal, prev)
@@ -1147,6 +1140,8 @@ GanyTheBot.prototype.check_recent_paid_users = function() {
   Subscriber.find({notify_user_paid: true}, (err, subscribers) => {
     if (subscribers.length > 0) {
       subscribers.forEach((subscriber) => {
+        subscriber.notify_user_paid = false
+        subscriber.save()
         this.logger.log("Notifying user", subscriber.telegram_id, "of new status of paid")
         message = "Hello! We received your payment, hope you enjoy CryptGany as much as we do! :)\nIf your have any doubt or question, don't hesitate to ask any on @CryptGanyChat or @CryptoWise.\nOther commands:\n/subscription\n/help"
         this.send_message(subscriber.telegram_id, message)
