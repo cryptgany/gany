@@ -120,18 +120,23 @@ GanyTheBot.prototype.start = function() {
   this.telegram_bot.onText(/^\/subscription/, (msg, match) => {
     if (this.is_not_a_group(msg) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
       if (this.is_subscribed(msg.chat.id)) {
-        subscriber = this.find_subscriber(msg.chat.id)
-        if (subscriber.subscription_status) { // subscription updated
+        let subscriber = this.find_subscriber(msg.chat.id)
+        if (subscriber.subscription_status) { // subscribed and paid
           message = "You are a paid user. Expiration: " + subscriber.subscriptionDaysLeft() + " days left."
           message += "\nYour subscription expires on " + subscriber.subscription_expires_on
           message += "\nYou can /pay your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
           this.send_message(subscriber.telegram_id, message)
-        } else { // not subscribed
+        } else { // subscribed but not paid
           message = "You are a free user."
           message += "\nYou can keep using free Gany services, but if you want the premium subscription, you need to /pay a monthly fee."
           message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
-          this.send_message(msg.chat.id, message)
+          this.send_message(subscriber.telegram_id, message)
         }
+      } else { // not subscribed
+        message = "You are a free, unsubscribed user."
+        message += "\nYou can keep using free Gany services, but if you want the premium subscription and benefits, you need to /subscribe and /pay a monthly fee."
+        message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
+        this.send_message(msg.chat.id, message)
       }
     }
   })
