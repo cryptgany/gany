@@ -168,11 +168,14 @@ GanyTheBot.prototype.start = function() {
       if (this.is_subscribed(msg.chat.id)) {
         let subscriber = this.find_subscriber(msg.chat.id)
         options = { parse_mode: "Markdown" }
-        message = "Hello! Thanks for your interest into the paid version, your will surely make profits out of it."
+        let message = "Hello! Thanks for your interest into the paid version, your will surely make profits out of it."
         message += "\nYou can pay with multiple cryptocurrencies."
         message += "\nPlease press the button for the cryptocyrrency you want to use for making your payment."
 
         this.send_message(subscriber.telegram_id, message, this.payment_menu())
+      } else {
+        let message = 'Hello, seems like you have not subscribed, please go to /subscribe and follow instructions.'
+        this.send_message(subscriber.telegram_id, message)
       }
     }
   })
