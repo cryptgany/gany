@@ -130,7 +130,7 @@ GanyTheBot.prototype.start = function() {
           message = "You are a free user."
           message += "\nYou can keep using free Gany services, but if you want the premium subscription, you need to /pay a monthly fee."
           message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
-          this.send_message(subscriber.telegram_id, message)
+          this.send_message(msg.chat.id, message)
         }
       }
     }
@@ -166,7 +166,7 @@ GanyTheBot.prototype.start = function() {
         this.send_message(subscriber.telegram_id, message, this.payment_menu())
       } else {
         let message = 'Hello, seems like you have not subscribed, please go to /subscribe and follow instructions.'
-        this.send_message(subscriber.telegram_id, message)
+        this.send_message(msg.chat.id, message)
       }
     }
   })
