@@ -124,22 +124,13 @@ GanyTheBot.prototype.start = function() {
         if (subscriber.subscription_status) { // subscription updated
           message = "You are a paid user. Expiration: " + subscriber.subscriptionDaysLeft() + " days left."
           message += "\nYour subscription expires on " + subscriber.subscription_expires_on
-          message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions.\nIf you already have /balance your subscription will be auto renewed."
+          message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
           this.send_message(subscriber.telegram_id, message)
         } else { // not subscribed
-          if (subscriber.btc_address) {
-            message = "You are a free user."
-            message += "\nYou must send 0.006 BTC to address " + subscriber.btc_address + " in order to start using the full service."
-            message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
-            this.send_message(subscriber.telegram_id, message)
-          } else {
-            subscriber.generate_btc_address().then((address) => {
-              message = "You are a free user."
-              message += "\nYou must send 0.006 BTC to address " + address + " in order to start using the full service."
-              message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
-              this.send_message(subscriber.telegram_id, message)
-            })
-          }
+          message = "You are a free user."
+          message += "\nYou can keep using free Gany services, but if you want the premium subscription, you need to /pay a monthly fee."
+          message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
+          this.send_message(subscriber.telegram_id, message)
         }
       }
     }
