@@ -746,10 +746,11 @@ GanyTheBot.prototype.start = function() {
         // tell user how much they have to pay
         let amount = currency == 'LTCT' ? 1 : this.quickConvert(20, 'USDT', currency)
         if (amount) {
-          amount = parseFloat(amount.toFixed(8))
+          amount = amount.roundBySignificance()
+
           var message = ''
           Payment.getPaymentAddress(currency, amount, subscriber.telegram_id).then((address) => {
-            message = `Awesome, please transfer ${amount} ${currency} (20 US$) to address ${address}, we will notify you when your payment gets processed.`
+            message = `Awesome, please transfer *${amount} ${currency}* (20~ US$) to address *${address}*, we will notify you when your payment gets processed.`
             message += "Please try to do so right now, as the coin's price changes commonly."
             this.send_message(msg.from.id, message)
           }).catch((err) => {
