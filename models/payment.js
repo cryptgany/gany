@@ -79,26 +79,30 @@ paymentSchema.statics.setupIPNServer = function() {
 			// txn_id: '3e0997db7f978ae828b6ed8925979113263ac07de7e72d3e56465ef80512e93e'
 
 			PaymentModel.findOne({address: address}, (err, pmt) => {
-				if (pmt.status == 'pending') {
-					logger.log("Updating payment for address", address)
-					pmt.status = 'completed'
-					pmt.paid_on_tx = req.body.txn_id
-					pmt.real_amount = amount
-					pmt.save()
-					logger.log("Marking user as paid")
-					// Approach here so we dont rely on class including/mixing:
-					// We will check payments on this class and when it's done
-					// mark the user as a paid subscriber, then on gany we have a
-					// loop that finds users who have to 'notify_user_paid'
-					// users with that field on true will be notified that
-					// their payment was received and that they are now a paid sub
-					Subscriber.findOne({telegram_id: pmt.telegram_id}, (err, sub) => {
-						sub.notify_user_paid = true
-						sub.add_subscription_time(30)
-						sub.save();
-						logger.log("User", sub.telegram_id, "got 30 days as a paid member")
-					})
-				} else { logger.log("payment was already completed") }
+				if (pmt) {
+					if (pmt.status == 'pending') {
+						logger.log("Updating payment for address", address)
+						pmt.status = 'completed'
+						pmt.paid_on_tx = req.body.txn_id
+						pmt.real_amount = amount
+						pmt.save()
+						logger.log("Marking user as paid")
+						// Approach here so we dont rely on class including/mixing:
+						// We will check payments on this class and when it's done
+						// mark the user as a paid subscriber, then on gany we have a
+						// loop that finds users who have to 'notify_user_paid'
+						// users with that field on true will be notified that
+						// their payment was received and that they are now a paid sub
+						Subscriber.findOne({telegram_id: pmt.telegram_id}, (err, sub) => {
+							sub.notify_user_paid = true
+							sub.add_subscription_time(30)
+							sub.save();
+							logger.log("User", sub.telegram_id, "got 30 days as a paid member")
+						})
+					} else { logger.log("payment was already completed") }
+				} else {
+					logger.log("Payment for address", address, "not found.")
+				}
 			})
 		}
 
