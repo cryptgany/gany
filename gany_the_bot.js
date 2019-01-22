@@ -166,7 +166,7 @@ GanyTheBot.prototype.start = function() {
         options = { parse_mode: "Markdown" }
         let message = "Hello! Thanks for your interest into the paid version, your will surely make profits out of it."
         message += "\nYou can pay with multiple cryptocurrencies."
-        message += "\nPlease press the button for the cryptocyrrency you want to use for making your payment."
+        message += "\nPlease press the button for the crypto you want to use for making your payment."
 
         this.send_message(subscriber.telegram_id, message, this.payment_menu())
       } else {
@@ -420,10 +420,10 @@ GanyTheBot.prototype.start = function() {
 
   this.telegram_bot.onText(/^\/pricing/, (msg, match) => {
     let message = "Gany has both paid and free subscription:"
-    message += '\n*Paid User*: 0.006 BTC monthly fee. Receives all Gany notifications and can use current features.'
-    message += '\n*Free User*: Receives only 25% of notifications and can use /see and /configure commands.'
+    message += '\n*Paid User*: 20$ monthly fee. Receives all Gany notifications and can use all features.'
+    message += '\n*Free User*: Receives only 25% of notifications and can use /see, /chart and /configure commands.'
     message += "\n\nGany is an evolving product, there will be new exchanges added, mobile app (for which your subscription will work) and much more."
-    message += "\nFor more information visit us at www.cryptowise.net"
+    message += "\nFor more information visit us at www.cryptgany.com"
     this.send_message(msg.chat.id, message)
   })
 
@@ -693,19 +693,10 @@ GanyTheBot.prototype.start = function() {
             message += "\nYou can send your monthly fee before the expiration date, so you can keep receiving the service without interruptions."
             this.send_message(subscriber.telegram_id, message)
           } else { // not subscribed
-            if (subscriber.btc_address) {
-              message = "You are a free user."
-              message += "\nYou must send 0.006 BTC to address " + subscriber.btc_address + " in order to start using the full service."
-              message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
-              this.send_message(subscriber.telegram_id, message)
-            } else {
-              subscriber.generate_btc_address().then((address) => {
-                message = "You are a free user."
-                message += "\nYou must send 0.006 BTC to address " + address + " in order to start using the full service."
-                message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
-                this.send_message(subscriber.telegram_id, message)
-              })
-            }
+            message = "You are a free user."
+            message += "\nYou must go to /pay and follow the instructions to use the full service."
+            message += "\nIf you already did, you will start receiving our notifications as soon as we confirm the transaction."
+            this.send_message(subscriber.telegram_id, message)
           }
         }
       if (msg.data == "configure")
@@ -1155,7 +1146,7 @@ GanyTheBot.prototype.expire_expired_users = function() {
   }).forEach((subscriber) => {
     subscriber.subscription_status = false
     subscriber.save()
-    message = "Looks like your subscription has expired :(\nPlease transfer again 0.006 BTC in order to continue receiving the service."
+    message = "Looks like your subscription has expired.\nPlease transfer go to /pay and follow the instructions to continue receiving the service."
     this.send_message(subscriber.telegram_id, message)
   })
 }
