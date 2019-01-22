@@ -1,15 +1,3 @@
-Array.prototype.sum = function() {
-  return this.reduce(function(sum, e) { return sum+e; });
-}
-
-Array.prototype.first = function() {
-  return this[0];
-}
-
-Array.prototype.last = function() {
-  return this[this.length-1];
-}
-
 // converts date into an usable string for filename
 Date.prototype.toFileName = function() {
   return this.toJSON().replace(/(\-|\:|(\..*[A-Z]))/gi, "");
@@ -34,6 +22,10 @@ Object.defineProperty(Array.prototype, 'chunk', {
 / 0.234234982 = 0.234
 / 0.00000030 = 0.0000003
 */
+Number.prototype.roundBySignificance = function() {
+  let n = this.humanize({significance: true})
+  return parseFloat(n.replace(/\,/g, ''))
+}
 Number.prototype.humanize = function(options = {}) {
   if (this > 1) { return parseFloat(this.toFixed(2)).toLocaleString('en-US', options) }// 2 decimals max
   if (options.style == 'currency') { return symbolFor(options.currency) + this.toFixed(this.decimalPoints(true)) }

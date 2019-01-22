@@ -1,6 +1,6 @@
 // Handles all the subscription process
 require('dotenv').config();
-var bitcoin = require("bitcoinjs-lib");
+
 var mongoose = require('mongoose');
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
 
@@ -17,6 +17,10 @@ var subscriberSchema = mongoose.Schema({
     subscription_type: { type: String, default: 'basic', enum: ['basic', 'advanced', 'pro'] },
     blocked: { type: Boolean, default: false },
     balance: { type: Number, default: 0 }, // Leftover after paying subscription
+    notify_user_paid: { type: Boolean, default: false }, // we iterate over this to see who recently paid so we can tell them
+    notify_user_paid_different_amount: { type: Boolean, default: false }, // when user didn't pay the whole amount
+    payments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'payments' }],
+    last_payment: { type: mongoose.Schema.Types.ObjectId, ref: 'payments' },
     exchanges: {
       Bittrex: { type: Boolean, default: true },
       Poloniex: { type: Boolean, default: true },
@@ -66,22 +70,6 @@ subscriberSchema.methods.change_market_status = function (market, decision) {
   }
 }
 
-subscriberSchema.methods.generate_btc_address = function() {
-  return new Promise((resolve, reject) => {
-    var keyPair = bitcoin.ECPair.makeRandom()
-    var address = keyPair.getAddress();
-    var pkey = keyPair.toWIF();
-    this.btc_address = address
-    this.btc_private_key = pkey
-    this.save(function(err, subscriber){
-      if (err) {
-        console.error(err);
-        reject(err)
-      } else { resolve(subscriber.btc_address) }
-    })
-  })
-}
-
 subscriberSchema.methods.set_final_balance = function(amount) {
   this.btc_final_balance = amount
   this.save()
@@ -91,6 +79,7 @@ subscriberSchema.methods.total_balance = function() {
   return this.balance + this.btc_final_balance
 }
 
+// todo: remove this method after people that still has balance runs out of it
 subscriberSchema.methods.set_subscription_confirmed = function(price = 0) { // price is the price of subscription
   expiry_date = new Date()
   if (this.subscription_expires_on && this.subscription_expires_on >= expiry_date) {
@@ -115,7 +104,6 @@ subscriberSchema.methods.add_subscription_time = function(days) {
     // is currently subscribed
     expiry_date = new Date(this.subscription_expires_on)
     expiry_date.setDate(expiry_date.getDate()+days)
-    console.log("Date was", this.subscription_expires_on + ", and now is", expiry_date)
   } else {
     expiry_date.setDate(expiry_date.getDate()+days);
   }

@@ -7,7 +7,6 @@ const Detektor = require('./detektor');
 const EventEmitter = require('events');
 const Logger = require('./logger');
 const Database = require('./database')
-const Wallet = require("./wallet")
 const Payment = require("./models/payment")
 const GanyTheBot = require('./gany_the_bot')
 const ExchangeList = require('./exchange_list')
@@ -30,11 +29,9 @@ let huobi = new ExchangeList.Huobi(logger, pump_events);
 let idex = new ExchangeList.IDEX(logger, pump_events);
 let bitfinex = new ExchangeList.Bitfinex(logger, pump_events);
 var database = new Database();
-var wallet = new Wallet(logger, gany_the_bot);
 
 // Start
 pump_events.setMaxListeners(50) // max 50 listeners
-setTimeout(() => { wallet.track_subscriptions() }, 1000*5)
 gany_the_bot.start()
 bittrex.watch()
 binance.watch()
@@ -52,8 +49,9 @@ if (process.env.ENVIRONMENT == 'production' || process.env.ENVIRONMENT == 'testi
     bitfinex.watch()
   }, 5000)
 }
-Payment.process_payments()
+Payment.setupIPNServer()
 gany_the_bot.expire_expired_users()
+gany_the_bot.check_recent_paid_users()
 
 rules = {
   "Bittrex": [

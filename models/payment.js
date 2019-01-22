@@ -1,145 +1,127 @@
 require('dotenv').config();
-require('../protofunctions')
-var bitcoin = require("bitcoinjs-lib");
-var pushtx = require('blockchain.info/pushtx')
-var request = require('request');
+require('../protofunctions.js')
+
+const Logger = require('../logger');
+const Subscriber = require('./subscriber');
+
+const util = require('util');
+const IPNServer = require('../ipn-server.js')
+
+const Coinpayments = require("coinpayments");
+const client = new Coinpayments({key: process.env.COINPAYMENTS_KEY, secret: process.env.COINPAYMENTS_SECRET});
+
+const { COINPAYMENTS_POST_URL } = process.env;
 
 var mongoose = require('mongoose');
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
 
-const PROCESS_MAXIMUM_INPUTS = 60 // maximum addresses into one transaction
-const CHECK_PAYMENTS_EVERY = 1 // hours
-const SATS_FEE_PER_BYTE = 8 // in satoshis
-const MIN_PAYMENTS_TO_PROCESS = 3 // minimum pending payments to start a transaction
-const MIN_CONFIRMATIONS_TO_PROCESS = 3 // tx confirmations
+let logger = new Logger();
 
 var paymentSchema = mongoose.Schema({
-  telegram_id: Number,
-  btc_address: String,
-  private_key: String,
-  completed_at: Date,
-  amount: Number,
-  real_amount: Number,
-  paid_on_tx: String,
-  status: {
-    type: String,
-    enum: ['pending', 'completed', 'error'],
-  },
-  error: String,
+	telegram_id: Number,
+	btc_address: String, // old payments system
+	address: String, // coinpayments given address
+	private_key: String,
+	symbol: String, // btc / xlm / ganytoken / etc (for future usage)
+	completed_at: Date,
+	amount: Number,
+	real_amount: Number,
+	paid_on_tx: String,
+	subscriber: { type: mongoose.Schema.Types.ObjectId, ref: 'subscribers' },
+	status: {
+		type: String,
+		enum: ['pending', 'completed', 'error'],
+		default: 'pending'
+},
+	error: String,
 }, { timestamps: true });
 
 paymentSchema.statics.pending = function(callback) {
-  PaymentModel.find({status: 'pending'}, callback).limit(PROCESS_MAXIMUM_INPUTS)
+	PaymentModel.find({status: 'pending'}, callback).limit(PROCESS_MAXIMUM_INPUTS)
 }
 
-paymentSchema.statics.process_payments = function() {
-  console.log("running process_payments...")
-  setTimeout(() => { PaymentModel.process_payments() }, CHECK_PAYMENTS_EVERY * 60 * 60 * 1000) // 1 hour, should probably be every 1 day
-  // checks every pending payment
-  PaymentModel.pending((err, payments) => {
-    if (payments.length >= MIN_PAYMENTS_TO_PROCESS) {
-      addresses = payments.map((payment) => { return payment.btc_address })
-
-      request({
-        method: 'POST', url: 'https://insight.bitpay.com/api/addrs/utxo', form: { addrs: addresses.join(",") }
-      }, (error, response, body) => {
-        if (error) {
-          console.error(Date.now(), "ERROR FETCHING UNSPENT", error)
-        } else {
-          // now that we have the unspent outputs we can iterate and transfer from all
-          unspent = JSON.parse(body)
-          data = []
-          payments.forEach((payment) => {
-            utxos = unspent.filter((utxo) => { return utxo.address == payment.btc_address && utxo.confirmations >= MIN_CONFIRMATIONS_TO_PROCESS })
-            if (utxos.length >= 1) {
-              // get from first to last unspent and spend them until we have the entire payment.amount
-              // if address does not has sufficient found mark as error and log
-              // continue until we have all addresses as paid
-              utxos.reverse()
-              tx_amount = payment.amount
-              txs = []
-              total = 0
-              utxos.forEach((utxo) => {
-                if (tx_amount > 0) {
-                  tx_amount -= utxo.satoshis
-                  total += utxo.satoshis
-                  txs.push([utxo.txid, utxo.vout])
-                }
-              })
-              if (tx_amount <= 0) {
-                data.push({payment: payment, txs: txs, total: total})
-              }
-            } else {
-              // this is not really an error, we are waiting on confirmations
-              // TODO implement some kind of "wait 48 hours or mark error"
-              // console.error(Date.now(), "ERROR FETCHING UNSPENT FOR SPECIFIC ADDRESS", payment.btc_address)
-              // payment.status = 'error'
-              // payment.error = 'Utxos length was 0'
-              // payment.save()
-            }
-          })
-          if (data.length >= 1) {
-            console.log("ready for payment:",data)
-            PaymentModel.make_payment_transaction(data)
-          }
-        }
-      });
-    }
-  })
+paymentSchema.statics.getPaymentAddress = function(symbol, amount, subscriber) {
+	// start payment processing for User X on XLM/BTC/NEO/etc
+	// Creates an internal payment model while also starting a callback payment (IPN) on coinpayments
+	// When payment is received on coinpayments, we should receive a POST to whatever we send as "ipn_url"
+	// https://www.npmjs.com/package/coinpayments#get-callback-address
+	return new Promise((resolve, reject) => {
+		client.getCallbackAddress({currency: symbol, ipn_url: COINPAYMENTS_POST_URL}).then((data)=> {
+			let pmt = new this({subscriber: subscriber._id, telegram_id: subscriber.telegram_id, address: data.address, symbol: symbol, amount: amount, status: 'pending'})
+			subscriber.payments.push(pmt);
+			subscriber.last_payment = pmt;
+			subscriber.save()
+			pmt.save((err) => {
+				if (err) { reject(err) } else { resolve(data.address); }
+			})
+		}).catch(reject);
+	});
 }
 
-paymentSchema.statics.make_payment_transaction = function(tx_data) {
-  try {
-    var tx = new bitcoin.TransactionBuilder()
-    input_txs = 0
-    // add inputs
-    tx_data.forEach((data) => {
-      data.txs.forEach((tx_data) => {
-        tx_id = tx_data[0]; tx_vout = tx_data[1]
-        console.log("adding tx_id", tx_id, "as id", tx_vout)
-        tx.addInput(tx_id, tx_vout)
-        input_txs += 1
-      })
-    })
-    // calculate fees
-    tx_bytes = (input_txs * 181) + 34 + 10
-    tx_fee = tx_bytes * SATS_FEE_PER_BYTE // minimum fee
-    // inputs * 181 + outs * 34 + 10
+paymentSchema.statics.setupIPNServer = function() {
+	// Receives POST request with payment updates
+	// more info: https://www.coinpayments.net/merchant-tools-ipn
+	IPNServer.notify = function(req, res, next) {
+		let address = req.body.address
+		let status = req.body.status
+		let amount = parseFloat(req.body.amount)
+		logger.log("Received IPN for address:", address, "amount:", amount, "status:", status)
 
-    // add output
-    total_amount = tx_data.map((d) => { return d.total }).sum();
-    console.log("adding output for ", total_amount, "minus fee of", tx_fee)
-    tx.addOutput(process.env.MAIN_BTC_ADDRESS, total_amount - tx_fee)
+		if (parseInt(status) >= 100 || status == '2') {
+			logger.log("Processing it, as it's completed")
 
-    // sign tx
-    id = 0
-    tx_data.forEach((data) => {
-      pkey = data.payment.private_key
-      keyPair = bitcoin.ECPair.fromWIF(pkey)
-      data.txs.forEach((tx_data) => {
-        console.log("singing id", tx_data[0], "as id", id)
-        tx.sign(id, keyPair)
-        id += 1
-      })
-    })
+			// example of what comes from notify
+			// address: 'QSKAjhEst5rwyEfYYEVYxxyYy8XNjHknTz',
+			// amount: '1.00000000',
+			// confirms: '0',
+			// currency: 'LTCT',
+			// fee: '0.00500000',
+			// fiat_amount: '3614.45071764',
+			// fiat_coin: 'USD',
+			// fiat_fee: '18.07225359',
+			// status: '100',
+			// status_text: 'Deposit confirmed',
+			// txn_id: '3e0997db7f978ae828b6ed8925979113263ac07de7e72d3e56465ef80512e93e'
 
-    // push
-    console.log("Pushing TX:", total_amount, tx_fee, tx.build().toHex())
+			PaymentModel.findOne({address: address}, (err, pmt) => {
+				if (pmt) {
+					if (pmt.status == 'pending') {
+						logger.log("Updating payment for address", address)
+						pmt.status = 'completed'
+						pmt.paid_on_tx = req.body.txn_id
+						pmt.real_amount = amount
+						pmt.save()
+						logger.log("Marking user as paid")
+						// Approach here so we dont rely on class including/mixing:
+						// We will check payments on this class and when it's done
+						// mark the user as a paid subscriber, then on gany we have a
+						// loop that finds users who have to 'notify_user_paid'
+						// users with that field on true will be notified that
+						// their payment was received and that they are now a paid sub
+						Subscriber.findOne({telegram_id: pmt.telegram_id}, (err, sub) => {
+							// we accept a 1% difference in price that could happen by fees / etc
+							let priceVariance = Math.abs(1- (pmt.real_amount / pmt.amount))
+							if ((pmt.amount.roundBySignificance() == pmt.real_amount.roundBySignificance()) || priceVariance <= 0.01) {
+								sub.notify_user_paid = true
+								sub.add_subscription_time(30)
+								sub.save();
+								logger.log("User", sub.telegram_id, "got 30 days as a paid member")
+							} else {
+								sub.notify_user_paid_different_amount = true
+								sub.save()
+								logger.log(`User paid diff amount than expected (${pmt.amount} vs ${pmt.real_amount}), notifying. (variance: ${priceVariance})`)
+							}
+						})
+					} else { logger.log("payment was already completed") }
+				} else {
+					logger.log("Payment for address", address, "not found.")
+				}
+			})
+		}
 
-    pushtx.pushtx(tx.build().toHex(), { apiCode: process.env.BLOCKCHAIN_API_CODE }).then((res) => {
-      console.log("RESULT IS", res)
-      tx_data.forEach((data) => {
-        payment = data.payment
-        payment.completed_at = Date.now()
-        payment.real_amount = data.total
-        payment.status = 'completed'
-        payment.save()
-      })
-    })
-  } catch(e) {
-    console.error('Error on payment creation!', e)
-    // we should also send an email notification here
-  }
+		res.send('received');
+	}
+	IPNServer.start()
 }
 
 PaymentModel = mongoose.model('payments', paymentSchema);
