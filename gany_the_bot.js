@@ -17,6 +17,8 @@ var moment = require('moment');
 CHECK_EXPIRED_USERS = 1 // hours
 CHECK_RECENT_PAID_USERS = 1 // minutes
 
+MONTHLY_SUBSCRIPTION_PRICE = 20 // in USD
+
 SEE_REGEX_WITH_ONE_PARAM=/^\/see\ ([a-zA-Z0-9]|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))+$/i // /see neo | /see neo-btc
 SEE_REGEX_WITH_TWO_PARAMS=/^\/see\ (([a-zA-Z0-9]{1,6})|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))\ \d+$/i // /see neo 20 | /see neo-btc 20
 FIAT_SYMBOLS = ['USD', 'EUR', 'GBP', 'USDT', 'TUSD', 'EURT']
@@ -736,14 +738,14 @@ GanyTheBot.prototype.start = function() {
         // convert currency to USD in amount
         // generate a payment
         // tell user how much they have to pay
-        let amount = currency == 'LTCT' ? 1 : this.quickConvert(20, 'USDT', currency)
+        let amount = currency == 'LTCT' ? 1 : this.quickConvert(MONTHLY_SUBSCRIPTION_PRICE, 'USDT', currency)
         if (amount) {
           amount = amount.roundBySignificance()
 
           var message = ''
           Payment.getPaymentAddress(currency, amount, subscriber).then((address) => {
-            message = `Awesome, please transfer *${amount} ${currency}* (~20 US$) to address *${address}*, we will notify you when your payment gets processed.`
-            message += "Please try to do so right now, as the coin's price changes commonly."
+            message = `Please send *${amount} ${currency}* (~${MONTHLY_SUBSCRIPTION_PRICE} US$) to address *${address}*, we will notify you when your payment gets processed.`
+            message += "\nPlease try to do so right now, payment will expire in about 30 minutes."
             this.send_message(msg.from.id, message)
           }).catch((err) => {
             this.logger.error("Error on payments:", err)

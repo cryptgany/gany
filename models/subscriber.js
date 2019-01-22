@@ -70,12 +70,6 @@ subscriberSchema.methods.change_market_status = function (market, decision) {
   }
 }
 
-subscriberSchema.methods.generate_btc_address = function() {
-  return new Promise((resolve, reject) => {
-    resolve("-work in progress-")
-  })
-}
-
 subscriberSchema.methods.set_final_balance = function(amount) {
   this.btc_final_balance = amount
   this.save()
@@ -85,6 +79,7 @@ subscriberSchema.methods.total_balance = function() {
   return this.balance + this.btc_final_balance
 }
 
+// todo: remove this method after people that still has balance runs out of it
 subscriberSchema.methods.set_subscription_confirmed = function(price = 0) { // price is the price of subscription
   expiry_date = new Date()
   if (this.subscription_expires_on && this.subscription_expires_on >= expiry_date) {
