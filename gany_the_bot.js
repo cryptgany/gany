@@ -108,7 +108,7 @@ GanyTheBot.prototype.start = function() {
             message += '\nYou are currently a free user. The full version of CryptGany works with a monthly subscription fee that you can pay using the command /pay.'
             message += "\nOr you can remain as a free user but you will only receive 25% of all of Gany's notifications. You will still be able to use many commands."
             message += '\nGany paid version offers customized alert reviews, 100% notifications and will be implementing more features over time.'
-            message += '\nIf you have any doubts or comments that you would like to ask, join the discussion group at https://t.me/CryptoWise'
+            message += '\nIf you have any doubts or comments that you would like to ask, join the discussion group at https://t.me/CryptGanyChat'
             message += '\nYou can also use the /help command for further information'
             this.send_message(msg.chat.id, message)
           }
@@ -395,7 +395,7 @@ GanyTheBot.prototype.start = function() {
     message += "\n/pricing - See information about pricing of Gany"
     message += '\n/pay - See information required for paying monthly fee'
     message += "\n/whatisbal - What is B A L ?"
-    message += "\nThe information you want is not here? You can talk to us in our discussion group https://t.me/CryptoWarnings"
+    message += "\nThe information you want is not here? You can talk to us in our discussion groups https://t.me/CryptGanyChat and https://t.me/CryptoWise"
     this.send_message(msg.chat.id, message)
   })
 
