@@ -17,6 +17,7 @@ var subscriberSchema = mongoose.Schema({
     blocked: { type: Boolean, default: false },
     balance: { type: Number, default: 0 }, // Leftover after paying subscription
     notify_user_paid: { type: Boolean, default: false }, // we iterate over this to see who recently paid so we can tell them
+    notify_user_paid_different_amount: { type: Boolean, default: false }, // when user didn't pay the whole amount
     exchanges: {
       Bittrex: { type: Boolean, default: true },
       Poloniex: { type: Boolean, default: true },

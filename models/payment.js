@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./protofunctions.js')
 
 const Logger = require('../logger');
 const Subscriber = require('./subscriber');
@@ -94,10 +95,16 @@ paymentSchema.statics.setupIPNServer = function() {
 						// users with that field on true will be notified that
 						// their payment was received and that they are now a paid sub
 						Subscriber.findOne({telegram_id: pmt.telegram_id}, (err, sub) => {
-							sub.notify_user_paid = true
-							sub.add_subscription_time(30)
-							sub.save();
-							logger.log("User", sub.telegram_id, "got 30 days as a paid member")
+							if (pmt.amount.roundBySignificance() == pmt.real_amount.roundBySignificance()) {
+								sub.notify_user_paid = true
+								sub.add_subscription_time(30)
+								sub.save();
+								logger.log("User", sub.telegram_id, "got 30 days as a paid member")
+							} else {
+								sub.notify_user_paid_different_amount = true
+								sub.save()
+								logger.log(`User paid diff amount than expected (${pmt.amount} vs ${pmt.real_amount}), notifying.`)
+							}
 						})
 					} else { logger.log("payment was already completed") }
 				} else {
