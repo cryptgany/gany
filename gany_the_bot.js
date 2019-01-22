@@ -741,6 +741,7 @@ GanyTheBot.prototype.start = function() {
       }
       if (msg.data.match('paywith')) {
         let currency = msg.data.split(" ")[1]
+        this.send_message(msg.from.id, 'Generating an address for ' + currency + '...')
         // convert currency to USD in amount
         // generate a payment
         // tell user how much they have to pay
