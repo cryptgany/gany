@@ -166,7 +166,7 @@ GanyTheBot.prototype.start = function() {
       if (this.is_subscribed(msg.chat.id)) {
         let subscriber = this.find_subscriber(msg.chat.id)
         options = { parse_mode: "Markdown" }
-        let message = "Hello! Thanks for your interest into the paid version, your will surely make profits out of it."
+        let message = "Hello! Thanks for your interest into the paid version, you will surely make profits out of it."
         message += "\nYou can pay with multiple cryptocurrencies."
         message += "\nPlease press the button for the crypto you want to use for making your payment."
 
@@ -1163,7 +1163,7 @@ GanyTheBot.prototype.check_recent_paid_users = function() {
         subscriber.notify_user_paid = false
         subscriber.save()
         this.logger.log("Notifying user", subscriber.telegram_id, "of new status of paid")
-        message = "Hello! We received your payment, hope you enjoy CryptGany as much as we do! :)\nIf your have any doubt or question, don't hesitate to ask on @CryptGanyChat or @CryptoWise.\nOther commands:\n/subscription\n/help"
+        message = "Hello! We received your payment, hope you enjoy CryptGany as much as we do! :)\nIf you have any doubt or question, don't hesitate to ask on @CryptGanyChat or @CryptoWise.\nOther commands:\n/subscription\n/help"
         this.send_message(subscriber.telegram_id, message)
       })
       this.refreshSubscribers()
