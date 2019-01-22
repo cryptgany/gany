@@ -49,6 +49,7 @@ paymentSchema.statics.getPaymentAddress = function(symbol, amount, subscriber) {
 		client.getCallbackAddress({currency: symbol, ipn_url: COINPAYMENTS_POST_URL}).then((data)=> {
 			let pmt = new this({subscriber: subscriber._id, telegram_id: subscriber.telegram_id, address: data.address, symbol: symbol, amount: amount, status: 'pending'})
 			subscriber.payments.push(pmt);
+			subscriber.last_payment = pmt;
 			subscriber.save()
 			pmt.save((err) => {
 				if (err) { reject(err) } else { resolve(data.address); }
@@ -98,7 +99,9 @@ paymentSchema.statics.setupIPNServer = function() {
 						// users with that field on true will be notified that
 						// their payment was received and that they are now a paid sub
 						Subscriber.findOne({telegram_id: pmt.telegram_id}, (err, sub) => {
-							if (pmt.amount.roundBySignificance() == pmt.real_amount.roundBySignificance()) {
+							// we accept a 1% difference in price that could happen by fees / etc
+							let priceVariance = Math.abs(1- (pmt.real_amount / pmt.amount))
+							if ((pmt.amount.roundBySignificance() == pmt.real_amount.roundBySignificance()) || priceVariance <= 0.01) {
 								sub.notify_user_paid = true
 								sub.add_subscription_time(30)
 								sub.save();
@@ -106,7 +109,7 @@ paymentSchema.statics.setupIPNServer = function() {
 							} else {
 								sub.notify_user_paid_different_amount = true
 								sub.save()
-								logger.log(`User paid diff amount than expected (${pmt.amount} vs ${pmt.real_amount}), notifying.`)
+								logger.log(`User paid diff amount than expected (${pmt.amount} vs ${pmt.real_amount}), notifying. (variance: ${priceVariance})`)
 							}
 						})
 					} else { logger.log("payment was already completed") }

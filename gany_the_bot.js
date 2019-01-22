@@ -749,8 +749,8 @@ GanyTheBot.prototype.start = function() {
           amount = amount.roundBySignificance()
 
           var message = ''
-          Payment.getPaymentAddress(currency, amount, subscriber.telegram_id).then((address) => {
-            message = `Awesome, please transfer *${amount} ${currency}* (20~ US$) to address *${address}*, we will notify you when your payment gets processed.`
+          Payment.getPaymentAddress(currency, amount, subscriber).then((address) => {
+            message = `Awesome, please transfer *${amount} ${currency}* (~20 US$) to address *${address}*, we will notify you when your payment gets processed.`
             message += "Please try to do so right now, as the coin's price changes commonly."
             this.send_message(msg.from.id, message)
           }).catch((err) => {
@@ -1162,6 +1162,7 @@ GanyTheBot.prototype.expire_expired_users = function() {
 GanyTheBot.prototype.check_recent_paid_users = function() {
   date = new Date();
   setTimeout(() => { this.check_recent_paid_users() }, CHECK_RECENT_PAID_USERS * 60 * 1000) // 1 minute
+  // users who paid exact amount
   Subscriber.find({notify_user_paid: true}, (err, subscribers) => {
     if (subscribers.length > 0) {
       subscribers.forEach((subscriber) => {
@@ -1170,6 +1171,27 @@ GanyTheBot.prototype.check_recent_paid_users = function() {
         this.logger.log("Notifying user", subscriber.telegram_id, "of new status of paid")
         message = "Hello! We received your payment, hope you enjoy CryptGany as much as we do! :)\nIf your have any doubt or question, don't hesitate to ask on @CryptGanyChat or @CryptoWise.\nOther commands:\n/subscription\n/help"
         this.send_message(subscriber.telegram_id, message)
+      })
+      this.refreshSubscribers()
+    }
+  })
+
+  // users who paid different amount
+  Subscriber.find({notify_user_paid_different_amount: true}, (err, subscribers) => {
+    if (subscribers.length > 0) {
+      subscribers.forEach((subscriber) => {
+        this.logger.log("Notifying user", subscriber.telegram_id, "of a wrong payment")
+        Payment.findOne({_id: subscriber.last_payment}, (err, lastPayment) => {
+          if (lastPayment) {
+            subscriber.notify_user_paid_different_amount = false
+            subscriber.save()
+            message = `Hello! We received your payment, but it was a different amount (had to be ${lastPayment.amount}, received ${lastPayment.real_amount})`
+            message += '\nPlease contact our staff at @CryptGanyChat'
+            this.send_message(subscriber.telegram_id, message)
+          } else {
+            this.logger.error("Not found payment for subscriber", subscriber._id, err)
+          }
+        })
       })
       this.refreshSubscribers()
     }

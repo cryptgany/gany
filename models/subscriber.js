@@ -20,6 +20,7 @@ var subscriberSchema = mongoose.Schema({
     notify_user_paid: { type: Boolean, default: false }, // we iterate over this to see who recently paid so we can tell them
     notify_user_paid_different_amount: { type: Boolean, default: false }, // when user didn't pay the whole amount
     payments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'payments' }],
+    last_payment: { type: mongoose.Schema.Types.ObjectId, ref: 'payments' },
     exchanges: {
       Bittrex: { type: Boolean, default: true },
       Poloniex: { type: Boolean, default: true },
@@ -84,23 +85,6 @@ subscriberSchema.methods.total_balance = function() {
   return this.balance + this.btc_final_balance
 }
 
-subscriberSchema.methods.getLastPayment = function() {
-  return new Promise((resolve, reject) => {
-    console.log("Payment is", Payment)
-    Payment.findOne({telegram_id: this.telegram_id}, {}, { sort: { 'created_at' : -1 } }, function(err, payment) {
-      if (err) {
-        reject(err)
-      } else {
-        if (payment == undefined) {
-          resolve(false) }
-        else {
-          resolve(payment)
-        }
-      }
-    })
-  })
-}
-
 subscriberSchema.methods.set_subscription_confirmed = function(price = 0) { // price is the price of subscription
   expiry_date = new Date()
   if (this.subscription_expires_on && this.subscription_expires_on >= expiry_date) {
@@ -125,7 +109,6 @@ subscriberSchema.methods.add_subscription_time = function(days) {
     // is currently subscribed
     expiry_date = new Date(this.subscription_expires_on)
     expiry_date.setDate(expiry_date.getDate()+days)
-    console.log("Date was", this.subscription_expires_on + ", and now is", expiry_date)
   } else {
     expiry_date.setDate(expiry_date.getDate()+days);
   }
