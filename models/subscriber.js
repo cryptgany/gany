@@ -1,5 +1,6 @@
 // Handles all the subscription process
 require('dotenv').config();
+
 var mongoose = require('mongoose');
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
 
@@ -18,6 +19,7 @@ var subscriberSchema = mongoose.Schema({
     balance: { type: Number, default: 0 }, // Leftover after paying subscription
     notify_user_paid: { type: Boolean, default: false }, // we iterate over this to see who recently paid so we can tell them
     notify_user_paid_different_amount: { type: Boolean, default: false }, // when user didn't pay the whole amount
+    payments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'payments' }],
     exchanges: {
       Bittrex: { type: Boolean, default: true },
       Poloniex: { type: Boolean, default: true },
@@ -80,6 +82,23 @@ subscriberSchema.methods.set_final_balance = function(amount) {
 
 subscriberSchema.methods.total_balance = function() {
   return this.balance + this.btc_final_balance
+}
+
+subscriberSchema.methods.getLastPayment = function() {
+  return new Promise((resolve, reject) => {
+    console.log("Payment is", Payment)
+    Payment.findOne({telegram_id: this.telegram_id}, {}, { sort: { 'created_at' : -1 } }, function(err, payment) {
+      if (err) {
+        reject(err)
+      } else {
+        if (payment == undefined) {
+          resolve(false) }
+        else {
+          resolve(payment)
+        }
+      }
+    })
+  })
 }
 
 subscriberSchema.methods.set_subscription_confirmed = function(price = 0) { // price is the price of subscription

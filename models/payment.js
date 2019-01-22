@@ -1,5 +1,5 @@
 require('dotenv').config();
-require('./protofunctions.js')
+require('../protofunctions.js')
 
 const Logger = require('../logger');
 const Subscriber = require('./subscriber');
@@ -27,6 +27,7 @@ var paymentSchema = mongoose.Schema({
 	amount: Number,
 	real_amount: Number,
 	paid_on_tx: String,
+	subscriber: { type: mongoose.Schema.Types.ObjectId, ref: 'subscribers' },
 	status: {
 		type: String,
 		enum: ['pending', 'completed', 'error'],
@@ -39,14 +40,16 @@ paymentSchema.statics.pending = function(callback) {
 	PaymentModel.find({status: 'pending'}, callback).limit(PROCESS_MAXIMUM_INPUTS)
 }
 
-paymentSchema.statics.getPaymentAddress = function(symbol, amount, user_id) {
+paymentSchema.statics.getPaymentAddress = function(symbol, amount, subscriber) {
 	// start payment processing for User X on XLM/BTC/NEO/etc
 	// Creates an internal payment model while also starting a callback payment (IPN) on coinpayments
 	// When payment is received on coinpayments, we should receive a POST to whatever we send as "ipn_url"
 	// https://www.npmjs.com/package/coinpayments#get-callback-address
 	return new Promise((resolve, reject) => {
 		client.getCallbackAddress({currency: symbol, ipn_url: COINPAYMENTS_POST_URL}).then((data)=> {
-			let pmt = new this({telegram_id: user_id, address: data.address, symbol: symbol, amount: amount, status: 'pending'})
+			let pmt = new this({subscriber: subscriber._id, telegram_id: subscriber.telegram_id, address: data.address, symbol: symbol, amount: amount, status: 'pending'})
+			subscriber.payments.push(pmt);
+			subscriber.save()
 			pmt.save((err) => {
 				if (err) { reject(err) } else { resolve(data.address); }
 			})
