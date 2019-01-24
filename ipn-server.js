@@ -6,7 +6,7 @@ const CoinpaymentsIPNError = require('coinpayments-ipn/lib/error');
 
 const { MERCHANT_ID, COINPAYMENTS_IPN_SECRET, COINPAYMENTS_IPN_SERVER_ENDPOINT } = process.env;
 
-const COINPAYMENTS_IPN_SERVER_PORT = process.env.PORT || 3000
+const COINPAYMENTS_IPN_SERVER_PORT = process.env.PORT || process.env.COINPAYMENTS_IPN_SERVER_PORT || 3000
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
