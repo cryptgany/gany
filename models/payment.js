@@ -30,7 +30,7 @@ var paymentSchema = mongoose.Schema({
 	subscriber: { type: mongoose.Schema.Types.ObjectId, ref: 'subscribers' },
 	status: {
 		type: String,
-		enum: ['pending', 'completed', 'error'],
+		enum: ['pending', 'completed', 'error', 'expired'],
 		default: 'pending'
 },
 	error: String,

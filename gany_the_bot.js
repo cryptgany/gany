@@ -733,26 +733,30 @@ GanyTheBot.prototype.start = function() {
         }
       }
       if (msg.data.match('paywith')) {
-        let currency = msg.data.split(" ")[1]
-        this.send_message(msg.from.id, 'Generating an address for ' + currency + '...')
-        // convert currency to USD in amount
-        // generate a payment
-        // tell user how much they have to pay
-        let amount = currency == 'LTCT' ? 1 : this.quickConvert(MONTHLY_SUBSCRIPTION_PRICE, 'USDT', currency)
-        if (amount) {
-          amount = amount.roundBySignificance()
-
-          var message = ''
-          Payment.getPaymentAddress(currency, amount, subscriber).then((address) => {
-            message = `Please send *${amount} ${currency}* (~${MONTHLY_SUBSCRIPTION_PRICE} US$) to address *${address}*, we will notify you when your payment gets processed.`
-            message += "\nPlease try to do so right now, payment will expire in about 30 minutes."
+        Payment.findOne({_id: subscriber.payments, status: 'pending'}, (err, pendingPmt) => {
+          if (pendingPmt && ((new Date()) - pendingPmt.createdAt) <= 60 * 1000 * 1000) { // payment expiration time
+            var message = "You already have a payment waiting for completion:\n"
+            message += "\n"
+            message += this.paymentMessagePost(pendingPmt.amount, pendingPmt.symbol, pendingPmt.address)
             this.send_message(msg.from.id, message)
-          }).catch((err) => {
-            this.logger.error("Error on payments:", err)
-            message = 'Sorry, please try again or ask our community @cryptowise about this issue.'
-            this.send_message(msg.from.id, message)
-          })
-        }
+          } else {
+            let currency = msg.data.split(" ")[1]
+            this.send_message(msg.from.id, 'Generating an address for ' + currency + '...')
+            // convert currency to USD in amount
+            // generate a payment
+            // tell user how much they have to pay
+            let amount = currency == 'LTCT' ? 1 : this.quickConvert(MONTHLY_SUBSCRIPTION_PRICE, 'USDT', currency)
+            if (amount) {
+              Payment.getPaymentAddress(currency, amount.roundBySignificance(), subscriber).then((address) => {
+                this.send_message(msg.from.id, this.paymentMessagePost(amount, currency, address))
+              }).catch((err) => {
+                this.logger.error("Error on payments:", err)
+                var message = 'Sorry, please try again or ask our community @cryptowise about this issue.'
+                this.send_message(msg.from.id, message)
+              })
+            }
+          }
+        })
       }
     }
   });
@@ -1244,6 +1248,13 @@ GanyTheBot.prototype.refreshSubscribers = function() {
       this.logger.error("Could not get subscribers! fatal error", err)
     this.subscribers = subscribers
   })
+}
+
+GanyTheBot.prototype.paymentMessagePost = function(amount, currency, address) {
+  var message = ""
+  message = `Please send *${amount.roundBySignificance()} ${currency}* (~${MONTHLY_SUBSCRIPTION_PRICE} US$) to address *${address}*, we will notify you when your payment gets processed.`
+  message += "\nPlease try to do so right now, payment will expire in about 30 minutes."
+  return message
 }
 
 module.exports = GanyTheBot;
