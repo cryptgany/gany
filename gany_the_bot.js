@@ -1079,8 +1079,9 @@ GanyTheBot.prototype.configuration_menu_options = function() {
 
 GanyTheBot.prototype.payment_menu = function() {
   let options = [
-    [{ text: 'BTC', callback_data: 'paywith BTC' }, { text: 'ETH', callback_data: 'paywith ETH' }, { text: 'XVG', callback_data: 'paywith XVG' }],
+    [{ text: 'BTC', callback_data: 'paywith BTC' }, { text: 'ETH', callback_data: 'paywith ETH' }, { text: 'LTC', callback_data: 'paywith LTC' }],
     [{ text: 'NEO', callback_data: 'paywith NEO' }, { text: 'Tether USDT', callback_data: 'paywith USDT' }, { text: 'XMR', callback_data: 'paywith XMR' }],
+    [{ text: 'BNB', callback_data: 'paywith BNB' }, { text: 'DASH', callback_data: 'paywith DASH' }, { text: 'XVG', callback_data: 'paywith XVG' }],
   ]
   if (process.env.ENVIRONMENT !== 'production') {
     options.push([{text: 'LTCT', callback_data: 'paywith LTCT'}])
