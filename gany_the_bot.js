@@ -70,7 +70,7 @@ GanyTheBot.prototype.start = function() {
   // MESSAGE CALLBACKS //
   // ***************** //
   this.telegram_bot.onText(/^\/start/, (msg, match) => {
-    if (this.is_not_a_group(msg) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
+    if (this.is_not_a_group(msg) && msg.chat.id) {
       message = 'Hello ' + msg.from.first_name + '. I am CryptGany, the Cryptocurrency Trading Analyst Bot.'
       if (this.is_subscribed(msg.chat.id)) {
         if (this.is_paid_subscriber(msg.chat.id)) {
@@ -87,7 +87,7 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/subscribe/, (msg, match) => {
-    if (this.is_not_a_group(msg) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
+    if (this.is_not_a_group(msg) && msg.chat.id) {
       if (this.is_subscribed(msg.chat.id)) {
         if (this.is_blocked(msg.chat.id)) {
           this.unblock_subscriber(msg.chat.id)
@@ -120,7 +120,7 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/subscription/, (msg, match) => {
-    if (this.is_not_a_group(msg) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
+    if (this.is_not_a_group(msg) && msg.chat.id) {
       if (this.is_subscribed(msg.chat.id)) {
         let subscriber = this.find_subscriber(msg.chat.id)
         if (subscriber.subscription_status) { // subscribed and paid
@@ -152,7 +152,7 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/configure/, (msg, match) => {
-    if (this.is_not_a_group(msg) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
+    if (this.is_not_a_group(msg) && msg.chat.id) {
       if (this.is_subscribed(msg.chat.id)) {
         this.send_message(msg.chat.id, "Configuration menu:", this.configuration_menu_options())
       } else {
@@ -162,7 +162,7 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/pay/, (msg, match) => {
-    if (this.is_not_a_group(msg) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
+    if (this.is_not_a_group(msg) && msg.chat.id) {
       if (this.is_subscribed(msg.chat.id)) {
         let subscriber = this.find_subscriber(msg.chat.id)
         options = { parse_mode: "Markdown" }
@@ -378,7 +378,7 @@ GanyTheBot.prototype.start = function() {
   })
 
   this.telegram_bot.onText(/^\/(stop|block)/, (msg, match) => {
-    if (this.is_subscribed(msg.chat.id) && msg.chat.id != process.env.SPECIAL_GROUP_ID) {
+    if (this.is_subscribed(msg.chat.id)) {
       this.block_subscriber(msg.chat.id)
     }
     this.send_message(msg.chat.id, 'You wont receive my notifications anymore. To change that, you can type /subscribe')
@@ -763,10 +763,10 @@ GanyTheBot.prototype.start = function() {
 }
 
 GanyTheBot.prototype.is_not_a_group = function(msg) {
-  if (msg.chat.id != process.env.SPECIAL_GROUP_ID && (msg.chat.type == 'group' || msg.chat.type == 'supergroup')) {
+  if ((msg.chat.type == 'group' || msg.chat.type == 'supergroup')) {
     this.send_message(msg.chat.id, 'Hello ' + msg.from.first_name + '. You need to talk to me directly in a private chat.\nGroups can only use the /see currency feature.')
   }
-  return msg.chat.id == process.env.SPECIAL_GROUP_ID || (msg.chat.type != 'group' && msg.chat.type != 'supergroup')
+  return (msg.chat.type != 'group' && msg.chat.type != 'supergroup')
 }
 
 GanyTheBot.prototype.send_message = function(chat_id, message, options = { parse_mode: "Markdown", disable_web_page_preview: true }) {
