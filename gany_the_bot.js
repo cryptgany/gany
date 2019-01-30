@@ -389,6 +389,7 @@ GanyTheBot.prototype.start = function() {
     message += "\n/subscribe - Subscribe to Gany's notifications"
     message += "\n/subscription - Information about your subscription"
     message += "\n/stop - Stop receiving notifications from Gany"
+    message += "\n/chart - View charts directly from bot, use /chart indicators to see indicators you can use"
     message += "\n/configure - Configure the exchanges you want or don't want"
     message += "\n/see XXX - See information on all exchanges about XXX currency"
     message += "\n/see XXX 20 - See information on all exchanges with change over 20 minutes"
@@ -398,6 +399,7 @@ GanyTheBot.prototype.start = function() {
     message += '\n/pay - See information required for paying monthly fee'
     message += "\n/whatisbal - What is B A L ?"
     message += "\nThe information you want is not here? You can talk to us in our discussion groups https://t.me/CryptGanyChat and https://t.me/CryptoWise"
+    message += "\nHow to use GanyTheBot, by @sidahimsa: [->watch in YouTube](https://www.youtube.com/watch?v=_jKvfi_sjwQ)"
     this.send_message(msg.chat.id, message)
   })
 
@@ -615,7 +617,7 @@ GanyTheBot.prototype.start = function() {
       // Just ran /chart and wasnt a reply to
       if(!market){
         // lets give them a message that points them to a nicer format. Conditioned users to give us less problems
-        return this.send_message(msg.chat.id, 'Command format:\n/chart btc\n/chart ltc-btc\n/chart xlm-btc binance\n/chart arn-eth binance 30')
+        return this.send_message(msg.chat.id, 'Command format:\n/chart btc\n/chart ltc-btc\n/chart xlm-btc binance\n/chart arn-eth binance 30\n/chart indicators')
       }
 
 
