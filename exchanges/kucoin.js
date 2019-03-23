@@ -1,10 +1,10 @@
 const AbstractExchange = require('./exchange');
-const KucoinClient = require('kucoin-api')
+var request = require('request');
+const TICKER_ENDPOINT = 'https://api.kucoin.com/api/v1/market/allTickers'
 
 class Kucoin extends AbstractExchange {
-    constructor(logger, pumpEvents, exchangeName) {
+    constructor(logger, pumpEvents) {
         super(logger, pumpEvents)
-        this.client = new KucoinClient()
     }
 
     watch(){
@@ -12,10 +12,19 @@ class Kucoin extends AbstractExchange {
     }
 
   	getMarkets () {
-        this.client.getTicker({pair: []}).then((result) => {
-            this.lastData = result.data
-            this.emitData(result.data)
-        }).catch(this.logger.error)
+        return this._makeRequest(TICKER_ENDPOINT).then((response) => {
+            return response.data.ticker;
+        }).then((tickers) => {
+            this.lastData = tickers;
+            this.emitData(tickers);
+        }).catch((error) => {
+            this.logger.error("Error in kucoin api: ", error)
+        })
+
+        // this.client.getTicker({pair: []}).then((result) => {
+        //     this.lastData = result.data
+        //     this.emitData(result.data)
+        // }).catch(this.logger.error)
   	};
 
     emitData(data) {
@@ -41,13 +50,29 @@ class Kucoin extends AbstractExchange {
 
     mapData(ticker) {
         return {
-            high: ticker.high,
-            low: ticker.low,
-            volume: ticker.volValue,
-            last: ticker.lastDealPrice,
-            ask: ticker.sell,
-            bid: ticker.buy,
+            high: parseFloat(ticker.high),
+            low: parseFloat(ticker.low),
+            volume: parseFloat(ticker.volValue),
+            last: parseFloat(ticker.last),
+            ask: parseFloat(ticker.sell),
+            bid: parseFloat(ticker.buy)
         }
+    }
+
+    _makeRequest(url) {
+        return new Promise((resolve, reject) => {
+            request(url, function (error, response, body) {
+                if (body.match(/404\ Not\ Found/)) {
+                    reject("not_found_marked")
+                } else {
+                    if (error)
+                        reject(error)
+                    else {
+                        try { resolve(JSON.parse(body)) } catch(e) { reject(e)}
+                    }
+                }
+            })
+        })
     }
 }
 
