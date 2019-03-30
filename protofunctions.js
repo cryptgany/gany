@@ -77,6 +77,7 @@ smartTimeConvert = function(seconds) {
 }
 
 convertUserTimeToMinutes = function(userTime) { // 30 60 1h 10h
+	if (isNaN(parseInt(userTime))) { return 0 }
 	var t = parseInt(userTime)
 	if (userTime.match(/H/)) {
 		return t * 60;
