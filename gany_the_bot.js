@@ -12,7 +12,6 @@ var moment = require('moment')
 const Charts = require('./charts')
 
 require('./protofunctions.js')
-var moment = require('moment');
 
 CHECK_EXPIRED_USERS = 1 // hours
 CHECK_RECENT_PAID_USERS = 1 // minutes
