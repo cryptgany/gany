@@ -309,13 +309,21 @@ GanyTheBot.prototype.start = function() {
 		this.send_message(msg.chat.id, message)
 	})
 
-	// /topvol 30 (brings top change currencies over 30 minutes)
+	/*
+	 /volchange 30 (brings top change currencies over 30 minutes)
+	 Possible combinations
+	 /volchange binance 1h (top changes last hour in binance)
+	 /volchange binance eth 1h 12btc (top changes last hour in binance for eth markets with min 12 btc volume)
+	 /volchange bittrex btc 30 15 (top changes last 30 mins in bittrex for btc markets, show 15 results)
+	 /volchange binance neo 12h 10 50btc (top changes last 12 hours in binance for neo markets with min 50 btc volume, show 10 results)
+	*/
 	this.telegram_bot.onText(/^\/volchange/, (msg, match) => {
 		let data = msg.text.toUpperCase().split(' ')
 		let subscriber = undefined
 		let exchange = data[1]
 		let time = undefined
 		let message = undefined
+		let minVol = 0.00000001
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
 		}
@@ -327,12 +335,20 @@ GanyTheBot.prototype.start = function() {
 			time = convertUserTimeToMinutes(data[1])
 		}
 
+		if (data[3] && data[3].match(/\d+BTC/)) { // min vol detected
+			minVol = parseInt(data[3])
+		}
+
+		if (data[4] && data[4].match(/\d+BTC/)) { // min vol detected
+			minVol = parseInt(data[4])
+		}
+
 		if (time < 1) { // we will handle hours with influxdb
 			this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
 		} else {
 			if (time < 60 * 24) {
 				TickerData.getTimeComparisson('1', exchange, time).then((markets) => {
-					let filtered = markets.filter((m) => m.open_volume24 != 0 ) // skip all those random new markets
+					let filtered = markets.filter((m) => m.open_volume24 >= minVol ) // skip all those random new markets
 					filtered = this.reduceVolumeComparisonResults(filtered)
 					let result = filtered.map((e) => this.telegramInfluxVolPostComparisson(e, time)).join("\n\n")
 
