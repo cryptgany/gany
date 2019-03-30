@@ -23,6 +23,7 @@
     "jsonfile": "^3.0.1",
     "kraken-exchange-api": "^1.0.0",
     "kucoin-api": "0.0.3",
+    "mocha": "^6.0.2",
     "moment": "^2.19.1",
     "mongodb": "^2.2.33",
     "mongoose": "^4.12.1",
@@ -38,7 +39,8 @@
   },
   "devDependencies": {},
   "scripts": {
-    "start": "node run.js"
+    "start": "node run.js",
+    "test": "node_modules/mocha/bin/mocha test/index"
   },
   "author": "",
   "license": "ISC"

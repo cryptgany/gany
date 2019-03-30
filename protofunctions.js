@@ -62,3 +62,26 @@ symbolFor = function(cur = 'USD') {
   if (safeCurrency(cur) == 'EUR') return '€'
   if (safeCurrency(cur) == 'GBP') return '£'
 }
+
+smartTimeConvert = function(seconds) {
+	let minutes = seconds / 60
+	if (seconds == 1) { return `1 second` }
+	if (minutes < 1) { return `${seconds} seconds`}
+	if (minutes == 1) { return `1 minute` }
+	if (minutes < 60) { return `${parseInt(minutes)} minutes`}
+	if (minutes >= 60) {
+		let hours = minutes / 60
+		if (hours == 1) { return `1 hour` }
+		return `${parseInt(hours)} hours`
+	}
+}
+
+convertUserTimeToMinutes = function(userTime) { // 30 60 1h 10h
+	var t = parseInt(userTime)
+	if (userTime.match(/H/)) {
+		return t * 60;
+	} else {
+		return t
+	}
+
+}
