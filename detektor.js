@@ -97,7 +97,7 @@ Detektor.prototype.analyze_ticker = function(exchange, market, data) {
         if (signal) {
           this.detect_spam()
 
-          this.tickers_detected_blacklist[exchange+market] = 360 * 3 // blacklist for 3 hour, each "1" is 10 seconds
+          this.tickers_detected_blacklist[exchange+market] = 360 // blacklist for 1 hour, each "1" is 10 seconds
           if (!this.muted())
             this.telegram_bot.send_signal(ExchangeList[exchange], signal)
         }
