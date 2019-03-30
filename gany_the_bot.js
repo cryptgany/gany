@@ -821,7 +821,7 @@ GanyTheBot.prototype.previous_signal = async function(exchange, market, callback
 GanyTheBot.prototype.telegram_post_signal = function(client, signal, prev = undefined) {
 	diff = signal.last_ticker.volume - signal.first_ticker.volume
 	message = "[" + client.name + " - " + signal.market + "](" + client.market_url(signal.market) + ") - " + this.symbol_hashtag(client.name, signal.market) + " (" + this.priceInUSD(client.name, signal.market, signal.last_ticker.last) + ")"
-	message += "\nVol. up by *" + diff.humanize({significance: true}) + "* " + client.volume_for(signal.market) + " since *" + this._seconds_to_minutes(signal.time) + "*"
+	message += "\nVol. up by *" + diff.humanize({significance: true}) + "* " + client.volume_for(signal.market) + " since *" + smartTimeConvert(signal.time) + "*"
 	message += "\nVolume: " + signal.last_ticker.volume.humanize() + " (*" + ((signal.change - 1) * 100).humanize({significance: true}) + "%*)"
 	if (signal.first_ticker.bid)
 		message += "\nB: " + signal.first_ticker.bid.toFixed(8) + " " + this.telegram_arrow(signal.first_ticker.bid, signal.last_ticker.bid) + " " + signal.last_ticker.bid.toFixed(8)
@@ -884,7 +884,7 @@ GanyTheBot.prototype.telegramInfluxVolPostComparisson = function(data, time) {
 	diff = data.close_volume24 - data.open_volume24
 	change = data.close_volume24 / data.open_volume24
 	message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
-	message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
+	message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + smartTimeConvert(time * 60) + "*"
 	message += "\nVol: " + data.open_volume24.humanize() + " " + this.telegram_arrow(data.open_volume24, data.close_volume24) + " " + data.close_volume24.humanize() + ' ' + ExchangeList[exchange].volume_for(market) + " (*" + ((change - 1) * 100).humanize({significance: true}) + "%*)"
 	message += "\nL: " + data.open_close.toFixed(8) + " " + this.telegram_arrow(data.open_close, data.close_close) + " " + data.close_close.toFixed(8)
 	return message
@@ -898,7 +898,7 @@ GanyTheBot.prototype.telegramInfluxPricePostComparisson = function(data, time) {
 	diff_price = data.close_close - data.open_close
 	change_price = data.close_close / data.open_close
 	message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
-	message += "\nVol. changed by *" + diff_vol.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
+	message += "\nVol. changed by *" + diff_vol.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + smartTimeConvert(time * 60) + "*"
 	message += "\nPrice changed by *" + diff_price.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " " + " (*" + ((change_price - 1) * 100).humanize({significance: true}) + "%*)"
 	message += "\nVol: " + data.open_volume24.humanize() + " " + this.telegram_arrow(data.open_volume24, data.close_volume24) + " " + data.close_volume24.humanize() + ' ' + ExchangeList[exchange].volume_for(market) + " (*" + ((change_vol - 1) * 100).humanize({significance: true}) + "%*)"
 	message += "\nL: " + data.open_close.toFixed(8) + " " + this.telegram_arrow(data.open_close, data.close_close) + " " + data.close_close.toFixed(8)
@@ -1202,12 +1202,6 @@ GanyTheBot.prototype.check_recent_paid_users = function() {
 			this.refreshSubscribers()
 		}
 	})
-}
-
-GanyTheBot.prototype._seconds_to_minutes = function(seconds) {
-	var minutes = Math.floor(seconds / 60);
-	var seconds = seconds - minutes * 60;
-	return minutes == 0 ? (seconds + " seconds") : minutes + (minutes > 1 ? " minutes" : " minute")
 }
 
 GanyTheBot.prototype._signalMarketType = function(signal) {
