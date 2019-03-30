@@ -20,7 +20,7 @@ CHECK_RECENT_PAID_USERS = 1 // minutes
 MONTHLY_SUBSCRIPTION_PRICE = 20 // in USD
 
 SEE_REGEX_WITH_ONE_PARAM=/^\/see\ ([a-zA-Z0-9]|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))+$/i // /see neo | /see neo-btc
-SEE_REGEX_WITH_TWO_PARAMS=/^\/see\ (([a-zA-Z0-9]{1,6})|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))\ \d+$/i // /see neo 20 | /see neo-btc 20
+SEE_REGEX_WITH_TWO_PARAMS=/^\/see\ (([a-zA-Z0-9]{1,6})|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))\ ([0-9h]{1,4})+$/i // /see neo 20 | /see neo-btc 20h
 FIAT_SYMBOLS = ['USD', 'EUR', 'GBP', 'USDT', 'TUSD', 'EURT']
 EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart first
 	Bittrex: 1,
@@ -209,11 +209,13 @@ GanyTheBot.prototype.start = function() {
 		this.send_message(msg.chat.id, message)
 	})
 
+	// /see (no params) or bad formatted /see
 	this.telegram_bot.onText(/^\/see/i, (msg, match) => {
 		if (!msg.text.match(SEE_REGEX_WITH_ONE_PARAM) && !(msg.text.match(SEE_REGEX_WITH_TWO_PARAMS)))
-			this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30')
+			this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30\n/see btc 3h')
 	})
 
+	// /see neo
 	this.telegram_bot.onText(SEE_REGEX_WITH_ONE_PARAM, (msg, match) => { // common users /see
 		let subscriber = undefined
 		let message = undefined
@@ -233,6 +235,7 @@ GanyTheBot.prototype.start = function() {
 		this.send_message(msg.chat.id, message)
 	})
 
+	// /see neo-btc 360
 	this.telegram_bot.onText(SEE_REGEX_WITH_TWO_PARAMS, (msg, match) => {
 		let subscriber = undefined
 		let message = undefined
@@ -242,8 +245,11 @@ GanyTheBot.prototype.start = function() {
 		let data = msg.text.toUpperCase().split(' ')
 		let market = data[1]
 		let time = parseInt(data[2])
-		if (time.toString() != data[2] || time < 1 || time > 60 * 6) {
-			this.send_message(msg.chat.id, 'Please enter a number between 1 and 360.')
+		if (data[2].match(/H/)) { // 1h 3h 12h
+			time = time * 60
+		}
+		if (time < 1 || time > (60 * 24)) {
+			this.send_message(msg.chat.id, 'Please enter a number between 1 (1 minute) and 24h (24 hours).')
 		} else {
 			this.detektor.getMarketDataWithTime(market, time-1, subscriber).then((markets) => {
 				if (markets.length == 0)
