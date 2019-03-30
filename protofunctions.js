@@ -75,3 +75,13 @@ smartTimeConvert = function(seconds) {
 		return `${parseInt(hours)} hours`
 	}
 }
+
+convertUserTimeToMinutes = function(userTime) { // 30 60 1h 10h
+	var t = parseInt(userTime)
+	if (userTime.match(/H/)) {
+		return t * 60;
+	} else {
+		return t
+	}
+
+}

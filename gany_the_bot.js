@@ -243,10 +243,7 @@ GanyTheBot.prototype.start = function() {
 		}
 		let data = msg.text.toUpperCase().split(' ')
 		let market = data[1]
-		let time = parseInt(data[2])
-		if (data[2].match(/H/)) { // 1h 3h 12h
-			time = time * 60
-		}
+		let time = convertUserTimeToMinutes(data[2])
 		if (time < 1 || time > (60 * 24)) {
 			this.send_message(msg.chat.id, 'Please enter a number between 1 (1 minute) and 24h (24 hours).')
 		} else {
@@ -324,10 +321,10 @@ GanyTheBot.prototype.start = function() {
 		}
 		if (parseInt(data[1]).toString() != data[1]) {// it's an exchange
 			exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
-			time = parseInt(data[2])
+			time = convertUserTimeToMinutes(data[2])
 		} else {
 			exchange = 'All'
-			time = parseInt(data[1])
+			time = convertUserTimeToMinutes(data[1])
 		}
 
 		if (time < 1) { // we will handle hours with influxdb
@@ -359,10 +356,10 @@ GanyTheBot.prototype.start = function() {
 		}
 		if (parseInt(data[1]).toString() != data[1]) {// it's an exchange
 			exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
-			time = parseInt(data[2])
+			time = convertUserTimeToMinutes(data[2])
 		} else {
 			exchange = 'All'
-			time = parseInt(data[1])
+			time = convertUserTimeToMinutes(data[1])
 		}
 
 		if (time < 1) { // we will handle hours with influxdb

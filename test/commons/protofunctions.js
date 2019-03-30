@@ -16,4 +16,12 @@ describe('Common shared functions', function() {
 		assert.equal(smartTimeConvert(60 * 60), "1 hour");
 		done();
 	});
+
+	it ('convertUserTimeToMinutes converts user input time into the right minutes', function(done) {
+		assert.equal(convertUserTimeToMinutes("30"), 30);
+		assert.equal(convertUserTimeToMinutes("360"), 360);
+		assert.equal(convertUserTimeToMinutes("1H"), 60);
+		assert.equal(convertUserTimeToMinutes("10H"), 600);
+		done();
+	});
 });
