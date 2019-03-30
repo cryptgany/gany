@@ -866,7 +866,7 @@ GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market,
 	diff = lastTicker.volume - firstTicker.volume
 	change = this.detektor.volume_change(firstTicker, lastTicker)
 	message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, lastTicker.last) + ")"
-	message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + time + " minutes*"
+	message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + smartTimeConvert(time)
 	message += "\nVolume: " + lastTicker.volume.humanize() + " (*" + ((change - 1) * 100).humanize({significance: true}) + "%*)"
 	if (firstTicker.bid)
 		message += "\nB: " + firstTicker.bid.toFixed(8) + " " + this.telegram_arrow(firstTicker.bid, lastTicker.bid) + " " + lastTicker.bid.toFixed(8)
