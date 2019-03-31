@@ -24,4 +24,13 @@ describe('Common shared functions', function() {
 		assert.equal(convertUserTimeToMinutes("10H"), 600);
 		done();
 	});
+
+	it ('extractMinBtc understands user input-min btc value filter', function(done) {
+		assert.equal(extractMinBtc("/VOLCHANGE BINANCE 1 5 10BTC"), 10);
+		assert.equal(extractMinBtc("/VOLCHANGE BINANCE 1 5"), undefined);
+		assert.equal(extractMinBtc("/VOLCHANGE BINANCE 1 5 0.5BTC"), 0.5);
+		assert.equal(extractMinBtc("/VOLCHANGE BINANCE 1BTC"), 1);
+		assert.equal(extractMinBtc("/VOLCHANGE BINANCE BTC"), undefined);
+		done();
+	});
 });

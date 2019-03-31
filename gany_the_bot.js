@@ -318,12 +318,13 @@ GanyTheBot.prototype.start = function() {
 	 /volchange binance neo 12h 10 50btc (top changes last 12 hours in binance for neo markets with min 50 btc volume, show 10 results)
 	*/
 	this.telegram_bot.onText(/^\/volchange/, (msg, match) => {
-		let data = msg.text.toUpperCase().split(' ')
+		let command = msg.text.toUpperCase()
+		let data = command.split(' ')
 		let subscriber = undefined
 		let exchange = data[1]
 		let time = undefined
 		let message = undefined
-		let minVol = 0.00000001
+		let minVol = extractMinBtc(command) || 0.00000001
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
 		}
@@ -335,20 +336,12 @@ GanyTheBot.prototype.start = function() {
 			time = convertUserTimeToMinutes(data[1])
 		}
 
-		if (data[3] && data[3].match(/\d+BTC/)) { // min vol detected
-			minVol = parseInt(data[3])
-		}
-
-		if (data[4] && data[4].match(/\d+BTC/)) { // min vol detected
-			minVol = parseInt(data[4])
-		}
-
 		if (time < 1) { // we will handle hours with influxdb
 			this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
 		} else {
 			if (time < 60 * 24) {
 				TickerData.getTimeComparisson('1', exchange, time).then((markets) => {
-					let filtered = markets.filter((m) => m.open_volume24 >= minVol ) // skip all those random new markets
+					let filtered = markets.filter((m) => this.btcVolume(m, m.close_volume24) > minVol ) // skip all those random new markets
 					filtered = this.reduceVolumeComparisonResults(filtered)
 					let result = filtered.map((e) => this.telegramInfluxVolPostComparisson(e, time)).join("\n\n")
 
@@ -362,11 +355,13 @@ GanyTheBot.prototype.start = function() {
 
 	// /pricechange 30 (brings top change currencies over 30 minutes)
 	this.telegram_bot.onText(/^\/pricechange/, (msg, match) => {
+		let command = msg.text.toUpperCase()
 		let data = msg.text.toUpperCase().split(' ')
 		let subscriber = undefined
 		let exchange = data[1]
 		let time = data[2]
 		let message = undefined
+		let minVol = extractMinBtc(command) || 0.00000001
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
 		}
@@ -383,7 +378,7 @@ GanyTheBot.prototype.start = function() {
 		} else {
 			if (time < 60 * 24) {
 				TickerData.getTimeComparisson('1', exchange, time).then((markets) => {
-					let filtered = markets.filter((m) => m.open_volume24 != 0 ) // skip all those random new markets
+					let filtered = markets.filter((m) => this.btcVolume(m, m.close_volume24) > minVol ) // skip all those random new markets
 					filtered = this.reducePriceComparisonResults(filtered)
 					let result = filtered.map((e) => this.telegramInfluxPricePostComparisson(e, time)).join("\n\n")
 

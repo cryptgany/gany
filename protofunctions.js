@@ -86,3 +86,13 @@ convertUserTimeToMinutes = function(userTime) { // 30 60 1h 10h
 	}
 
 }
+
+
+// Extracting functions to understand user input
+// /VOLCHANGE BINANCE 2 1000BTC => 1000btc
+extractMinBtc = function(command) {
+	let match = command.match(/(\d+\.\d+|\d+)BTC/)
+	if (match) {
+		return parseFloat(match[0])
+	}
+}
