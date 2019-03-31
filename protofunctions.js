@@ -16,6 +16,12 @@ Object.defineProperty(Array.prototype, 'chunk', {
     }
 });
 
+Object.defineProperty(Array.prototype, 'removeElement', {
+    value: function(el) {
+        return this.filter(function(ele) { return ele != el; })
+    }
+});
+
 /*
 / 1234567.2 = 1,234,567.2
 / 2.234242 = 2.23
@@ -73,26 +79,5 @@ smartTimeConvert = function(seconds) {
 		let hours = minutes / 60
 		if (hours == 1) { return `1 hour` }
 		return `${parseInt(hours)} hours`
-	}
-}
-
-convertUserTimeToMinutes = function(userTime) { // 30 60 1h 10h
-	if (isNaN(parseInt(userTime))) { return 0 }
-	var t = parseInt(userTime)
-	if (userTime.match(/H/)) {
-		return t * 60;
-	} else {
-		return t
-	}
-
-}
-
-
-// Extracting functions to understand user input
-// /VOLCHANGE BINANCE 2 1000BTC => 1000btc
-extractMinBtc = function(command) {
-	let match = command.match(/(\d+\.\d+|\d+)BTC/)
-	if (match) {
-		return parseFloat(match[0])
 	}
 }
