@@ -4,6 +4,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./models/subscriber');
 const TickerData = require('./models/ticker_data');
 const Payment = require('./models/payment');
+const Alert = require('./models/alert');
 const Signal = require('./models/signal')
 const ExchangeList = require('./exchange_list')
 const _ = require('underscore')
@@ -611,6 +612,53 @@ GanyTheBot.prototype.start = function() {
 				this.photo.photo_id = undefined;
 			}
 	})
+
+	// User price alerts
+	// Plan is to grow from here until we have some custom alert on volume+whatever user stuff
+	// MVP: /alert binance btc-usdt 4000: will alert when btc-usdt pair on binance crosses 4000
+
+	// TODO:
+	//   User limit max amount of alerts
+	//   Find market and exchange, identify the right values, store those+price start
+	this.telegram_bot.onText(/^\/alert/, async (msg, match) => {
+		let subscriber = undefined
+		if (this.is_subscribed(msg.from.id)) {
+			subscriber = this.find_subscriber(msg.from.id)
+		}
+		let userInput = (new UserInputAnalyzer(msg.text)).splitCommand
+
+		let exchange = userInput[1]
+		let market = userInput[2] + "-" + userInput[3]
+		let priceTarget = userInput[4]
+
+		if (exchange && market && priceTarget) {
+			let alert = new Alert({
+				subscriber: subscriber._id,
+				telegram_id: msg.chat.id,
+				price_start: priceStart,
+				price_target: priceTarget,
+				exchange: exchange,
+				market: market,
+				status: 'active'
+			})
+			if (subscriber) {
+				subscriber.alerts.push(alert);
+				subscriber.save()
+			}
+			alert.save((err) => {
+				if (err) { /* print error */ } else { /* print user happy message */ }
+			})
+		} else {
+			let message = ""
+			message += 'Register alerts when price crosses expected target.\n'
+			message += 'Usage:\n'
+			message += '`/alert [exchange] [market-pair] [price]`\n'
+			message += 'Examples:\n'
+			message += '`/alert binance neo-btc 0.01`: Alert when neo-btc crosses that price on binance.\n'
+			message += '`/alert idex next-eth 0.0015`: Alert when next-idex crosses that price on idex.\n'
+			this.send_message(msg.chat.id, message)
+		}
+	});
 
 
 	// Chart command
