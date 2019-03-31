@@ -1,6 +1,7 @@
 const repl = require('repl');
 
 
+const Alert = require('./models/alert.js')
 const Payment = require('./models/payment.js')
 const Signal = require('./models/signal.js')
 const Subscriber = require('./models/subscriber.js')
