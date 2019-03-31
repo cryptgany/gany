@@ -318,7 +318,18 @@ GanyTheBot.prototype.start = function() {
 	 /volchange bittrex btc 30 15 (top changes last 30 mins in bittrex for btc markets, show 15 results)
 	 /volchange binance neo 12h 10 50btc (top changes last 12 hours in binance for neo markets with min 50 btc volume, show 10 results)
 	*/
-	this.telegram_bot.onText(/^\/volchange/, (msg, match) => {
+	this.telegram_bot.onText(/^\/volchange/i, (msg, match) => { // no commands
+		if (!msg.text.match(/^\/volchange\ /)) {
+			let message = 'Usage:\n'
+			message += '`/volchange binance 1h` (top changes last hour in binance)\n\n'
+			message += '`/volchange binance eth 1h 12btc` (top changes last hour in binance for eth markets with min 12 btc volume)\n\n'
+			message += '`/volchange bittrex btc 30 15` (top changes last 30 mins in bittrex for btc markets, show 15 results)\n\n'
+			message += '`/volchange binance neo 12h 10 50btc` (top changes last 12 hours in binance for neo markets with min 50 btc volume, show 10 results)\n\n'
+			this.send_message(msg.chat.id, message)
+		}
+	});
+
+	this.telegram_bot.onText(/^\/volchange\ /, (msg, match) => {
 		let userInput = new UserInputAnalyzer(msg.text)
 		let subscriber = undefined
 		let exchange = EXCHANGES_CONVERSION[userInput.exchange || 'ALL']
@@ -352,8 +363,19 @@ GanyTheBot.prototype.start = function() {
 		}
 	})
 
+	this.telegram_bot.onText(/^\/pricechange/i, (msg, match) => { // no commands
+		if (!msg.text.match(/^\/pricechange\ /)) {
+			let message = 'Usage:\n'
+			message += '`/pricechange binance 1h` (top changes last hour in binance)\n\n'
+			message += '`/pricechange binance eth 1h 12btc` (top changes last hour in binance for eth markets with min 12 btc volume)\n\n'
+			message += '`/pricechange bittrex btc 30 15` (top changes last 30 mins in bittrex for btc markets, show 15 results)\n\n'
+			message += '`/pricechange binance neo 12h 10 50btc` (top changes last 12 hours in binance for neo markets with min 50 btc volume, show 10 results)\n\n'
+			this.send_message(msg.chat.id, message)
+		}
+	});
+
 	// /pricechange 30 (brings top change currencies over 30 minutes)
-	this.telegram_bot.onText(/^\/pricechange/, (msg, match) => {
+	this.telegram_bot.onText(/^\/pricechange\ /, (msg, match) => {
 		let userInput = new UserInputAnalyzer(msg.text)
 		let subscriber = undefined
 		let exchange = EXCHANGES_CONVERSION[userInput.exchange || 'ALL']
@@ -403,6 +425,8 @@ GanyTheBot.prototype.start = function() {
 		message += "\n/configure - Configure the exchanges you want or don't want"
 		message += "\n/see XXX - See information on all exchanges about XXX currency"
 		message += "\n/see XXX 20 - See information on all exchanges with change over 20 minutes"
+		message += "\n/volchange - Perform a deep, custom markets+exchanges analysis based on volume change"
+		message += "\n/pricechange - Perform a deep, custom markets+exchanges analysis based on price change"
 		message += "\n/price XXX - See resume of price in BTC and USD for XXX."
 		message += "\n/top - See the top 4 markets sorted by volume of all exchanges."
 		message += "\n/pricing - See information about pricing of Gany"
