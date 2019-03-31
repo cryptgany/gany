@@ -354,38 +354,35 @@ GanyTheBot.prototype.start = function() {
 
 	// /pricechange 30 (brings top change currencies over 30 minutes)
 	this.telegram_bot.onText(/^\/pricechange/, (msg, match) => {
-		let command = msg.text.toUpperCase()
-		let data = msg.text.toUpperCase().split(' ')
+		let userInput = new UserInputAnalyzer(msg.text)
 		let subscriber = undefined
-		let exchange = data[1]
-		let time = data[2]
-		let message = undefined
-		let minVol = extractMinBtc(command) || 0.00000001
-		let filterMarket = undefined
+		let exchange = EXCHANGES_CONVERSION[userInput.exchange || 'ALL']
+		let minVol = userInput.minVol || 0.00000001 // IN BTC, TODO: other bases, for example 1000USD
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
 		}
-		if (parseInt(data[1]).toString() != data[1]) {// it's an exchange
-			exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
-			time = convertUserTimeToMinutes(data[2])
-		} else {
-			exchange = 'All'
-			time = convertUserTimeToMinutes(data[1])
-		}
 
-		if (time < 1) { // we will handle hours with influxdb
+		if (userInput.time < 1 || userInput.time == undefined) { // we will handle hours with influxdb
 			this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
 		} else {
-			if (time < 60 * 24) {
-				TickerData.getTimeComparisson('1', exchange, time).then((markets) => {
-					let filtered = markets.filter((m) => this.btcVolume(m, m.close_volume24) > minVol ) // skip all those random new markets
-					filtered = this.reducePriceComparisonResults(filtered)
-					let result = filtered.map((e) => this.telegramInfluxPricePostComparisson(e, time)).join("\n\n")
-
-					this.send_message(msg.chat.id, result)
+			if (userInput.time < 60 * 24) {
+				TickerData.getTimeComparisson('1', exchange, userInput.time).then((markets) => {
+					let filtered = markets;
+					if (userInput.market) {
+						let reg = new RegExp('(^' + userInput.market + '\-)|(\-' + userInput.market + '$)')
+						filtered = filtered.filter((e) => e.market.match(reg))
+					}
+					filtered = filtered.filter((m) => this.btcVolume(m, m.close_volume24) >= minVol ) // skip all those random new markets
+					filtered = this.reducePriceComparisonResults(filtered, userInput.limit || 4)
+					if (filtered.length > 0) {
+						let result = filtered.map((e) => this.telegramInfluxPricePostComparisson(e, userInput.time)).join("\n\n")
+						this.send_message(msg.chat.id, result)
+					} else {
+						this.send_message(msg.chat.id, 'No results found.')
+					}
 				})
 			} else {
-				this.send_message(msg.chat.id, 'Work in progress')
+				this.send_message(msg.chat.id, 'Work in progress.')
 			}
 		}
 	})
