@@ -16,6 +16,12 @@ Object.defineProperty(Array.prototype, 'chunk', {
     }
 });
 
+Object.defineProperty(Array.prototype, 'removeElement', {
+    value: function(el) {
+        return this.filter(function(ele) { return ele != el; })
+    }
+});
+
 /*
 / 1234567.2 = 1,234,567.2
 / 2.234242 = 2.23
@@ -74,14 +80,4 @@ smartTimeConvert = function(seconds) {
 		if (hours == 1) { return `1 hour` }
 		return `${parseInt(hours)} hours`
 	}
-}
-
-convertUserTimeToMinutes = function(userTime) { // 30 60 1h 10h
-	var t = parseInt(userTime)
-	if (userTime.match(/H/)) {
-		return t * 60;
-	} else {
-		return t
-	}
-
 }

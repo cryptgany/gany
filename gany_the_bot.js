@@ -7,6 +7,7 @@ const Payment = require('./models/payment');
 const Signal = require('./models/signal')
 const ExchangeList = require('./exchange_list')
 const _ = require('underscore')
+const UserInputAnalyzer = require('./user_input_analyzer')
 var moment = require('moment')
 
 const Charts = require('./charts')
@@ -183,7 +184,14 @@ GanyTheBot.prototype.start = function() {
 	/ /convert 10 btc neo (10 btc to neo)
 	/ /convert 10 omg (10 omg to btc, default is btc)
 	*/
-	this.telegram_bot.onText(/^\/convert/, (msg, match) => {
+	this.telegram_bot.onText(/^\/convert$/, (msg, match) => {
+		let message = 'Usage:\n'
+		message += '`/convert 10 neo eth` (10 neo to eth)\n'
+		message += '`/convert 10 btc neo` (10 btc to neo)\n'
+		message += '`/convert 10 omg` (10 omg to btc, default is btc)'
+		this.send_message(msg.chat.id, message)
+	});
+	this.telegram_bot.onText(/^\/convert\ /, (msg, match) => {
 		data = msg.text.toUpperCase().split(' ')
 		let fromCur = data[2]
 		let toCur = data[3] || 'BTC'
@@ -211,7 +219,7 @@ GanyTheBot.prototype.start = function() {
 	// /see (no params) or bad formatted /see
 	this.telegram_bot.onText(/^\/see/i, (msg, match) => {
 		if (!msg.text.match(SEE_REGEX_WITH_ONE_PARAM) && !(msg.text.match(SEE_REGEX_WITH_TWO_PARAMS)))
-			this.send_message(msg.chat.id, 'You need to type the currency you want to see, examples:\n/see neo\n/see eth-btc\n/see usdt\n/see neo 30\n/see btc 3h')
+			this.send_message(msg.chat.id, 'Shows basic market information and its change in xx minutes. Usage:\n`/see [market name]`: Shows basic information.\n`/see [market name] [time]`: Shows basic information change in -time-.\n\nExamples:\n`/see neo`\n`/see eth-btc`\n`/see usdt`\n`/see neo 30` (neo changes in 30 minutes)\n`/see btc 3h`(neo changes in 3 hours)')
 	})
 
 	// /see neo
@@ -266,6 +274,13 @@ GanyTheBot.prototype.start = function() {
 		}
 	})
 
+	this.telegram_bot.onText(/^\/price$/, (msg, match) => {
+		let message = "Shows price in BTC and USD values.\nUsage:\n"
+		message += "`/price neo`: Shows price of Neo in different exchanges, for BTC and USD\n\n"
+		message += "`/price xtz`: Shows price of Tezos in different exchanges, for BTC and USD"
+		this.send_message(msg.chat.id, message)
+	});
+
 	this.telegram_bot.onText(/^\/price\ /, (msg, match) => {
 		let subscriber = undefined
 		let message = undefined
@@ -309,72 +324,103 @@ GanyTheBot.prototype.start = function() {
 		this.send_message(msg.chat.id, message)
 	})
 
-	// /topvol 30 (brings top change currencies over 30 minutes)
-	this.telegram_bot.onText(/^\/volchange/, (msg, match) => {
-		let data = msg.text.toUpperCase().split(' ')
+	/*
+	 /volchange 30 (brings top change currencies over 30 minutes)
+	 Possible combinations
+	 /volchange binance 1h (top changes last hour in binance)
+	 /volchange binance eth 1h 12btc (top changes last hour in binance for eth markets with min 12 btc volume)
+	 /volchange bittrex btc 30 15 (top changes last 30 mins in bittrex for btc markets, show 15 results)
+	 /volchange binance neo 12h 10 50btc (top changes last 12 hours in binance for neo markets with min 50 btc volume, show 10 results)
+	*/
+	this.telegram_bot.onText(/^\/volchange/i, (msg, match) => { // no commands
+		if (!msg.text.match(/^\/volchange\ /)) {
+			let message = 'Finds in all exchanges+markets for specific changes. Usage:\n'
+			message += '`/volchange [exchange] [market] [time] [limit] [vol]`\n\nExamples:\n'
+			message += '`/volchange binance 1h` (top changes last hour in binance)\n\n'
+			message += '`/volchange binance eth 1h 12btc` (top changes last hour in binance for eth markets with min 12 btc volume)\n\n'
+			message += '`/volchange bittrex btc 30 15` (top changes last 30 mins in bittrex for btc markets, show 15 results)\n\n'
+			message += '`/volchange binance neo 12h 10 50btc` (top changes last 12 hours in binance for neo markets with min 50 btc volume, show 10 results)\n\n'
+			this.send_message(msg.chat.id, message)
+		}
+	});
+
+	this.telegram_bot.onText(/^\/volchange\ /, (msg, match) => {
+		let userInput = new UserInputAnalyzer(msg.text)
 		let subscriber = undefined
-		let exchange = data[1]
-		let time = undefined
-		let message = undefined
+		let exchange = EXCHANGES_CONVERSION[userInput.exchange || 'ALL']
+		let minVol = userInput.minVol || 0.00000001 // IN BTC, TODO: other bases, for example 1000USD
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
 		}
-		if (parseInt(data[1]).toString() != data[1]) {// it's an exchange
-			exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
-			time = convertUserTimeToMinutes(data[2])
-		} else {
-			exchange = 'All'
-			time = convertUserTimeToMinutes(data[1])
-		}
 
-		if (time < 1) { // we will handle hours with influxdb
+		if (userInput.time < 1 || userInput.time == undefined) { // we will handle hours with influxdb
 			this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
 		} else {
-			if (time < 60 * 24) {
-				TickerData.getTimeComparisson('1', exchange, time).then((markets) => {
-					let filtered = markets.filter((m) => m.open_volume24 != 0 ) // skip all those random new markets
-					filtered = this.reduceVolumeComparisonResults(filtered)
-					let result = filtered.map((e) => this.telegramInfluxVolPostComparisson(e, time)).join("\n\n")
-
-					this.send_message(msg.chat.id, result)
+			if (userInput.time < 60 * 24) {
+				TickerData.getTimeComparisson('1', exchange, userInput.time).then((markets) => {
+					let filtered = markets;
+					if (userInput.market) {
+						let reg = new RegExp('(^' + userInput.market + '\-)|(\-' + userInput.market + '$)')
+						filtered = filtered.filter((e) => e.market.match(reg))
+					}
+					filtered = filtered.filter((m) => this.btcVolume(m, m.close_volume24) >= minVol ) // skip all those random new markets
+					filtered = this.reduceVolumeComparisonResults(filtered, userInput.limit || 4)
+					if (filtered.length > 0) {
+						let result = filtered.map((e) => this.telegramInfluxVolPostComparisson(e, userInput.time)).join("\n\n")
+						this.send_message(msg.chat.id, result)
+					} else {
+						this.send_message(msg.chat.id, 'No results found.')
+					}
 				})
 			} else {
-				this.send_message(msg.chat.id, 'Work in progress')
+				this.send_message(msg.chat.id, 'Work in progress.')
 			}
 		}
 	})
 
+	this.telegram_bot.onText(/^\/pricechange/i, (msg, match) => { // no commands
+		if (!msg.text.match(/^\/pricechange\ /)) {
+			let message = 'Finds in all exchanges+markets for specific changes. Usage:\n'
+			message += '`/pricechange [exchange] [market] [time] [limit] [vol]`\n\nExamples:\n'
+			message += '`/pricechange binance 1h` (top changes last hour in binance)\n\n'
+			message += '`/pricechange binance eth 1h 12btc` (top changes last hour in binance for eth markets with min 12 btc volume)\n\n'
+			message += '`/pricechange bittrex btc 30 15` (top changes last 30 mins in bittrex for btc markets, show 15 results)\n\n'
+			message += '`/pricechange binance neo 12h 10 50btc` (top changes last 12 hours in binance for neo markets with min 50 btc volume, show 10 results)\n\n'
+			this.send_message(msg.chat.id, message)
+		}
+	});
+
 	// /pricechange 30 (brings top change currencies over 30 minutes)
-	this.telegram_bot.onText(/^\/pricechange/, (msg, match) => {
-		let data = msg.text.toUpperCase().split(' ')
+	this.telegram_bot.onText(/^\/pricechange\ /, (msg, match) => {
+		let userInput = new UserInputAnalyzer(msg.text)
 		let subscriber = undefined
-		let exchange = data[1]
-		let time = data[2]
-		let message = undefined
+		let exchange = EXCHANGES_CONVERSION[userInput.exchange || 'ALL']
+		let minVol = userInput.minVol || 0.00000001 // IN BTC, TODO: other bases, for example 1000USD
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
 		}
-		if (parseInt(data[1]).toString() != data[1]) {// it's an exchange
-			exchange = EXCHANGES_CONVERSION[data[1] || 'ALL']
-			time = convertUserTimeToMinutes(data[2])
-		} else {
-			exchange = 'All'
-			time = convertUserTimeToMinutes(data[1])
-		}
 
-		if (time < 1) { // we will handle hours with influxdb
+		if (userInput.time < 1 || userInput.time == undefined) { // we will handle hours with influxdb
 			this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
 		} else {
-			if (time < 60 * 24) {
-				TickerData.getTimeComparisson('1', exchange, time).then((markets) => {
-					let filtered = markets.filter((m) => m.open_volume24 != 0 ) // skip all those random new markets
-					filtered = this.reducePriceComparisonResults(filtered)
-					let result = filtered.map((e) => this.telegramInfluxPricePostComparisson(e, time)).join("\n\n")
-
-					this.send_message(msg.chat.id, result)
+			if (userInput.time < 60 * 24) {
+				TickerData.getTimeComparisson('1', exchange, userInput.time).then((markets) => {
+					let filtered = markets;
+					if (userInput.market) {
+						let reg = new RegExp('(^' + userInput.market + '\-)|(\-' + userInput.market + '$)')
+						filtered = filtered.filter((e) => e.market.match(reg))
+					}
+					filtered = filtered.filter((m) => this.btcVolume(m, m.close_volume24) >= minVol ) // skip all those random new markets
+					filtered = this.reducePriceComparisonResults(filtered, userInput.limit || 4)
+					if (filtered.length > 0) {
+						let result = filtered.map((e) => this.telegramInfluxPricePostComparisson(e, userInput.time)).join("\n\n")
+						this.send_message(msg.chat.id, result)
+					} else {
+						this.send_message(msg.chat.id, 'No results found.')
+					}
 				})
 			} else {
-				this.send_message(msg.chat.id, 'Work in progress')
+				this.send_message(msg.chat.id, 'Work in progress.')
 			}
 		}
 	})
@@ -387,19 +433,22 @@ GanyTheBot.prototype.start = function() {
 	})
 
 	this.telegram_bot.onText(/^\/help/, (msg, match) => {
-		let message = "/whatisgany - What is this bot?"
-		message += "\n/subscribe - Subscribe to Gany's notifications"
-		message += "\n/subscription - Information about your subscription"
-		message += "\n/stop - Stop receiving notifications from Gany"
-		message += "\n/chart - View charts directly from bot, use /chart indicators to see indicators you can use"
-		message += "\n/configure - Configure the exchanges you want or don't want"
-		message += "\n/see XXX - See information on all exchanges about XXX currency"
-		message += "\n/see XXX 20 - See information on all exchanges with change over 20 minutes"
-		message += "\n/price XXX - See resume of price in BTC and USD for XXX."
-		message += "\n/top - See the top 4 markets sorted by volume of all exchanges."
-		message += "\n/pricing - See information about pricing of Gany"
-		message += '\n/pay - See information required for paying monthly fee'
+		let message = ""
+		message += "\n/whatisgany - What is this bot?\n"
 		message += "\n/whatisbal - What is B A L ?"
+		message += "\n/configure - Configure the exchanges you want or don't want"
+		message += "\n/chart - View charts directly from bot, use /chart indicators to see indicators you can use"
+		message += "\n/convert - Converts any to any crypto regardless of their exchange"
+		message += "\n/see - See information on all exchanges about XXX currency and its changes over time"
+		message += "\n/volchange - Market analysis tool for volume changes analysis"
+		message += "\n/pricechange - Market analysis tool for price changes analysis"
+		message += "\n/price - See resume of price in BTC and USD for XXX."
+		message += "\n/top - See the top 4 markets sorted by volume of all exchanges."
+		message += "\n/subscribe - Subscribe to Gany's notifications"
+		message += "\n/stop - Stop receiving notifications from Gany"
+		message += "\n/pricing - See information about pricing of Gany"
+		message += '\n/pay - See in formation required for paying monthly fee'
+		message += "\n/subscription - Information about your subscription"
 		message += "\nThe information you want is not here? You can talk to us in our discussion groups https://t.me/CryptGanyChat and https://t.me/CryptoWise"
 		message += "\nHow to use GanyTheBot, by @sidahimsa: [->watch in YouTube](https://www.youtube.com/watch?v=_jKvfi_sjwQ)"
 		this.send_message(msg.chat.id, message)
@@ -417,7 +466,7 @@ GanyTheBot.prototype.start = function() {
 
 	this.telegram_bot.onText(/^\/whatisbal/, (msg, match) => {
 		if (this.is_subscribed(msg.chat.id)) {
-			let message = "\nB: Bid"
+			let message = "In order to keep all information short, we use the following codes:\nB: Bid"
 			message += "\nA: Ask"
 			message += "\nL: Last"
 			this.send_message(msg.chat.id, message)
@@ -619,6 +668,9 @@ GanyTheBot.prototype.start = function() {
 			// Just ran /chart and wasnt a reply to
 			if(!market){
 				// lets give them a message that points them to a nicer format. Conditioned users to give us less problems
+				let message = 'Usage:\n'
+				message += '`/chart btc`: Prints btc-usdt daily chart\n'
+				message += '`/chart btc`: Prints btc-usdt daily chart'
 				return this.send_message(msg.chat.id, 'Command format:\n/chart btc\n/chart ltc-btc\n/chart xlm-btc binance\n/chart arn-eth binance 30\n/chart indicators')
 			}
 
