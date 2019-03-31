@@ -61,4 +61,14 @@ describe('User Input Analyzer', function() {
 		assert.equal(uia.minVol, undefined);
 		done();
 	});
+
+	it ('understands the right values user meant for /VOLCHANGE 6h', function(done) {
+		uia = new UserInputAnalyzer("/VOLCHANGE 6h")
+		assert.equal(uia.exchange, undefined);
+		assert.equal(uia.market, undefined);
+		assert.equal(uia.time, 6*60);
+		assert.equal(uia.limit, undefined);
+		assert.equal(uia.minVol, undefined);
+		done();
+	});
 });
