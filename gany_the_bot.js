@@ -184,7 +184,14 @@ GanyTheBot.prototype.start = function() {
 	/ /convert 10 btc neo (10 btc to neo)
 	/ /convert 10 omg (10 omg to btc, default is btc)
 	*/
-	this.telegram_bot.onText(/^\/convert/, (msg, match) => {
+	this.telegram_bot.onText(/^\/convert$/, (msg, match) => {
+		let message = 'Usage:\n'
+		message += '`/convert 10 neo eth` (10 neo to eth)\n'
+		message += '`/convert 10 btc neo` (10 btc to neo)\n'
+		message += '`/convert 10 omg` (10 omg to btc, default is btc)'
+		this.send_message(msg.chat.id, message)
+	});
+	this.telegram_bot.onText(/^\/convert\ /, (msg, match) => {
 		data = msg.text.toUpperCase().split(' ')
 		let fromCur = data[2]
 		let toCur = data[3] || 'BTC'
@@ -212,7 +219,7 @@ GanyTheBot.prototype.start = function() {
 	// /see (no params) or bad formatted /see
 	this.telegram_bot.onText(/^\/see/i, (msg, match) => {
 		if (!msg.text.match(SEE_REGEX_WITH_ONE_PARAM) && !(msg.text.match(SEE_REGEX_WITH_TWO_PARAMS)))
-			this.send_message(msg.chat.id, 'Shows basic market information and its change in xx minutes. Usage:\n`/see [market name] [time]`\n\nExamples:\n`/see neo`\n`/see eth-btc`\n`/see usdt`\n`/see neo 30` (neo changes in 30 minutes)\n`/see btc 3h`(neo changes in 3 hours)')
+			this.send_message(msg.chat.id, 'Shows basic market information and its change in xx minutes. Usage:\n`/see [market name]`: Shows basic information.\n`/see [market name] [time]`: Shows basic information change in [time]\n\nExamples:\n`/see neo`\n`/see eth-btc`\n`/see usdt`\n`/see neo 30` (neo changes in 30 minutes)\n`/see btc 3h`(neo changes in 3 hours)')
 	})
 
 	// /see neo
@@ -266,6 +273,13 @@ GanyTheBot.prototype.start = function() {
 			})
 		}
 	})
+
+	this.telegram_bot.onText(/^\/price$/, (msg, match) => {
+		let message = "Shows price in BTC and USD values.\nUsage:\n"
+		message += "`/price neo`: Shows price of Neo in different exchanges, for BTC and USD\n\n"
+		message += "`/price xtz`: Shows price of Tezos in different exchanges, for BTC and USD"
+		this.send_message(msg.chat.id, message)
+	});
 
 	this.telegram_bot.onText(/^\/price\ /, (msg, match) => {
 		let subscriber = undefined
@@ -418,20 +432,20 @@ GanyTheBot.prototype.start = function() {
 
 	this.telegram_bot.onText(/^\/help/, (msg, match) => {
 		let message = "/whatisgany - What is this bot?"
-		message += "\n`/subscribe` - Subscribe to Gany's notifications"
-		message += "\n`/subscription` - Information about your subscription"
-		message += "\n`/stop` - Stop receiving notifications from Gany"
-		message += "\n`/chart` - View charts directly from bot, use /chart indicators to see indicators you can use"
-		message += "\n`/configure` - Configure the exchanges you want or don't want"
-		message += "\n`/see` - See information on all exchanges about XXX currency"
-		message += "\n`/see` - See information on all exchanges with change over 20 minutes"
-		message += "\n`/volchange` - Perform a deep, custom markets+exchanges analysis based on volume change"
-		message += "\n`/pricechange` - Perform a deep, custom markets+exchanges analysis based on price change"
-		message += "\n`/price` XXX - See resume of price in BTC and USD for XXX."
-		message += "\n`/top` - See the top 4 markets sorted by volume of all exchanges."
-		message += "\n`/pricing` - See information about pricing of Gany"
-		message += '\n`/pay` - See information required for paying monthly fee'
-		message += "\n`/whatisbal` - What is B A L ?"
+		message += "\n/subscribe - Subscribe to Gany's notifications"
+		message += "\n/subscription - Information about your subscription"
+		message += "\n/stop - Stop receiving notifications from Gany"
+		message += "\n/chart - View charts directly from bot, use /chart indicators to see indicators you can use"
+		message += "\n/convert - Converts any to any crypto regardless of their exchange"
+		message += "\n/configure - Configure the exchanges you want or don't want"
+		message += "\n/see - See information on all exchanges about XXX currency and its changes over time"
+		message += "\n/volchange - Market analysis tool for volume changes analysis"
+		message += "\n/pricechange - Market analysis tool for price changes analysis"
+		message += "\n/price - See resume of price in BTC and USD for XXX."
+		message += "\n/top - See the top 4 markets sorted by volume of all exchanges."
+		message += "\n/pricing - See information about pricing of Gany"
+		message += '\n/pay - See in formation required for paying monthly fee'
+		message += "\n/whatisbal - What is B A L ?"
 		message += "\nThe information you want is not here? You can talk to us in our discussion groups https://t.me/CryptGanyChat and https://t.me/CryptoWise"
 		message += "\nHow to use GanyTheBot, by @sidahimsa: [->watch in YouTube](https://www.youtube.com/watch?v=_jKvfi_sjwQ)"
 		this.send_message(msg.chat.id, message)
@@ -651,6 +665,9 @@ GanyTheBot.prototype.start = function() {
 			// Just ran /chart and wasnt a reply to
 			if(!market){
 				// lets give them a message that points them to a nicer format. Conditioned users to give us less problems
+				let message = 'Usage:\n'
+				message += '`/chart btc`: Prints btc-usdt daily chart\n'
+				message += '`/chart btc`: Prints btc-usdt daily chart'
 				return this.send_message(msg.chat.id, 'Command format:\n/chart btc\n/chart ltc-btc\n/chart xlm-btc binance\n/chart arn-eth binance 30\n/chart indicators')
 			}
 
