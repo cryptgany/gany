@@ -634,44 +634,52 @@ GanyTheBot.prototype.start = function() {
 			let currentMarket = markets.find((m) => m.exchange.toUse == userInput.exchangeCamelCase())
 			let currPrice = currentMarket.ticker.last
 
-			if (currPrice == priceTarget) {
-				this.send_message(msg.chat.id, 'Current price for ' + currentMarket.market + ' is already on ' + priceTarget + '.')
-			} else {
-				if (currentMarket) {
-					let alert = new Alert({
-						subscriber: subscriber._id,
-						telegram_id: msg.chat.id,
-						price_start: currPrice,
-						price_target: priceTarget,
-						exchange: currentMarket.exchange,
-						market: currentMarket.market,
-						status: 'active'
-					})
-					if (subscriber) {
-						subscriber.alerts.push(alert);
-						subscriber.save()
-					}
-					alert.save((err) => {
-						if (err) {
-							this.logger.error("[ERROR /alert] Error trying to create alert")
-							this.logger.error("[ERROR /alert] ChatId:", msg.chat.id, ", fromId:", msg.from.id, ", command: '" + userInput.command + "'");
-							this.logger.error("[ERROR /alert] Error:", err);
-							this.send_message(msg.chat.id, 'Error trying to create the alert, please contact an admin.')
-						} else {
-							let diffPercentage = Math.abs(1 - (currPrice / priceTarget))
-							let mathSignal = currPrice < priceTarget ? "+" : "-"
-							diffPercentage = (diffPercentage * 100).humanize({significance: true})
-							let diffAmt = Math.abs(currPrice - priceTarget).humanize()
+			let chatAlerts = Alert.find({telegram_id: msg.chat.id, status: 'active'}, (err, c) => {
+				if (c.length >= Alert.MAX_ALERTS_PER_CHAT_ID) {
+					this.send_message(msg.chat.id, 'Maximum active alerts is ' + Alert.MAX_ALERTS_PER_CHAT_ID + '.')
+				} else {
+					if (currPrice == priceTarget) {
+						this.send_message(msg.chat.id, 'Current price for ' + currentMarket.market + ' is already on ' + priceTarget + '.')
+					} else {
+						if (currentMarket) {
+							let alert = new Alert({
+								subscriber: subscriber._id,
+								telegram_id: msg.chat.id,
+								price_start: currPrice,
+								price_target: priceTarget,
+								exchange: currentMarket.exchange,
+								market: currentMarket.market,
+								status: 'active'
+							})
+							if (subscriber) {
+								subscriber.alerts.push(alert);
+								subscriber.save()
+							}
+							alert.save((err) => {
+								if (err) {
+									this.logger.error("[ERROR /alert] Error trying to create alert")
+									this.logger.error("[ERROR /alert] ChatId:", msg.chat.id, ", fromId:", msg.from.id, ", command: '" + userInput.command + "'");
+									this.logger.error("[ERROR /alert] Error:", err);
+									this.send_message(msg.chat.id, 'Error trying to create the alert, please contact an admin.')
+								} else {
+									let diffPercentage = Math.abs(1 - (currPrice / priceTarget))
+									let mathSignal = currPrice < priceTarget ? "+" : "-"
+									diffPercentage = (diffPercentage * 100).humanize({significance: true})
+									let diffAmt = Math.abs(currPrice - priceTarget).humanize()
 
-							let message = "I will notify you when " + currentMarket.market + " on " + currentMarket.exchange + " crosses " + priceTarget + ".\n"
-							message += "Current: " + currPrice + ", target: " + priceTarget + ", diff: " + diffAmt + " (" + mathSignal + diffPercentage + "%)"
-							this.send_message(msg.chat.id, message)
+									let message = "I will notify you when " + currentMarket.market + " on " + currentMarket.exchange + " crosses " + priceTarget + ".\n"
+									message += "Current: " + currPrice + ", target: " + priceTarget + ", diff: " + diffAmt + " (" + mathSignal + diffPercentage + "%)"
+									this.send_message(msg.chat.id, message)
+								}
+							})
+						} else { // if (currentMarket) {
+							this.send_message(msg.chat.id, "Exchange / Market not found.")
 						}
-					})
-				} else { // if (currentMarket) {
-					this.send_message(msg.chat.id, "Exchange / Market not found.")
+					}
 				}
-			}
+			})
+
+			
 		} else {
 			let message = ""
 			message += 'Register alerts when price crosses expected target.\n'
