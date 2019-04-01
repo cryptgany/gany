@@ -625,20 +625,20 @@ GanyTheBot.prototype.start = function() {
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
 		}
-		let userInput = (new UserInputAnalyzer(msg.text)).splitCommand
+		let userInput = new UserInputAnalyzer(msg.text)
+		console.log("for alert userInput is", userInput)
 
-		let exchange = userInput[1]
-		let market = userInput[2] + "-" + userInput[3]
-		let priceTarget = userInput[4]
+		let priceTarget = userInput.splitCommand[4]
+		let currentPrice = 0.0000123
 
-		if (exchange && market && priceTarget) {
+		if (userInput.exchange && userInput.market && priceTarget) {
 			let alert = new Alert({
 				subscriber: subscriber._id,
 				telegram_id: msg.chat.id,
-				price_start: priceStart,
+				price_start: currentPrice,
 				price_target: priceTarget,
-				exchange: exchange,
-				market: market,
+				exchange: userInput.exchange,
+				market: userInput.market,
 				status: 'active'
 			})
 			if (subscriber) {
@@ -646,7 +646,17 @@ GanyTheBot.prototype.start = function() {
 				subscriber.save()
 			}
 			alert.save((err) => {
-				if (err) { /* print error */ } else { /* print user happy message */ }
+				if (err) {
+					this.logger.error("[ERROR /alert] Error trying to create alert")
+					this.logger.error("[ERROR /alert] ChatId:", msg.chat.id, ", fromId:", msg.from.id, ", command: '" + userInput.command + "'");
+					this.logger.error("[ERROR /alert] Error:", err);
+					this.send_message(msg.chat.id, 'Error trying to create the alert, please contact an admin.')
+				} else {
+					/* print user happy message */
+					let message = "I will notify you when " + userInput.market + " on " + userInput.exchange + " crosses " + priceTarget + ".\n"
+					message += "Current price: " + currentPrice + ", target: " + priceTarget
+					this.send_message(msg.chat.id, message)
+				}
 			})
 		} else {
 			let message = ""
