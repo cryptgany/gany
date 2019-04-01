@@ -22,6 +22,8 @@ function Detektor(logger, telegram_bot, pump_events, database, rules) {
   this.all_market_names = [] // BTC, ETC, USD, etc
   // {base: {pair: xxx}} multipliers
 
+  this.alertsTree = [] // {exchange => market => [{alert}]}
+
   this.matcher = require('./matcher')
   this.ticker_handler = new TickerHandler(this, logger)
 

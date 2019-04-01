@@ -696,7 +696,6 @@ GanyTheBot.prototype.start = function() {
 		})
 	})
 
-
 	// Chart command
 	this.telegram_bot.onText(/^\/chart/, async (msg, match) => {
 			let subscriber = undefined
