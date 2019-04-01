@@ -346,6 +346,7 @@ GanyTheBot.prototype.start = function() {
 
 	this.telegram_bot.onText(/^\/volchange\ /, (msg, match) => {
 		let userInput = new UserInputAnalyzer(msg.text)
+		console.log("userInput is ", userInput)
 		let subscriber = undefined
 		let exchange = EXCHANGES_CONVERSION[userInput.exchange || 'ALL']
 		let minVol = userInput.minVol || 0.00000001 // IN BTC, TODO: other bases, for example 1000USD
@@ -356,7 +357,7 @@ GanyTheBot.prototype.start = function() {
 		if (userInput.time < 1 || userInput.time == undefined) { // we will handle hours with influxdb
 			this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
 		} else {
-			if (userInput.time < 60 * 24) {
+			if (userInput.time <= 60 * 24) {
 				TickerData.getTimeComparisson('1', exchange, userInput.time).then((markets) => {
 					let filtered = markets;
 					if (userInput.market) {
@@ -403,7 +404,7 @@ GanyTheBot.prototype.start = function() {
 		if (userInput.time < 1 || userInput.time == undefined) { // we will handle hours with influxdb
 			this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
 		} else {
-			if (userInput.time < 60 * 24) {
+			if (userInput.time <= 60 * 24) {
 				TickerData.getTimeComparisson('1', exchange, userInput.time).then((markets) => {
 					let filtered = markets;
 					if (userInput.market) {
