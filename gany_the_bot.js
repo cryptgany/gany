@@ -628,36 +628,42 @@ GanyTheBot.prototype.start = function() {
 		let userInput = new UserInputAnalyzer(msg.text)
 		console.log("for alert userInput is", userInput)
 
-		let priceTarget = userInput.splitCommand[4]
-		let currentPrice = 0.0000123
+		let priceTarget = userInput.splitCommand[3]
 
 		if (userInput.exchange && userInput.market && priceTarget) {
-			let alert = new Alert({
-				subscriber: subscriber._id,
-				telegram_id: msg.chat.id,
-				price_start: currentPrice,
-				price_target: priceTarget,
-				exchange: userInput.exchange,
-				market: userInput.market,
-				status: 'active'
-			})
-			if (subscriber) {
-				subscriber.alerts.push(alert);
-				subscriber.save()
-			}
-			alert.save((err) => {
-				if (err) {
-					this.logger.error("[ERROR /alert] Error trying to create alert")
-					this.logger.error("[ERROR /alert] ChatId:", msg.chat.id, ", fromId:", msg.from.id, ", command: '" + userInput.command + "'");
-					this.logger.error("[ERROR /alert] Error:", err);
-					this.send_message(msg.chat.id, 'Error trying to create the alert, please contact an admin.')
-				} else {
-					/* print user happy message */
-					let message = "I will notify you when " + userInput.market + " on " + userInput.exchange + " crosses " + priceTarget + ".\n"
-					message += "Current price: " + currentPrice + ", target: " + priceTarget
-					this.send_message(msg.chat.id, message)
+			let markets = this.detektor.get_market_data(userInput.market)
+			let currentMarket = markets.find((m) => m.exchange.toUse == userInput.exchangeCamelCase())
+
+			if (currentMarket) {
+				let alert = new Alert({
+					subscriber: subscriber._id,
+					telegram_id: msg.chat.id,
+					price_start: currentMarket.ticker.last,
+					price_target: priceTarget,
+					exchange: currentMarket.exchange,
+					market: currentMarket.market,
+					status: 'active'
+				})
+				if (subscriber) {
+					subscriber.alerts.push(alert);
+					subscriber.save()
 				}
-			})
+				alert.save((err) => {
+					if (err) {
+						this.logger.error("[ERROR /alert] Error trying to create alert")
+						this.logger.error("[ERROR /alert] ChatId:", msg.chat.id, ", fromId:", msg.from.id, ", command: '" + userInput.command + "'");
+						this.logger.error("[ERROR /alert] Error:", err);
+						this.send_message(msg.chat.id, 'Error trying to create the alert, please contact an admin.')
+					} else {
+						/* print user happy message */
+						let message = "I will notify you when " + currentMarket.market + " on " + currentMarket.exchange + " crosses " + priceTarget + ".\n"
+						message += "Current price: " + currentMarket.ticker.last + ", target: " + priceTarget
+						this.send_message(msg.chat.id, message)
+					}
+				})
+			} else { // if (currentMarket) {
+				this.send_message(msg.chat.id, "Exchange / Market not found.")
+			}
 		} else {
 			let message = ""
 			message += 'Register alerts when price crosses expected target.\n'
