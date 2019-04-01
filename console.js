@@ -13,6 +13,7 @@ const ExchangeList = require('./exchange_list')
 
 var replServer = repl.start({})
 
+replServer.context.Alert = Alert;
 replServer.context.Payment = Payment;
 replServer.context.Signal = Signal;
 replServer.context.Subscriber = Subscriber;
