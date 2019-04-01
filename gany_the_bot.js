@@ -346,7 +346,6 @@ GanyTheBot.prototype.start = function() {
 
 	this.telegram_bot.onText(/^\/volchange\ /, (msg, match) => {
 		let userInput = new UserInputAnalyzer(msg.text)
-		console.log("userInput is ", userInput)
 		let subscriber = undefined
 		let exchange = EXCHANGES_CONVERSION[userInput.exchange || 'ALL']
 		let minVol = userInput.minVol || 0.00000001 // IN BTC, TODO: other bases, for example 1000USD
