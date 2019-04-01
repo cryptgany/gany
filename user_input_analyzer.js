@@ -2,12 +2,27 @@ require('./protofunctions')
 const VALID_EXCHANGES = /BITTREX|BINANCE|KRAKEN|POLONIEX|CRYPTOPIA|YOBIT|KUCOIN|ETHERDELTA|COINEXCHANGE|HUOBI|IDEX|BITFINEX/
 const TIME_AND_LIMIT_VALID_REGEX = /(^\d+$)|(^\d+H$)/ // 1 12, 1H 60, etc
 const VALID_MIN_VOLUME_REGEX = /(\d+\.\d+|\d+)BTC/
+const EXCHANGES_CONVERSION = { // there should be a better way of doing this
+	BITTREX: 'Bittrex',
+	BINANCE: 'Binance',
+	KRAKEN: 'Kraken',
+	POLONIEX: 'Poloniex',
+	CRYPTOPIA: 'Cryptopia',
+	YOBIT: 'Yobit',
+	KUCOIN: 'Kucoin',
+	ETHERDELTA: 'EtherDelta',
+	COINEXCHANGE: 'CoinExchange',
+	HUOBI: 'Huobi',
+	IDEX: 'IDEX',
+	BITFINEX: 'Bitfinex',
+	ALL: 'All'
+}
 
 class UserInputAnalyzer {
 	// understands commands and returns the filtering values
 	constructor(userCommand) {
 		this.command = userCommand.toUpperCase();
-		this.splitCommand = this.command.match(/\w+/g);
+		this.splitCommand = this.command.split(' ');
 		let commands = this.splitCommand.slice(0)
 
 		// base command, volchange, see, chart, etc
@@ -41,11 +56,7 @@ class UserInputAnalyzer {
 		commands = commands.removeElement(this.exchange)
 		// next should be either market or number, if number its not a market
 		if (commands[0] && (!commands[0].match(TIME_AND_LIMIT_VALID_REGEX))) {
-			if (commands[1] && (!commands[1].match(TIME_AND_LIMIT_VALID_REGEX))) { // market is xxx-yyy format
-				return (commands[0] + "-" + commands[1])
-			} else {
-				return commands[0]
-			}
+			return commands[0]
 		}
 	}
 
@@ -75,6 +86,10 @@ class UserInputAnalyzer {
 		}
 	}
 
+	exchangeCamelCase() { // BINANCE => Binance
+		EXCHANGES_CONVERSION[this.exchange]
+	}
+
 	// private
 	convertUserTimeToMinutes(userTime) { // 30 60 1h 10h
 		if (isNaN(parseInt(userTime))) { return 0 }
@@ -89,3 +104,4 @@ class UserInputAnalyzer {
 
 module.exports = UserInputAnalyzer
 module.exports.VALID_EXCHANGES = VALID_EXCHANGES;
+module.exports.EXCHANGES_CONVERSION = EXCHANGES_CONVERSION;
