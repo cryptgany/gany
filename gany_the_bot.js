@@ -616,11 +616,7 @@ GanyTheBot.prototype.start = function() {
 	// User price alerts
 	// Plan is to grow from here until we have some custom alert on volume+whatever user stuff
 	// MVP: /alert binance btc-usdt 4000: will alert when btc-usdt pair on binance crosses 4000
-
-	// TODO:
-	//   User limit max amount of alerts
-	//   Find market and exchange, identify the right values, store those+price start
-	this.telegram_bot.onText(/^\/alert/, async (msg, match) => {
+	this.telegram_bot.onText(/(^\/alert\ )|(^\/alert$)/, async (msg, match) => {
 		let subscriber = undefined
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
@@ -634,7 +630,7 @@ GanyTheBot.prototype.start = function() {
 			let currentMarket = markets.find((m) => m.exchange.toUse == userInput.exchangeCamelCase())
 			let currPrice = currentMarket.ticker.last
 
-			let chatAlerts = Alert.find({telegram_id: msg.chat.id, status: 'active'}, (err, alerts) => {
+			Alert.find({telegram_id: msg.chat.id, status: 'active'}, (err, alerts) => {
 				let matchAlert = alerts.find((al) => al.exchange == currentMarket.exchange && al.market == currentMarket.market && al.price_target == priceTarget)
 				if (alerts.length >= Alert.MAX_ALERTS_PER_CHAT_ID) {
 					this.send_message(msg.chat.id, 'Maximum active alerts is ' + Alert.MAX_ALERTS_PER_CHAT_ID + '.')
@@ -655,7 +651,6 @@ GanyTheBot.prototype.start = function() {
 						status: 'active'
 					})
 					if (subscriber) {
-						console.log("SUBSCRIBER EXISTS LOL")
 						subscriber.alerts.push(alert);
 						subscriber.save()
 					}
@@ -689,6 +684,17 @@ GanyTheBot.prototype.start = function() {
 			this.send_message(msg.chat.id, message)
 		}
 	});
+
+	this.telegram_bot.onText(/^\/alerts/, async (msg, match) => {
+		Alert.find({telegram_id: msg.chat.id, status: 'active'}, (err, alerts) => {
+			if (alerts.length == 0) {
+				this.send_message(msg.chat.id, 'No active alerts.')
+			} else {
+				let message = alerts.map((al) => `${al.exchange} - ${al.market} at ${al.price_target}`).join("\n")
+				this.send_message(msg.chat.id, 'Alerts:\n' + message)
+			}
+		})
+	})
 
 
 	// Chart command
