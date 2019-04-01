@@ -626,19 +626,19 @@ GanyTheBot.prototype.start = function() {
 			subscriber = this.find_subscriber(msg.from.id)
 		}
 		let userInput = new UserInputAnalyzer(msg.text)
-		console.log("for alert userInput is", userInput)
 
 		let priceTarget = userInput.splitCommand[3]
 
-		if (userInput.exchange && userInput.market && priceTarget) {
+		if (userInput.exchange && userInput.market && userInput.market.match(/\-/) && priceTarget) {
 			let markets = this.detektor.get_market_data(userInput.market)
 			let currentMarket = markets.find((m) => m.exchange.toUse == userInput.exchangeCamelCase())
+			let currPrice = currentMarket.ticker.last
 
 			if (currentMarket) {
 				let alert = new Alert({
 					subscriber: subscriber._id,
 					telegram_id: msg.chat.id,
-					price_start: currentMarket.ticker.last,
+					price_start: currPrice,
 					price_target: priceTarget,
 					exchange: currentMarket.exchange,
 					market: currentMarket.market,
@@ -655,9 +655,13 @@ GanyTheBot.prototype.start = function() {
 						this.logger.error("[ERROR /alert] Error:", err);
 						this.send_message(msg.chat.id, 'Error trying to create the alert, please contact an admin.')
 					} else {
-						/* print user happy message */
+						let diffPercentage = Math.abs(1 - (currPrice / priceTarget))
+						let mathSignal = currPrice < priceTarget ? "+" : "-"
+						diffPercentage = (diffPercentage * 100).humanize({significance: true})
+						let diffAmt = Math.abs(currPrice - priceTarget).humanize()
+
 						let message = "I will notify you when " + currentMarket.market + " on " + currentMarket.exchange + " crosses " + priceTarget + ".\n"
-						message += "Current price: " + currentMarket.ticker.last + ", target: " + priceTarget
+						message += "Current: " + currPrice + ", target: " + priceTarget + ", diff: " + diffAmt + " (" + mathSignal + diffPercentage + "%)"
 						this.send_message(msg.chat.id, message)
 					}
 				})
