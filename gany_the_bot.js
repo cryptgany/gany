@@ -244,18 +244,18 @@ GanyTheBot.prototype.start = function() {
 
 	// /see neo-btc 360
 	this.telegram_bot.onText(SEE_REGEX_WITH_TWO_PARAMS, (msg, match) => {
+		let userInput = new UserInputAnalyzer(msg.text)
 		let subscriber = undefined
 		let message = undefined
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
 		}
 		let data = msg.text.toUpperCase().split(' ')
-		let market = data[1]
-		let time = convertUserTimeToMinutes(data[2])
+		let time = userInput.time
 		if (time < 1 || time > (60 * 24)) {
 			this.send_message(msg.chat.id, 'Please enter a number between 1 (1 minute) and 24h (24 hours).')
 		} else {
-			this.detektor.getMarketDataWithTime(market, time-1, subscriber).then((markets) => {
+			this.detektor.getMarketDataWithTime(userInput.market, time-1, subscriber).then((markets) => {
 				if (markets.length == 0)
 					message = "Not found."
 				else {

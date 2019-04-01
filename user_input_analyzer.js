@@ -40,8 +40,13 @@ class UserInputAnalyzer {
 		commands.shift() // first command name
 		commands = commands.removeElement(this.exchange)
 		// next should be either market or number, if number its not a market
-		if (!commands[0].match(TIME_AND_LIMIT_VALID_REGEX))
-			return commands[0]
+		if (commands[0] && (!commands[0].match(TIME_AND_LIMIT_VALID_REGEX))) {
+			if (commands[1] && (!commands[1].match(TIME_AND_LIMIT_VALID_REGEX))) { // market is xxx-yyy format
+				return (commands[0] + "-" + commands[1])
+			} else {
+				return commands[0]
+			}
+		}
 	}
 
 	// /VOLCHANGE BINANCE 2 1000BTC => 2

@@ -71,4 +71,14 @@ describe('User Input Analyzer', function() {
 		assert.equal(uia.minVol, undefined);
 		done();
 	});
+
+	it ('understands the right values user meant for /see btc-usdt 30', function(done) {
+		uia = new UserInputAnalyzer("/see btc-usdt 30")
+		assert.equal(uia.exchange, undefined);
+		assert.equal(uia.market, 'BTC-USDT');
+		assert.equal(uia.time, 30);
+		assert.equal(uia.limit, undefined);
+		assert.equal(uia.minVol, undefined);
+		done();
+	});
 });
