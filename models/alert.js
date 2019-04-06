@@ -21,6 +21,20 @@ var alertSchema = mongoose.Schema({
 		},
 }, { timestamps: true });
 
+alertSchema.methods.trigger = function(price) {
+	if (this.price_start > this.price_target) { // downtrend, price was 100, alert was on 80 for example
+		return price <= this.price_start && price <= this.price_target
+	} else { // uptrend, price was 100, alert was on 120 for example
+		return price >= this.price_start && price >= this.price_target
+	}
+}
+
+alertSchema.methods.triggerAndDeactivate = function() {
+	this.status = 'finished';
+	this.time_of_detection = new Date()
+	this.save()
+}
+
 AlertModel = mongoose.model('alerts', alertSchema);
 
 module.exports = AlertModel;
