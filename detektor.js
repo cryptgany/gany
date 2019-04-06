@@ -218,14 +218,16 @@ Detektor.prototype.addAlertToTree = function(alert) {
 }
 
 Detektor.prototype.checkAlertsFor = function(exchange, market, data) {
-	if (this.alertsTree[exchange] && this.alertsTree[exchange][market]) {
-		this.alertsTree[exchange][market].forEach((alert) => {
-			if (alert.status == 'active' && alert.trigger(data.last)) {
-				alert.triggerAndDeactivate() // sets active = false && time of alert
-				this.removeAlertFromTree(alert)
-			}
-		})
-	}
+	setTimeout(() => {
+		if (this.alertsTree[exchange] && this.alertsTree[exchange][market]) {
+			this.alertsTree[exchange][market].forEach((alert) => {
+				if (alert.status == 'active' && alert.trigger(data.last)) {
+					alert.triggerAndDeactivate() // sets active = false && time of alert
+					this.removeAlertFromTree(alert)
+				}
+			})
+		}
+	}, 0)
 }
 
 module.exports = Detektor;
