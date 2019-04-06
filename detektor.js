@@ -27,10 +27,6 @@ function Detektor(logger, telegram_bot, pump_events, database, rules) {
 	// when a user adds an alert, should be added to the tree
 	// when an alert triggers, we need to remove from the tree
 	// when receiving market updates (marketupdate TICKER) check for tree[exchange][market] has any alert?
-	// new method: refreshAlertsTree(): gets all alerts from DB that are active and creates the tree
-	// tree alert data needed: priceFrom, priceTo, group to alert, alertId (to mark it).
-	// new method: addAlert(alertId): for when user adds an alert, add to the tree
-	// new method: removeAlert(alertId): for when an alert hits, set status off and remove from tree
 	this.refreshAlertsTree()
 
 	this.matcher = require('./matcher')
@@ -205,7 +201,6 @@ Detektor.prototype.refreshAlertsTree = function() {
 			this.alertsTree[alert.exchange][alert.market] = this.alertsTree[alert.exchange][alert.market] || []
 			this.alertsTree[alert.exchange][alert.market].push(alert)
 		})
-		console.log("Alerts is", this.alertsTree)
 	})
 }
 
@@ -213,6 +208,7 @@ Detektor.prototype.removeAlertFromTree = function(alert) { // expects alert to b
 	if (this.alertsTree[exchange] && this.alertsTree[exchange][market]) {
 		this.alertsTree[exchange][market].removeElement(alert)
 	}
+}
 
 
 Detektor.prototype.addAlertToTree = function(alert) {
