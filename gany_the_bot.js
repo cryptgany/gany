@@ -630,7 +630,15 @@ GanyTheBot.prototype.start = function() {
 			let currentMarket = markets.find((m) => m.exchange.toUse == userInput.exchangeCamelCase())
 			let currPrice = currentMarket.ticker.last
 
-			Alert.find({telegram_id: msg.chat.id, status: 'active'}, (err, alerts) => {
+			let query = {status: 'active'}
+			if (subscriber) {
+				query['subscriber'] = subscriber._id
+			} else {
+				query['telegram_id'] = msg.chat.id
+			}
+
+			Alert.find(query, (err, alerts) => {
+				console.log("alerts for this person are", alerts.length)
 				let matchAlert = alerts.find((al) => al.exchange == currentMarket.exchange && al.market == currentMarket.market && al.price_target == priceTarget)
 				if (alerts.length >= Alert.MAX_ALERTS_PER_CHAT_ID) {
 					this.send_message(msg.chat.id, 'Maximum active alerts is ' + Alert.MAX_ALERTS_PER_CHAT_ID + '.')
