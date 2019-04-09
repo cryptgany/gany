@@ -665,6 +665,7 @@ GanyTheBot.prototype.start = function() {
 							let mathSignal = currPrice < priceTarget ? "+" : "-"
 							diffPercentage = (diffPercentage * 100).humanize({significance: true})
 							let diffAmt = Math.abs(currPrice - priceTarget).humanize()
+							this.detektor.addAlertToTree(alert)
 
 							let message = "I will notify you when " + currentMarket.market + " on " + currentMarket.exchange + " crosses " + priceTarget + ".\n"
 							message += "Current: " + currPrice + ", target: " + priceTarget + ", diff: " + diffAmt + " (" + mathSignal + diffPercentage + "%)"
@@ -938,6 +939,12 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
 		}
 		this.detektor.store_signal_in_background(signal)
 	})
+}
+
+GanyTheBot.prototype.send_alert_was_triggered = function(alert) {
+	let message = "PRICE ALERT\n" + this.msgExchangeAndMarketUrl(alert.exchange, alert.market) + "\n"
+	message += `Price crossed ${alert.price_target} (Currently: ${alert.price_trigger})`
+	this.send_message(alert.telegram_id, message)
 }
 
 GanyTheBot.prototype.random_number = function(min, max) {
@@ -1388,6 +1395,11 @@ GanyTheBot.prototype.paymentMessagePost = function(amount, currency, address) {
 	message = `Please send *${amount.roundBySignificance()} ${currency}* (~${MONTHLY_SUBSCRIPTION_PRICE} US$) to address *${address}*, we will notify you when your payment gets processed.`
 	message += "\nPlease try to do so right now, payment will expire in about 30 minutes."
 	return message
+}
+
+GanyTheBot.prototype.msgExchangeAndMarketUrl = function(exchange_name, market) {
+	let exchange = ExchangeList[exchange_name]
+	return "[" + exchange.name + " - " + market + "](" + exchange.market_url(market) + ") - " + this.symbol_hashtag(exchange.name, market)
 }
 
 module.exports = GanyTheBot;

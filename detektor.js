@@ -221,8 +221,9 @@ Detektor.prototype.checkAlertsFor = function(exchange, market, price) {
 	if (this.alertsTree[exchange] && this.alertsTree[exchange][market]) {
 		this.alertsTree[exchange][market].forEach((alert) => {
 			if (alert.status == 'active' && alert.trigger(price)) {
-				alert.triggerAndDeactivate() // sets active = false && time of alert
-				this.removeAlertFromTree(alert)
+				alert.triggerAndDeactivate(price); // sets active = false && time of alert
+				this.removeAlertFromTree(alert);
+				this.telegram_bot.send_alert_was_triggered(alert);
 			}
 		})
 	}

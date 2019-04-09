@@ -11,6 +11,7 @@ var alertSchema = mongoose.Schema({
 		market: String,
 		price_start: Number, // price of X when creating alert
 		price_target: Number, // alert if price gets to this point
+		price_trigger: Number, // price of X at the moment of the trigger
 		time_of_detection: Date,
 		subscriber: { type: mongoose.Schema.Types.ObjectId, ref: 'subscribers' },
 		status: {
@@ -28,7 +29,8 @@ alertSchema.methods.trigger = function(price) {
 	}
 }
 
-alertSchema.methods.triggerAndDeactivate = function() {
+alertSchema.methods.triggerAndDeactivate = function(price) {
+	this.price_trigger = price;
 	this.status = 'finished';
 	this.time_of_detection = new Date()
 	this.save()
