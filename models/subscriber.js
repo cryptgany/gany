@@ -2,7 +2,6 @@
 require('dotenv').config();
 
 var mongoose = require('mongoose');
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
 
 var subscriberSchema = mongoose.Schema({
     telegram_id: Number,
@@ -20,6 +19,7 @@ var subscriberSchema = mongoose.Schema({
     notify_user_paid: { type: Boolean, default: false }, // we iterate over this to see who recently paid so we can tell them
     notify_user_paid_different_amount: { type: Boolean, default: false }, // when user didn't pay the whole amount
     payments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'payments' }],
+    alerts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'alerts' }],
     last_payment: { type: mongoose.Schema.Types.ObjectId, ref: 'payments' },
     exchanges: {
       Bittrex: { type: Boolean, default: true },

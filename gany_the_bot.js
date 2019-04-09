@@ -4,6 +4,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const Subscriber = require('./models/subscriber');
 const TickerData = require('./models/ticker_data');
 const Payment = require('./models/payment');
+const Alert = require('./models/alert');
 const Signal = require('./models/signal')
 const ExchangeList = require('./exchange_list')
 const _ = require('underscore')
@@ -612,6 +613,96 @@ GanyTheBot.prototype.start = function() {
 			}
 	})
 
+	// User price alerts
+	// Plan is to grow from here until we have some custom alert on volume+whatever user stuff
+	// MVP: /alert binance btc-usdt 4000: will alert when btc-usdt pair on binance crosses 4000
+	this.telegram_bot.onText(/(^\/alert\ )|(^\/alert$)/, async (msg, match) => {
+		let subscriber = undefined
+		if (this.is_subscribed(msg.from.id)) {
+			subscriber = this.find_subscriber(msg.from.id)
+		}
+		let userInput = new UserInputAnalyzer(msg.text)
+
+		let priceTarget = userInput.splitCommand[3]
+
+		if (userInput.exchange && userInput.market && userInput.market.match(/\-/) && priceTarget) {
+			let markets = this.detektor.get_market_data(userInput.market)
+			let currentMarket = markets.find((m) => m.exchange.toUse == userInput.exchangeCamelCase())
+			let currPrice = currentMarket.ticker.last
+
+			let query = {status: 'active'}
+			if (subscriber) {
+				query['subscriber'] = subscriber._id
+			} else {
+				query['telegram_id'] = msg.chat.id
+			}
+
+			Alert.find(query, (err, alerts) => {
+				let matchAlert = alerts.find((al) => al.exchange == currentMarket.exchange && al.market == currentMarket.market && al.price_target == priceTarget)
+				if (alerts.length >= Alert.MAX_ALERTS_PER_CHAT_ID) {
+					this.send_message(msg.chat.id, 'Maximum active alerts is ' + Alert.MAX_ALERTS_PER_CHAT_ID + '.')
+				} else if (matchAlert) {
+					this.send_message(msg.chat.id, "There is already an alert for " + currentMarket.market + ' on ' + currentMarket.exchange + ' at ' + priceTarget + '.')
+				} else if (currPrice == priceTarget) {
+					this.send_message(msg.chat.id, 'Current price for ' + currentMarket.market + ' is already on ' + priceTarget + '.')
+				} else if (!currentMarket) {
+					this.send_message(msg.chat.id, "Exchange / Market not found.")
+				} else {
+					let alert = new Alert({
+						subscriber: subscriber._id,
+						telegram_id: msg.chat.id,
+						price_start: currPrice,
+						price_target: priceTarget,
+						exchange: currentMarket.exchange,
+						market: currentMarket.market,
+						status: 'active'
+					})
+					if (subscriber) {
+						subscriber.alerts.push(alert);
+						subscriber.save()
+					}
+					alert.save((err) => {
+						if (err) {
+							this.logger.error("[ERROR /alert] Error trying to create alert")
+							this.logger.error("[ERROR /alert] ChatId:", msg.chat.id, ", fromId:", msg.from.id, ", command: '" + userInput.command + "'");
+							this.logger.error("[ERROR /alert] Error:", err);
+							this.send_message(msg.chat.id, 'Error trying to create the alert, please contact an admin.')
+						} else {
+							let diffPercentage = Math.abs(1 - (currPrice / priceTarget))
+							let mathSignal = currPrice < priceTarget ? "+" : "-"
+							diffPercentage = (diffPercentage * 100).humanize({significance: true})
+							let diffAmt = Math.abs(currPrice - priceTarget).humanize()
+							this.detektor.addAlertToTree(alert)
+
+							let message = "I will notify you when " + currentMarket.market + " on " + currentMarket.exchange + " crosses " + priceTarget + ".\n"
+							message += "Current: " + currPrice + ", target: " + priceTarget + ", diff: " + diffAmt + " (" + mathSignal + diffPercentage + "%)"
+							this.send_message(msg.chat.id, message)
+						}
+					})
+				}
+			})
+		} else {
+			let message = ""
+			message += 'Register alerts when price crosses expected target.\n'
+			message += 'Usage:\n'
+			message += '`/alert [exchange] [market-pair] [price]`\n'
+			message += 'Examples:\n'
+			message += '`/alert binance neo-btc 0.01`: Alert when neo-btc crosses that price on binance.\n'
+			message += '`/alert idex next-eth 0.0015`: Alert when next-idex crosses that price on idex.\n'
+			this.send_message(msg.chat.id, message)
+		}
+	});
+
+	this.telegram_bot.onText(/^\/alerts/, async (msg, match) => {
+		Alert.find({telegram_id: msg.chat.id, status: 'active'}, (err, alerts) => {
+			if (alerts.length == 0) {
+				this.send_message(msg.chat.id, 'No active alerts.')
+			} else {
+				let message = alerts.map((al) => `${al.exchange} - ${al.market} at ${al.price_target}`).join("\n")
+				this.send_message(msg.chat.id, 'Alerts:\n' + message)
+			}
+		})
+	})
 
 	// Chart command
 	this.telegram_bot.onText(/^\/chart/, async (msg, match) => {
@@ -855,6 +946,12 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
 		}
 		this.detektor.store_signal_in_background(signal)
 	})
+}
+
+GanyTheBot.prototype.send_alert_was_triggered = function(alert) {
+	let message = "#PRICEALERT\n" + this.msgExchangeAndMarketUrl(alert.exchange, alert.market) + "\n"
+	message += `Price crossed ${alert.price_target} (Currently: ${alert.price_trigger})`
+	this.send_message(alert.telegram_id, message)
 }
 
 GanyTheBot.prototype.random_number = function(min, max) {
@@ -1305,6 +1402,11 @@ GanyTheBot.prototype.paymentMessagePost = function(amount, currency, address) {
 	message = `Please send *${amount.roundBySignificance()} ${currency}* (~${MONTHLY_SUBSCRIPTION_PRICE} US$) to address *${address}*, we will notify you when your payment gets processed.`
 	message += "\nPlease try to do so right now, payment will expire in about 30 minutes."
 	return message
+}
+
+GanyTheBot.prototype.msgExchangeAndMarketUrl = function(exchange_name, market) {
+	let exchange = ExchangeList[exchange_name]
+	return "[" + exchange.name + " - " + market + "](" + exchange.market_url(market) + ") - " + this.symbol_hashtag(exchange.name, market)
 }
 
 module.exports = GanyTheBot;

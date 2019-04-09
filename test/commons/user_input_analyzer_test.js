@@ -72,6 +72,16 @@ describe('User Input Analyzer', function() {
 		done();
 	});
 
+	it ('understands the right values user meant for /VOLCHANGE 12h 0.05btc', function(done) {
+		uia = new UserInputAnalyzer("/VOLCHANGE 12h 0.05btc")
+		assert.equal(uia.exchange, undefined);
+		assert.equal(uia.market, undefined);
+		assert.equal(uia.time, 12*60);
+		assert.equal(uia.limit, undefined);
+		assert.equal(uia.minVol, 0.05);
+		done();
+	});
+
 	it ('understands the right values user meant for /see btc-usdt 30', function(done) {
 		uia = new UserInputAnalyzer("/see btc-usdt 30")
 		assert.equal(uia.exchange, undefined);

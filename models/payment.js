@@ -13,7 +13,6 @@ const client = new Coinpayments({key: process.env.COINPAYMENTS_KEY, secret: proc
 const { COINPAYMENTS_POST_URL } = process.env;
 
 var mongoose = require('mongoose');
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
 
 let logger = new Logger();
 
