@@ -942,7 +942,7 @@ GanyTheBot.prototype.send_signal = function(client, signal) {
 }
 
 GanyTheBot.prototype.send_alert_was_triggered = function(alert) {
-	let message = "PRICE ALERT\n" + this.msgExchangeAndMarketUrl(alert.exchange, alert.market) + "\n"
+	let message = "#PRICEALERT\n" + this.msgExchangeAndMarketUrl(alert.exchange, alert.market) + "\n"
 	message += `Price crossed ${alert.price_target} (Currently: ${alert.price_trigger})`
 	this.send_message(alert.telegram_id, message)
 }
