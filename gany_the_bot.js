@@ -638,7 +638,6 @@ GanyTheBot.prototype.start = function() {
 			}
 
 			Alert.find(query, (err, alerts) => {
-				console.log("alerts for this person are", alerts.length)
 				let matchAlert = alerts.find((al) => al.exchange == currentMarket.exchange && al.market == currentMarket.market && al.price_target == priceTarget)
 				if (alerts.length >= Alert.MAX_ALERTS_PER_CHAT_ID) {
 					this.send_message(msg.chat.id, 'Maximum active alerts is ' + Alert.MAX_ALERTS_PER_CHAT_ID + '.')
