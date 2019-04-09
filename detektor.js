@@ -47,7 +47,7 @@ function Detektor(logger, telegram_bot, pump_events, database, rules) {
 			this.updateConversionTable(exchange, market, data)
 			if (this.convert(data.volume, ExchangeList[exchange].volume_for(market), 'BTC') > this.minBTCVolume)
 				this.analyze_ticker(exchange, market, data)
-			this.checkAlertsFor(exchange, market, data)
+			setTimeout(() => { this.checkAlertsFor(exchange, market, data.last) }, 0)
 		}
 	})
 	this.store_snapshot_every_15_min()
@@ -205,8 +205,8 @@ Detektor.prototype.refreshAlertsTree = function() {
 }
 
 Detektor.prototype.removeAlertFromTree = function(alert) { // expects alert to be equally the same object stored in alertsTree
-	if (this.alertsTree[exchange] && this.alertsTree[exchange][market]) {
-		this.alertsTree[exchange][market].removeElement(alert)
+	if (this.alertsTree[alert.exchange] && this.alertsTree[alert.exchange][alert.market]) {
+		this.alertsTree[alert.exchange][alert.market].removeElement(alert)
 	}
 }
 
@@ -217,17 +217,15 @@ Detektor.prototype.addAlertToTree = function(alert) {
 	this.alertsTree[alert.exchange][alert.market].push(alert)
 }
 
-Detektor.prototype.checkAlertsFor = function(exchange, market, data) {
-	setTimeout(() => {
-		if (this.alertsTree[exchange] && this.alertsTree[exchange][market]) {
-			this.alertsTree[exchange][market].forEach((alert) => {
-				if (alert.status == 'active' && alert.trigger(data.last)) {
-					alert.triggerAndDeactivate() // sets active = false && time of alert
-					this.removeAlertFromTree(alert)
-				}
-			})
-		}
-	}, 0)
+Detektor.prototype.checkAlertsFor = function(exchange, market, price) {
+	if (this.alertsTree[exchange] && this.alertsTree[exchange][market]) {
+		this.alertsTree[exchange][market].forEach((alert) => {
+			if (alert.status == 'active' && alert.trigger(price)) {
+				alert.triggerAndDeactivate() // sets active = false && time of alert
+				this.removeAlertFromTree(alert)
+			}
+		})
+	}
 }
 
 module.exports = Detektor;
