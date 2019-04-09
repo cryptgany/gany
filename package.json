@@ -43,7 +43,7 @@
   },
   "scripts": {
     "start": "node run.js",
-    "test": "node_modules/mocha/bin/mocha test/**/*.*"
+    "test": "ENVIRONMENT=test node_modules/mocha/bin/mocha test/**/*.*",
   },
   "author": "",
   "license": "ISC"

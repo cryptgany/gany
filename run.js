@@ -1,5 +1,6 @@
 // Config vars
 require('dotenv').config();
+require('./config');
 
 // Constants
 const PumpHandler = require('./pump_handler.js');

@@ -2,7 +2,6 @@
 // We can grow from this later
 require('dotenv').config();
 var mongoose = require('mongoose');
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/detektor');
 
 const MAX_ALERTS_PER_CHAT_ID = 10 // alerts will display on call channel, rather than user id
 

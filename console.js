@@ -1,5 +1,5 @@
 const repl = require('repl');
-
+require('./config');
 
 const Alert = require('./models/alert.js')
 const Payment = require('./models/payment.js')
