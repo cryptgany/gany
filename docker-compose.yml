@@ -27,3 +27,15 @@ services:
       - $PWD/config/redis.conf:/usr/local/etc/redis/redis.conf
       - $home/.ganydata/redis:/var/redis/6379
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+  influx:
+    image: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB={changeme}
+      - INFLUXDB_USER={changeme}
+      - INFLUXDB_USER_PASSWORD={changeme}
+    volumes:
+      - $home/.ganydata/influxdb:/var/lib/influxdb
+      - $PWD/config/influxdb.conf:/etc/influxdb/influxdb.conf:ro
+    command: ['influxdb', '-config', '/etc/influxdb/influxdb.conf']
