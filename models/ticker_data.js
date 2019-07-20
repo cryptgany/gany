@@ -33,6 +33,7 @@ if (process.env.ENVIRONMENT == 'development') {
   config.username = process.env.INFLUX_USER
   config.password = process.env.INFLUX_PASS
 }
+console.log("influx config is ", config)
 
 const influx = new Influx.InfluxDB(config)
 

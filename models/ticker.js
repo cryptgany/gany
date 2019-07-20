@@ -1,13 +1,17 @@
 // Stores data for each minute. Should be cleaned for 30+ days old data
 var redis = require('redis');
-
-if (process.env.REDIS_URL) { // production environment detected
-    console.log("HERE REDIS STUFF IS", process.env.REDIS_URL)
-    var rtg   = require("url").parse(process.env.REDIS_URL);
+var client = undefined;
+if (process.env.REDISCLOUD_URL) { // heroku staging
+    var rtg   = require("url").parse(process.env.REDISCLOUD_URL);
     var client = require("redis").createClient(rtg.port, rtg.hostname);
     client.auth(rtg.auth.split(":")[1]);
 } else {
-    var client = require("redis").createClient();
+    if (process.env.REDIS_URL) { // production environment detected
+        console.log("HERE REDIS STUFF IS", process.env.REDIS_URL)
+        var client = require("redis").createClient(process.env.REDIS_URL);
+    } else {
+        var client = require("redis").createClient();
+    }
 }
 
 class Ticker {
