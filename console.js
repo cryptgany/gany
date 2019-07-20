@@ -1,3 +1,4 @@
+require('dotenv').config();
 const repl = require('repl');
 require('./config');
 
