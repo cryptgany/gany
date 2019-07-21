@@ -1,16 +1,16 @@
 require('dotenv').config();
 const repl = require('repl');
-require('./config');
+require('./src/config');
 
-const Alert = require('./models/alert.js')
-const Payment = require('./models/payment.js')
-const Signal = require('./models/signal.js')
-const Subscriber = require('./models/subscriber.js')
-const Ticker = require('./models/ticker.js')
-const TickerData = require('./models/ticker_data.js')
-const IPNServer = require('./ipn-server.js')
+const Alert = require('./src/models/alert.js')
+const Payment = require('./src/models/payment.js')
+const Signal = require('./src/models/signal.js')
+const Subscriber = require('./src/models/subscriber.js')
+const Ticker = require('./src/models/ticker.js')
+const TickerData = require('./src/models/ticker_data.js')
+const IPNServer = require('./src/ipn-server.js')
 
-const ExchangeList = require('./exchange_list')
+const ExchangeList = require('./src/exchange_list')
 
 var replServer = repl.start({})
 

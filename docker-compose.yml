@@ -4,7 +4,7 @@ services:
     build: .
     restart: always
     volumes:
-      - .:/gany
+      - ./src:/gany/src
     ports:
       - 3123:3123
     depends_on:
@@ -15,18 +15,18 @@ services:
     build: .
     restart: always
     volumes:
-      - .:/gany
+      - ./src:/gany/src
     depends_on:
       - influx
-    command: ['node', 'cron/hourly_ticker_data_cron.js']
+    command: ['node', 'src/cron/hourly_ticker_data_cron.js']
   daily_ticker_data_cron:
     build: .
     restart: always
     volumes:
-      - .:/gany
+      - ./src:/gany/src
     depends_on:
       - influx
-    command: ['node', 'cron/daily_ticker_data_cron.js']
+    command: ['node', 'src/cron/daily_ticker_data_cron.js']
   gany_charts:
     image: carlosero/ganycharts
     restart: always

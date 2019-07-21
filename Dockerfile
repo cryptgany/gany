@@ -13,4 +13,4 @@ RUN npm install
 
 COPY . /gany
 
-CMD ["node", "run.js"]
+CMD ["node", "src/run.js"]
