@@ -1,4 +1,4 @@
-require('../../protofunctions')
+require('../../src/protofunctions')
 var assert = require('assert');
 
 describe('Common shared functions', function() {

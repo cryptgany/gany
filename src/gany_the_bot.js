@@ -55,8 +55,13 @@ EXCHANGES_CONVERSION = { // there should be a better way of doing this
 
 function GanyTheBot(logger) {
 	this.logger = logger
-	this.god_users = [parseInt(process.env.PERSONAL_CHANNEL)];
-	this.mod_users = [parseInt(process.env.ADAM_CHANNEL)]
+	this.god_users = this.god_users || []
+	if (process.env.PERSONAL_CHANNEL) {
+		[parseInt(process.env.PERSONAL_CHANNEL)];
+	}
+	if (process.env.ADAM_CHANNEL) {
+		this.mod_users = [parseInt(process.env.ADAM_CHANNEL)]
+	}
 	this.token = process.env.GANY_KEY;
 	this.subscribers = []
 	this.detektor = undefined

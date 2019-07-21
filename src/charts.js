@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer');
 const findRemoveSync = require('find-remove')
 
 // Constants and Configuration
-const chartWebsite = process.env.GANY_CHARTS_CONNECTION || 'http://localhost:3000'
+const chartWebsite = process.env.GANY_CHARTS_CONNECTION || 'http://gany_charts:3000'
 const chartFileDir = './tmp/images'
 
 
@@ -36,7 +36,7 @@ const genChart = async (bot = {}, chatTargetID = 0, pair = 'BTC-USD', exchange =
   deleteOldFiles()
 
   // ensure phantom process ends if nothing below triggers
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
 
   setTimeout(() => { console.log("Killing browser instance if it's still around"); browser.close(); }, 20000);
