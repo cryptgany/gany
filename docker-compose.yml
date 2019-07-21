@@ -11,6 +11,7 @@ services:
       - mongo
       - redis
       - influx
+    command: ['node', 'src/run.js']
   hourly_ticker_data_cron:
     build: .
     restart: always
@@ -54,11 +55,11 @@ services:
       - "8083:8083"
       - "8086:8086"
     environment:
-      - INFLUXDB_DB={changeme}
+      - INFLUXDB_DB=gany
       - INFLUXDB_USER={changeme}
       - INFLUXDB_USER_PASSWORD={changeme}
       - INFLUXDB_ADMIN_USER={changeme}
       - INFLUXDB_ADMIN_PASSWORD={changeme}
-      - INFLUXDB_HTTP_AUTH_ENABLED={changeme}
+      - INFLUXDB_HTTP_AUTH_ENABLED=true
     volumes:
       - $PWD/.ganydata/influx:/var/lib/influxdb
