@@ -52,7 +52,11 @@ class Bitfinex extends AbstractExchange {
     emit(data) {
         return new Promise((resolve, reject) => {
             data.forEach((d) => {
-                this.pumpEvents.emit('marketupdate', 'TICKER', this.code, this._normalizeMarketName(d[0]), this._normalize_ticker_data(d));
+                if (d[0].match(/\:/)) {
+                    // skipping market
+                } else {
+                    this.pumpEvents.emit('marketupdate', 'TICKER', this.code, this._normalizeMarketName(d[0]), this._normalize_ticker_data(d));
+                }
             })
         })
     }
