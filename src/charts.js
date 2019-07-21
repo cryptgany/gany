@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer');
 const findRemoveSync = require('find-remove')
 
 // Constants and Configuration
-const chartWebsite = process.env.GANY_CHARTS_CONNECTION || 'http://localhost:3000'
+const chartWebsite = process.env.GANY_CHARTS_CONNECTION || 'http://gany_charts:3000'
 const chartFileDir = './tmp/images'
 
 

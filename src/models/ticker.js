@@ -9,7 +9,7 @@ if (process.env.REDISCLOUD_URL) { // heroku staging
     if (process.env.REDIS_URL) { // production environment detected
         var client = require("redis").createClient(process.env.REDIS_URL);
     } else {
-        var client = require("redis").createClient();
+        var client = require("redis").createClient('redis://redis');
     }
 }
 
