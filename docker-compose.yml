@@ -6,16 +6,37 @@ services:
     volumes:
       - .:/gany
     ports:
-      - 3000:3000
+      - 3123:3123
     depends_on:
       - mongo
       - redis
       - influx
+  hourly_ticker_data_cron:
+    build: .
+    restart: always
+    volumes:
+      - .:/gany
+    depends_on:
+      - influx
+    command: ['node', 'cron/hourly_ticker_data_cron.js']
+  daily_ticker_data_cron:
+    build: .
+    restart: always
+    volumes:
+      - .:/gany
+    depends_on:
+      - influx
+    command: ['node', 'cron/daily_ticker_data_cron.js']
+  gany_charts:
+    image: carlosero/ganycharts
+    restart: always
+    ports:
+      - "3000:3000"
   mongo:
     image: mongo
     restart: always
     ports:
-    - "27017:27017"
+      - "27017:27017"
     volumes:
       - /usr/local/ganydata/mongo:/data/db
   redis:
