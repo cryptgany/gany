@@ -7,7 +7,6 @@ if (process.env.REDISCLOUD_URL) { // heroku staging
     client.auth(rtg.auth.split(":")[1]);
 } else {
     if (process.env.REDIS_URL) { // production environment detected
-        console.log("HERE REDIS STUFF IS", process.env.REDIS_URL)
         var client = require("redis").createClient(process.env.REDIS_URL);
     } else {
         var client = require("redis").createClient();
