@@ -26,13 +26,9 @@ var config = {
   ]
 }
 
-if (process.env.ENVIRONMENT == 'development') {
-  config.host = 'localhost'
-} else {
-  config.host = process.env.INFLUX_HOST || "influx"
-  config.username = process.env.INFLUX_USER || "ganyuser"
-  config.password = process.env.INFLUX_PASS || "ganypassword"
-}
+config.host = process.env.INFLUX_HOST || "influx"
+config.username = process.env.INFLUX_USER || "ganyuser"
+config.password = process.env.INFLUX_PASS || "ganypassword"
 
 const influx = new Influx.InfluxDB(config)
 
