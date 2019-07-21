@@ -38,7 +38,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - /usr/local/ganydata/mongo:/data/db
+      - $PWD/.ganydata/mongo:/data/db
   redis:
     image: redis
     restart: always
@@ -46,7 +46,7 @@ services:
       - "6379:6379"
     volumes:
       - $PWD/config/redis.conf:/usr/local/etc/redis/redis.conf
-      - /usr/local/ganydata/redis:/data
+      - $PWD/.ganydata/redis:/data
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
   influx:
     image: influxdb
@@ -61,4 +61,4 @@ services:
       - INFLUXDB_ADMIN_PASSWORD={changeme}
       - INFLUXDB_HTTP_AUTH_ENABLED={changeme}
     volumes:
-      - /usr/local/ganydata/influx:/var/lib/influxdb
+      - $PWD/.ganydata/influx:/var/lib/influxdb

@@ -65,3 +65,6 @@ typings/
 
 # Temporal images generation
 tmp/images/
+
+# docker database
+.ganydata
