@@ -10,8 +10,8 @@ class Yobit extends AbstractExchange {
         this.all_markets = [];
         this.market_data = [];
         this.client = ccxt.yobit({
-            apiKey: process.env.YOBIT_BUY_KEY,
-            secret: process.env.YOBIT_BUY_SECRET
+            apiKey: '',
+            secret: ''
         })
     }
 

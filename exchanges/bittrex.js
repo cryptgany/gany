@@ -7,8 +7,8 @@ class Bittrex extends AbstractExchange {
         super(logger, pumpEvents)
         this.client = BittrexClient;
         this.client.options({
-            'apikey' : process.env.BITTREX_KEY,
-            'apisecret' : process.env.BITTREX_SECRET,
+            'apikey' : '',
+            'apisecret' : '',
             'stream' : false, // will be removed from future versions
             'verbose' : false,
             'cleartext' : false
