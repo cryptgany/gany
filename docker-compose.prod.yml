@@ -11,7 +11,7 @@ services:
       - mongo
       - redis
       - influx
-    command: ['/gany/node_modules/nodemon/bin/nodemon', 'src/run.js']
+    command: ['node', 'src/run.js']
   hourly_ticker_data_cron:
     build: .
     restart: always
