@@ -46,7 +46,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - $PWD/config/redis.conf:/usr/local/etc/redis/redis.conf
+      - $PWD/src/config/redis.conf:/usr/local/etc/redis/redis.conf
       - $PWD/.ganydata/redis:/data
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
   influx:
