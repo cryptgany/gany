@@ -116,4 +116,25 @@ describe('User Input Analyzer', function() {
 			done();
 		});
 	})
+
+	describe('understands days nomenclature', function() {
+		it ('for /see btc 1d', function(done) {
+			uia = new UserInputAnalyzer("/see btc 1d")
+			assert.equal(uia.time, 60*24);
+
+			done();
+		});
+		it ('for /see btc 3d', function(done) {
+			uia = new UserInputAnalyzer("/see btc 3d")
+			assert.equal(uia.time, 60*24*3);
+
+			done();
+		});
+		it ('for /see btc 17d', function(done) {
+			uia = new UserInputAnalyzer("/see btc 17d")
+			assert.equal(uia.time, 60*24*17);
+
+			done();
+		});
+	})
 });
