@@ -264,7 +264,7 @@ GanyTheBot.prototype.start = function() {
 		 * If user wants less than 24 hours of data (redis) then we return current /see
 		 * Otherwise, we return the influx new command
 		*/
-        if (userInput.time <= (60 * 24)) {
+		if (userInput.time <= (60 * 24)) {
 			this.detektor.getMarketDataWithTime(userInput.market, userInput.time-1, subscriber).then((markets) => {
 				if (markets.length == 0)
 					message = "Not found."
@@ -282,16 +282,16 @@ GanyTheBot.prototype.start = function() {
 					this.logger.error("Error fetching market with data:", err)
 			})
 		} else {
-	        TickerData.getMarketTimeComparisson('1', userInput).then((markets) => {
-	          let filtered = markets;
-	          filtered = this.reduceVolumeComparisonResults(filtered, userInput.limit || 4)
-	          if (filtered.length > 0) {
-	            let result = filtered.map((e) => this.telegramInfluxSeeCommandComparisson(e, userInput.time)).join("\n\n")
-	            this.send_message(msg.chat.id, result)
-	          } else {
-	            this.send_message(msg.chat.id, 'No results found.')
-	          }
-	        })
+			TickerData.getMarketTimeComparisson('1', userInput).then((markets) => {
+			  let filtered = markets;
+			  filtered = this.reduceVolumeComparisonResults(filtered, userInput.limit || 4)
+			  if (filtered.length > 0) {
+				let result = filtered.map((e) => this.telegramInfluxSeeCommandComparisson(e, userInput.time)).join("\n\n")
+				this.send_message(msg.chat.id, result)
+			  } else {
+				this.send_message(msg.chat.id, 'No results found.')
+			  }
+			})
 		}
 	})
 
