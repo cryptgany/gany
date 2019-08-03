@@ -147,7 +147,6 @@ class TickerData { // replace me with "Ticker" once "TickerData" and "Ticker" cl
     // }
 
     query += "group by exchange, market"
-    console.log("Query is ", query)
     return this.query(query)
   }
 
