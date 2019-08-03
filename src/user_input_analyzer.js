@@ -100,6 +100,10 @@ class UserInputAnalyzer {
 		return smartTimeConvert(this.time * 60);
 	}
 
+	timeIsMinutes() { return this.time <= 60 }
+	timeIsHours() { return this.time > 60 && this.time <= 60*24 }
+	thisIsDays() { return this.time > 60*24 }
+
 	// private
 	convertUserTimeToMinutes(userTime) { // 30 60 1h 10h 5d
 		if (isNaN(parseInt(userTime))) { return 0 }

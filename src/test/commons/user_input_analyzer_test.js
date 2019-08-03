@@ -135,6 +135,30 @@ describe('User Input Analyzer', function() {
 			assert.equal(uia.humanizedTime(), '1 hour');
 			done();
 		});
+
+		it ('time range detections', function(done) {
+			uia = new UserInputAnalyzer("/see btc-usdt 3h")
+			assert.equal(uia.timeIsMinutes(), false);
+			assert.equal(uia.timeIsHours(), true);
+			assert.equal(uia.thisIsDays(), false);
+
+			uia = new UserInputAnalyzer("/see btc-usdt 1h")
+			assert.equal(uia.timeIsMinutes(), true);
+			assert.equal(uia.timeIsHours(), false);
+			assert.equal(uia.thisIsDays(), false);
+
+			uia = new UserInputAnalyzer("/see btc-usdt 1d")
+			assert.equal(uia.timeIsMinutes(), false);
+			assert.equal(uia.timeIsHours(), true);
+			assert.equal(uia.thisIsDays(), false);
+
+			uia = new UserInputAnalyzer("/see btc-usdt 2d")
+			assert.equal(uia.timeIsMinutes(), false);
+			assert.equal(uia.timeIsHours(), false);
+			assert.equal(uia.thisIsDays(), true);
+
+			done();
+		})
 	})
 
 	describe('understands days nomenclature', function() {
