@@ -31,29 +31,20 @@ services:
   gany_charts:
     image: carlosero/ganycharts
     restart: always
-    ports:
-      - "3000:3000"
   mongo:
     image: mongo
     restart: always
-    ports:
-      - "27017:27017"
     volumes:
       - $PWD/.ganydata/mongo:/data/db
   redis:
     image: redis
     restart: always
-    ports:
-      - "6379:6379"
     volumes:
       - $PWD/src/config/redis.conf:/usr/local/etc/redis/redis.conf
       - $PWD/.ganydata/redis:/data
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
   influx:
     image: influxdb
-    ports:
-      - "8083:8083"
-      - "8086:8086"
     environment:
       - INFLUXDB_DB=gany
       - INFLUXDB_USER=${INFLUXDB_USER:-ganyuser}
