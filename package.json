@@ -45,7 +45,8 @@
   },
   "scripts": {
     "start": "nodemon run.js",
-    "test": "ENVIRONMENT=test node_modules/mocha/bin/mocha test/**/*.*"
+    "test": "ENVIRONMENT=test node_modules/mocha/bin/mocha test/**/*.*",
+    "console": "node src/console.js"
   },
   "author": "",
   "license": "ISC"
