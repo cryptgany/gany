@@ -91,4 +91,29 @@ describe('User Input Analyzer', function() {
 		assert.equal(uia.minVol, undefined);
 		done();
 	});
+
+	describe('specific methods', function() {
+		it ('inverseMarket() returns the right values', function(done) {
+			uia = new UserInputAnalyzer("/see btc-usdt 30")
+			assert.equal(uia.market, 'BTC-USDT');
+			assert.equal(uia.inverseMarket(), 'USDT-BTC');
+			done();
+		});
+
+		it ('exchangeCamelCase() returns the right values', function(done) {
+			uia = new UserInputAnalyzer("/see btc-usdt coinexchange 30")
+			assert.equal(uia.exchange, 'COINEXCHANGE');
+			assert.equal(uia.exchangeCamelCase(), 'CoinExchange');
+
+			uia = new UserInputAnalyzer("/see btc-usdt binance 30")
+			assert.equal(uia.exchange, 'BINANCE');
+			assert.equal(uia.exchangeCamelCase(), 'Binance');
+
+			uia = new UserInputAnalyzer("/see eth-xcp idex 30")
+			assert.equal(uia.exchange, 'IDEX');
+			assert.equal(uia.exchangeCamelCase(), 'IDEX');
+
+			done();
+		});
+	})
 });
