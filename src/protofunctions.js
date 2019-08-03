@@ -75,7 +75,7 @@ smartTimeConvert = function(seconds) {
 	if (minutes < 1) { return `${seconds} seconds`}
 	if (minutes == 1) { return `1 minute` }
 	if (minutes < 60) { return `${parseInt(minutes)} minutes`}
-  if (minutes > 60*24) {
+  if (minutes >= 60*24) {
     console.log("minutes is", minutes)
     days = minutes / 60 / 24
     if (days == 1) { return "1 day"}

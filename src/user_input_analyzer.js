@@ -95,6 +95,10 @@ class UserInputAnalyzer {
 		return `${_market[1]}-${_market[0]}`
 	}
 
+	humanizedTime() {
+		return smartTimeConvert(this.time);
+	}
+
 	// private
 	convertUserTimeToMinutes(userTime) { // 30 60 1h 10h 5d
 		if (isNaN(parseInt(userTime))) { return 0 }
