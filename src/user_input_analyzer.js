@@ -96,7 +96,8 @@ class UserInputAnalyzer {
 	}
 
 	humanizedTime() {
-		return smartTimeConvert(this.time);
+		if (isNaN(parseInt(this.time))) { return 0 }
+		return smartTimeConvert(this.time * 60);
 	}
 
 	// private

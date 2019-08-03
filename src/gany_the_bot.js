@@ -275,7 +275,7 @@ GanyTheBot.prototype.start = function() {
 				this.send_message(msg.chat.id, message)
 			}).catch((err) => {
 				if (err == 'no_time_data') {
-					this.send_message(msg.chat.id, "Sorry, I still don't have " + userInput.time + " minutes of data for that pair.")
+					this.send_message(msg.chat.id, "Sorry, I still don't have " + userInput.humanizedTime() + " of data for that pair.")
 				} else
 					this.logger.error("Error fetching market with data:", err)
 			})
