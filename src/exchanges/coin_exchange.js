@@ -52,7 +52,9 @@ class CoinExchange extends AbstractExchange {
 
     emitData() {
         Object.keys(this.marketsData).forEach((market) => {
-            this.pumpEvents.emit('marketupdate', 'TICKER', this.code, market, this.marketsData[market]);
+            if (!(market == 'USDT-ERC20-BTC')) {
+                this.pumpEvents.emit('marketupdate', 'TICKER', this.code, market, this.marketsData[market]);
+            }
         })
     }
 
