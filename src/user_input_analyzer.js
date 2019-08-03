@@ -87,7 +87,12 @@ class UserInputAnalyzer {
 	}
 
 	exchangeCamelCase() { // BINANCE => Binance
-		EXCHANGES_CONVERSION[this.exchange]
+		return EXCHANGES_CONVERSION[this.exchange]
+	}
+
+	inverseMarket() { // NEO-BTC => BTC-NEO (influx market=x search)
+		let _market = this.market.split(/\-/)
+		return `${_market[1]}-${_market[0]}`
 	}
 
 	// private
