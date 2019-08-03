@@ -280,7 +280,7 @@ GanyTheBot.prototype.start = function() {
 					this.logger.error("Error fetching market with data:", err)
 			})
 		} else {
-			TickerData.getMarketTimeComparisson('1', userInput).then((markets) => {
+			TickerData.getMarketTimeComparisson(userInput).then((markets) => {
 			  let filtered = markets;
 			  filtered = this.reduceVolumeComparisonResults(filtered, userInput.limit || 4)
 			  if (filtered.length > 0) {
