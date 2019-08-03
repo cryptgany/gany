@@ -102,7 +102,7 @@ class UserInputAnalyzer {
 
 	timeIsMinutes() { return this.time <= 60 }
 	timeIsHours() { return this.time > 60 && this.time <= 60*24 }
-	thisIsDays() { return this.time > 60*24 }
+	timeIsDays() { return this.time > 60*24 }
 
 	// private
 	convertUserTimeToMinutes(userTime) { // 30 60 1h 10h 5d

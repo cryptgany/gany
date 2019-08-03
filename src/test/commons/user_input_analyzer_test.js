@@ -140,22 +140,22 @@ describe('User Input Analyzer', function() {
 			uia = new UserInputAnalyzer("/see btc-usdt 3h")
 			assert.equal(uia.timeIsMinutes(), false);
 			assert.equal(uia.timeIsHours(), true);
-			assert.equal(uia.thisIsDays(), false);
+			assert.equal(uia.timeIsDays(), false);
 
 			uia = new UserInputAnalyzer("/see btc-usdt 1h")
 			assert.equal(uia.timeIsMinutes(), true);
 			assert.equal(uia.timeIsHours(), false);
-			assert.equal(uia.thisIsDays(), false);
+			assert.equal(uia.timeIsDays(), false);
 
 			uia = new UserInputAnalyzer("/see btc-usdt 1d")
 			assert.equal(uia.timeIsMinutes(), false);
 			assert.equal(uia.timeIsHours(), true);
-			assert.equal(uia.thisIsDays(), false);
+			assert.equal(uia.timeIsDays(), false);
 
 			uia = new UserInputAnalyzer("/see btc-usdt 2d")
 			assert.equal(uia.timeIsMinutes(), false);
 			assert.equal(uia.timeIsHours(), false);
-			assert.equal(uia.thisIsDays(), true);
+			assert.equal(uia.timeIsDays(), true);
 
 			done();
 		})
