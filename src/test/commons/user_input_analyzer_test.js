@@ -1,4 +1,4 @@
-const UserInputAnalyzer = require('../../src/user_input_analyzer')
+const UserInputAnalyzer = require('../../user_input_analyzer')
 var assert = require('assert');
 
 describe('User Input Analyzer', function() {

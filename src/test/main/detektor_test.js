@@ -1,9 +1,9 @@
-const dbURI = 'mongodb://localhost:27017/detektor-test'
-const Detektor = require('../../src/detektor.js')
+const dbURI = 'mongodb://mongo:27017/detektor-test'
+const Detektor = require('../../detektor.js')
 const chai = require("chai");
 const expect = chai.expect;
 const sinon = require("sinon");
-const Alert = require('../../src/models/alert')
+const Alert = require('../../models/alert')
 const clearDB = require('mocha-mongoose')(dbURI);
 mongoose = require('mongoose')
 
