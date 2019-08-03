@@ -115,6 +115,26 @@ describe('User Input Analyzer', function() {
 
 			done();
 		});
+		it ('humanizedTime() returns the right values', function(done) {
+			uia = new UserInputAnalyzer("/see btc-usdt 3h")
+			assert.equal(uia.humanizedTime(), '3 hours');
+
+			uia = new UserInputAnalyzer("/see btc-usdt 3d")
+			assert.equal(uia.humanizedTime(), '3 days');
+
+			uia = new UserInputAnalyzer("/see btc-usdt 23h")
+			assert.equal(uia.humanizedTime(), '23 hours');
+
+			uia = new UserInputAnalyzer("/see btc-usdt 1d")
+			assert.equal(uia.humanizedTime(), '1 day');
+
+			uia = new UserInputAnalyzer("/see btc-usdt 1h")
+			assert.equal(uia.humanizedTime(), '1 hour');
+
+			uia = new UserInputAnalyzer("/see btc-usdt 60")
+			assert.equal(uia.humanizedTime(), '1 hour');
+			done();
+		});
 	})
 
 	describe('understands days nomenclature', function() {
