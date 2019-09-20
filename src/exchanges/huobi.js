@@ -26,9 +26,15 @@ class Huobi extends AbstractExchange {
             i += 1;
             setTimeout(() => {
                 this._makeRequest(MARKETS_DATA + marketName).then((data) => {
+                    let realMarketName = this.marketsInfo[marketName]
                     if (data.status != 'error') { // weirdly sends some random pairs that they don't support
-                        this.storeMarketData(this.marketsInfo[marketName], this._normalize_ticker_data(data.tick))
-                        this.emitData(this.marketsInfo[marketName])
+                        if (data.tick.vol == 0) {
+                            if (this.marketsData[realMarketName]) {
+                                data.tick.vol = this.marketsData[realMarketName].volume;
+                            }
+                        }
+                        this.storeMarketData(realMarketName, this._normalize_ticker_data(data.tick))
+                        this.emitData(realMarketName)
                     }
                 }).catch((e) => {
                     if (e == 'not_found_marked') {
