@@ -1,6 +1,6 @@
 require('./protofunctions')
 const VALID_EXCHANGES = /BITTREX|BINANCE|KRAKEN|POLONIEX|CRYPTOPIA|YOBIT|KUCOIN|ETHERDELTA|COINEXCHANGE|HUOBI|IDEX|BITFINEX/
-const TIME_AND_LIMIT_VALID_REGEX = /(^\d+$)|(^\d+H$)/ // 1 12, 1H 60, etc
+const TIME_AND_LIMIT_VALID_REGEX = /(^\d+$)|(^\d+H$)|(^\d+D$)/ // 1 12, 1H 60, etc
 const VALID_MIN_VOLUME_REGEX = /(\d+\.\d+|\d+)BTC/
 const EXCHANGES_CONVERSION = { // there should be a better way of doing this
 	BITTREX: 'Bittrex',
@@ -87,17 +87,35 @@ class UserInputAnalyzer {
 	}
 
 	exchangeCamelCase() { // BINANCE => Binance
-		EXCHANGES_CONVERSION[this.exchange]
+		return EXCHANGES_CONVERSION[this.exchange]
 	}
 
+	inverseMarket() { // NEO-BTC => BTC-NEO (influx market=x search)
+		let _market = this.market.split(/\-/)
+		return `${_market[1]}-${_market[0]}`
+	}
+
+	humanizedTime() {
+		if (isNaN(parseInt(this.time))) { return 0 }
+		return smartTimeConvert(this.time * 60);
+	}
+
+	timeIsMinutes() { return this.time <= 60 }
+	timeIsHours() { return this.time > 60 && this.time <= 60*24 }
+	timeIsDays() { return this.time > 60*24 }
+
 	// private
-	convertUserTimeToMinutes(userTime) { // 30 60 1h 10h
+	convertUserTimeToMinutes(userTime) { // 30 60 1h 10h 5d
 		if (isNaN(parseInt(userTime))) { return 0 }
 		var t = parseInt(userTime)
 		if (userTime.match(/H/)) {
 			return t * 60;
 		} else {
-			return t
+			if (userTime.match(/D/)) {
+				return t * 60 * 24
+			} else {
+				return t
+			}
 		}
 	}
 }

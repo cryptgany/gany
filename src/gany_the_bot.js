@@ -21,7 +21,7 @@ CHECK_RECENT_PAID_USERS = 1 // minutes
 MONTHLY_SUBSCRIPTION_PRICE = 20 // in USD
 
 SEE_REGEX_WITH_ONE_PARAM=/^\/see\ ([a-zA-Z0-9]|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))+$/i // /see neo | /see neo-btc
-SEE_REGEX_WITH_TWO_PARAMS=/^\/see\ (([a-zA-Z0-9]{1,6})|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))\ ([0-9h]{1,4})+$/i // /see neo 20 | /see neo-btc 20h
+SEE_REGEX_WITH_TWO_PARAMS=/^\/see\ (([a-zA-Z0-9]{1,6})|([a-zA-Z0-9]{1,6})\-([a-zA-Z0-9]{1,6}))\ ([0-9hd]{1,4})+$/i // /see neo 20 | /see neo-btc 20h | /see neo 3d
 FIAT_SYMBOLS = ['USD', 'EUR', 'GBP', 'USDT', 'TUSD', 'EURT']
 EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart first
 	Bittrex: 1,
@@ -258,25 +258,37 @@ GanyTheBot.prototype.start = function() {
 			subscriber = this.find_subscriber(msg.from.id)
 		}
 		let data = msg.text.toUpperCase().split(' ')
-		let time = userInput.time
-		if (time < 1 || time > (60 * 24)) {
-			this.send_message(msg.chat.id, 'Please enter a number between 1 (1 minute) and 24h (24 hours).')
-		} else {
-			this.detektor.getMarketDataWithTime(userInput.market, time-1, subscriber).then((markets) => {
+		/*
+		 * If user wants less than 24 hours of data (redis) then we return current /see
+		 * Otherwise, we return the influx new command
+		*/
+		if (userInput.time <= (60 * 24)) {
+			this.detektor.getMarketDataWithTime(userInput.market, userInput.time-1, subscriber).then((markets) => {
 				if (markets.length == 0)
 					message = "Not found."
 				else {
 					markets = this.reduceMarketsByVolume(markets)
 					message = markets.map((market_info) => {
-						return this.telegramPostPriceCheckWithTime(market_info.exchange, market_info.market, market_info.firstTicker, market_info.lastTicker, time)
+						return this.telegramPostPriceCheckWithTime(market_info.exchange, market_info.market, market_info.firstTicker, market_info.lastTicker, userInput.time)
 					}).join("\n\n")
 				}
 				this.send_message(msg.chat.id, message)
 			}).catch((err) => {
 				if (err == 'no_time_data') {
-					this.send_message(msg.chat.id, "Sorry, I still don't have " + time + " minutes of data for that pair.")
+					this.send_message(msg.chat.id, "Sorry, I still don't have " + userInput.humanizedTime() + " of data for that pair.")
 				} else
 					this.logger.error("Error fetching market with data:", err)
+			})
+		} else {
+			TickerData.getMarketTimeComparisson(userInput).then((markets) => {
+			  let filtered = markets;
+			  filtered = this.reduceVolumeComparisonResults(filtered, userInput.limit || 4)
+			  if (filtered.length > 0) {
+				let result = filtered.map((e) => this.telegramInfluxSeeCommandComparisson(e, userInput.time)).join("\n\n")
+				this.send_message(msg.chat.id, result)
+			  } else {
+				this.send_message(msg.chat.id, 'No results found.')
+			  }
 			})
 		}
 	})
@@ -354,7 +366,6 @@ GanyTheBot.prototype.start = function() {
 	this.telegram_bot.onText(/^\/volchange\ /, (msg, match) => {
 		let userInput = new UserInputAnalyzer(msg.text)
 		let subscriber = undefined
-		let exchange = EXCHANGES_CONVERSION[userInput.exchange || 'ALL']
 		let minVol = userInput.minVol || 0.00000001 // IN BTC, TODO: other bases, for example 1000USD
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
@@ -364,7 +375,7 @@ GanyTheBot.prototype.start = function() {
 			this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
 		} else {
 			if (userInput.time <= 60 * 24) {
-				TickerData.getTimeComparisson('1', exchange, userInput.time).then((markets) => {
+				TickerData.getTimeComparisson('1', userInput.exchangeCamelCase(), userInput.time).then((markets) => {
 					let filtered = markets;
 					if (userInput.market) {
 						let reg = new RegExp('(^' + userInput.market + '\-)|(\-' + userInput.market + '$)')
@@ -401,7 +412,6 @@ GanyTheBot.prototype.start = function() {
 	this.telegram_bot.onText(/^\/pricechange\ /, (msg, match) => {
 		let userInput = new UserInputAnalyzer(msg.text)
 		let subscriber = undefined
-		let exchange = EXCHANGES_CONVERSION[userInput.exchange || 'ALL']
 		let minVol = userInput.minVol || 0.00000001 // IN BTC, TODO: other bases, for example 1000USD
 		if (this.is_subscribed(msg.from.id)) {
 			subscriber = this.find_subscriber(msg.from.id)
@@ -411,7 +421,7 @@ GanyTheBot.prototype.start = function() {
 			this.send_message(msg.chat.id, 'Please enter a number bigger than 1.')
 		} else {
 			if (userInput.time <= 60 * 24) {
-				TickerData.getTimeComparisson('1', exchange, userInput.time).then((markets) => {
+				TickerData.getTimeComparisson('1', userInput.exchangeCamelCase(), userInput.time).then((markets) => {
 					let filtered = markets;
 					if (userInput.market) {
 						let reg = new RegExp('(^' + userInput.market + '\-)|(\-' + userInput.market + '$)')
@@ -1027,6 +1037,18 @@ GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market,
 	message += "\nL: " + firstTicker.last.toFixed(8) + " " + this.telegram_arrow(firstTicker.last, lastTicker.last) + " " + lastTicker.last.toFixed(8)
 	if (exchange != 'EtherDelta')
 		message += "\n24h H/L: " + lastTicker.high.toFixed(8) + " / " + lastTicker.low.toFixed(8)
+	return message
+}
+
+GanyTheBot.prototype.telegramInfluxSeeCommandComparisson = function(data, time) {
+	let exchange = data.exchange
+	let market = data.market
+	diff = data.close_volume24 - data.open_volume24
+	change = data.close_volume24 / data.open_volume24
+	message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
+	message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + smartTimeConvert(time * 60) + "*"
+	message += "\nVol: " + data.open_volume24.humanize() + " " + this.telegram_arrow(data.open_volume24, data.close_volume24) + " " + data.close_volume24.humanize() + ' ' + ExchangeList[exchange].volume_for(market) + " (*" + ((change - 1) * 100).humanize({significance: true}) + "%*)"
+	message += "\nL: " + data.open_close.toFixed(8) + " " + this.telegram_arrow(data.open_close, data.close_close) + " " + data.close_close.toFixed(8)
 	return message
 }
 

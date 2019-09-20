@@ -1,4 +1,4 @@
-const Alert = require('../../src/models/alert')
+const Alert = require('../../models/alert')
 var assert = require('assert');
 
 describe('Alert functions', function() {

@@ -1,4 +1,4 @@
-const UserInputAnalyzer = require('../../src/user_input_analyzer')
+const UserInputAnalyzer = require('../../user_input_analyzer')
 var assert = require('assert');
 
 describe('User Input Analyzer', function() {
@@ -91,4 +91,94 @@ describe('User Input Analyzer', function() {
 		assert.equal(uia.minVol, undefined);
 		done();
 	});
+
+	describe('specific methods', function() {
+		it ('inverseMarket() returns the right values', function(done) {
+			uia = new UserInputAnalyzer("/see btc-usdt 30")
+			assert.equal(uia.market, 'BTC-USDT');
+			assert.equal(uia.inverseMarket(), 'USDT-BTC');
+			done();
+		});
+
+		it ('exchangeCamelCase() returns the right values', function(done) {
+			uia = new UserInputAnalyzer("/see btc-usdt coinexchange 30")
+			assert.equal(uia.exchange, 'COINEXCHANGE');
+			assert.equal(uia.exchangeCamelCase(), 'CoinExchange');
+
+			uia = new UserInputAnalyzer("/see btc-usdt binance 30")
+			assert.equal(uia.exchange, 'BINANCE');
+			assert.equal(uia.exchangeCamelCase(), 'Binance');
+
+			uia = new UserInputAnalyzer("/see eth-xcp idex 30")
+			assert.equal(uia.exchange, 'IDEX');
+			assert.equal(uia.exchangeCamelCase(), 'IDEX');
+
+			done();
+		});
+		it ('humanizedTime() returns the right values', function(done) {
+			uia = new UserInputAnalyzer("/see btc-usdt 3h")
+			assert.equal(uia.humanizedTime(), '3 hours');
+
+			uia = new UserInputAnalyzer("/see btc-usdt 3d")
+			assert.equal(uia.humanizedTime(), '3 days');
+
+			uia = new UserInputAnalyzer("/see btc-usdt 23h")
+			assert.equal(uia.humanizedTime(), '23 hours');
+
+			uia = new UserInputAnalyzer("/see btc-usdt 1d")
+			assert.equal(uia.humanizedTime(), '1 day');
+
+			uia = new UserInputAnalyzer("/see btc-usdt 1h")
+			assert.equal(uia.humanizedTime(), '1 hour');
+
+			uia = new UserInputAnalyzer("/see btc-usdt 60")
+			assert.equal(uia.humanizedTime(), '1 hour');
+			done();
+		});
+
+		it ('time range detections', function(done) {
+			uia = new UserInputAnalyzer("/see btc-usdt 3h")
+			assert.equal(uia.timeIsMinutes(), false);
+			assert.equal(uia.timeIsHours(), true);
+			assert.equal(uia.timeIsDays(), false);
+
+			uia = new UserInputAnalyzer("/see btc-usdt 1h")
+			assert.equal(uia.timeIsMinutes(), true);
+			assert.equal(uia.timeIsHours(), false);
+			assert.equal(uia.timeIsDays(), false);
+
+			uia = new UserInputAnalyzer("/see btc-usdt 1d")
+			assert.equal(uia.timeIsMinutes(), false);
+			assert.equal(uia.timeIsHours(), true);
+			assert.equal(uia.timeIsDays(), false);
+
+			uia = new UserInputAnalyzer("/see btc-usdt 2d")
+			assert.equal(uia.timeIsMinutes(), false);
+			assert.equal(uia.timeIsHours(), false);
+			assert.equal(uia.timeIsDays(), true);
+
+			done();
+		})
+	})
+
+	describe('understands days nomenclature', function() {
+		it ('for /see btc 1d', function(done) {
+			uia = new UserInputAnalyzer("/see btc 1d")
+			assert.equal(uia.time, 60*24);
+
+			done();
+		});
+		it ('for /see btc 3d', function(done) {
+			uia = new UserInputAnalyzer("/see btc 3d")
+			assert.equal(uia.time, 60*24*3);
+
+			done();
+		});
+		it ('for /see btc 17d', function(done) {
+			uia = new UserInputAnalyzer("/see btc 17d")
+			assert.equal(uia.time, 60*24*17);
+
+			done();
+		});
+	})
 });

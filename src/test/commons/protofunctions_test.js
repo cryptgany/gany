@@ -1,4 +1,4 @@
-require('../../src/protofunctions')
+require('../../protofunctions')
 var assert = require('assert');
 
 describe('Common shared functions', function() {
@@ -14,6 +14,13 @@ describe('Common shared functions', function() {
 		assert.equal(smartTimeConvert(60 * 60 * 5), "5 hours");
 		assert.equal(smartTimeConvert(60 * 60 * 7), "7 hours");
 		assert.equal(smartTimeConvert(60 * 60), "1 hour");
+		done();
+	});
+
+	it('smartTimeConvert converts seconds to days as expected', function(done) {
+		assert.equal(smartTimeConvert(60 * 60 * 24 * 3), "3 days");
+		assert.equal(smartTimeConvert(60 * 60 * 24 * 1), "1 day");
+		assert.equal(smartTimeConvert(60 * 60 * 24 * 120), "120 days");
 		done();
 	});
 });
