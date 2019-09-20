@@ -42,8 +42,8 @@ ExchangeList.Cryptopia.cycle_time = 20
 ExchangeList.CoinExchange.ticker_speed = 10
 ExchangeList.CoinExchange.cycle_time = 20
 
-ExchangeList.Huobi.ticker_speed = 20
-ExchangeList.Huobi.cycle_time = 20
+ExchangeList.Huobi.ticker_speed = 30
+ExchangeList.Huobi.cycle_time = 30
 
 ExchangeList.IDEX.ticker_speed = 20
 ExchangeList.IDEX.cycle_time = 20
