@@ -135,7 +135,7 @@ Detektor.prototype.updateConversionTable = function(exchange, market, data) {
 }
 
 // Mathematical conversion, ignoring any other factor
-Detektor.prototype.convert = function(quantity, from, to, stack) {
+Detektor.prototype.convert = function(quantity, from, to, stack = 0) {
 	if (stack >= 3) { return false } // max_stack = 3
 	if (from == to) { return quantity }
 	if (this.marketExists(from) && this.marketExists(to)) {
