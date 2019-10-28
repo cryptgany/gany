@@ -44,7 +44,13 @@ class Bitfinex extends AbstractExchange {
             request.get('https://api.bitfinex.com/v1' + '/symbols',
               function(error, response, body) {
                 if (error) { reject(error) }
-                resolve(JSON.parse(body))
+                let parsedBody = {}
+                try {
+                    parsedBody = JSON.parse(body); // sometimes fails
+                    resolve(parsedBody)
+                } catch (e) {
+                    this.logger.error("Error on bitfinex exchange:", e)
+                }
             })
         })
     }

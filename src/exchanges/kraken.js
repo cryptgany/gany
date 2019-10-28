@@ -59,7 +59,7 @@ class Kraken extends AbstractExchange {
         .then((data)=>{
             this.emitData(data.result);
         })
-        .catch((e)=> this.logger.error('Error fetching data for KRAKEN.'));
+        .catch((e)=> this.logger.error('Error fetching data for KRAKEN.', e));
     }
 
     fetchAssetPairs() {

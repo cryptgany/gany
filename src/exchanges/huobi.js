@@ -77,7 +77,7 @@ class Huobi extends AbstractExchange {
     _makeRequest(url) {
         return new Promise((resolve, reject) => {
             request(url, function (error, response, body) {
-                if (body.match(/404\ Not\ Found/)) {
+                if (body && body.match(/404\ Not\ Found/)) {
                     reject("not_found_marked")
                 } else {
                     if (error)
