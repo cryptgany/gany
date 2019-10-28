@@ -40,6 +40,7 @@ class Bitfinex extends AbstractExchange {
     }
 
     marketList() {
+        let that = this;
         return new Promise((resolve, reject) => {
             request.get('https://api.bitfinex.com/v1' + '/symbols',
               function(error, response, body) {
@@ -49,7 +50,7 @@ class Bitfinex extends AbstractExchange {
                     parsedBody = JSON.parse(body); // sometimes fails
                     resolve(parsedBody)
                 } catch (e) {
-                    this.logger.error("Error on bitfinex exchange:", e)
+                    that.logger.error("Error on bitfinex exchange:", e)
                 }
             })
         })
