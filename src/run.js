@@ -25,7 +25,6 @@ let kraken = new ExchangeList.Kraken(logger, pump_events);
 let binance = new ExchangeList.Binance(logger, pump_events);
 let etherDelta = new ExchangeList.EtherDelta(logger, pump_events);
 let kucoin = new ExchangeList.Kucoin(logger, pump_events);
-let coin_exchange = new ExchangeList.CoinExchange(logger, pump_events);
 let huobi = new ExchangeList.Huobi(logger, pump_events);
 let idex = new ExchangeList.IDEX(logger, pump_events);
 let bitfinex = new ExchangeList.Bitfinex(logger, pump_events);
@@ -44,7 +43,6 @@ setTimeout(() => {
   kraken.watch()
   etherDelta.watch()
   kucoin.watch()
-  coin_exchange.watch()
   huobi.watch()
   idex.watch()
   bitfinex.watch()
@@ -79,9 +77,6 @@ rules = {
   ],
   "Kucoin": [
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.25 }
-  ],
-  "CoinExchange": [
-    (first_ticker, last_ticker, time, matcher) => { return (time <= 20 * 60) && matcher.volume_change(first_ticker, last_ticker) > 1.25 }
   ],
   "Huobi": [
     (first_ticker, last_ticker, time, matcher) => { return (time <= 20 * 60) && matcher.volume_change(first_ticker, last_ticker) >= 1.08 }

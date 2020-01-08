@@ -32,11 +32,10 @@ EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart firs
 	Yobit: 6,
 	Kucoin: 7,
 	EtherDelta: 8,
-	CoinExchange: 9,
+	Stellar: 9,
 	Huobi: 10,
 	IDEX: 11,
 	Bitfinex: 12, // this should be higher but we need to wait for data to be collected before putting in higher rank for data-charts generation
-	Stellar: 13,
 }
 EXCHANGES_CONVERSION = { // there should be a better way of doing this
 	BITTREX: 'Bittrex',
@@ -47,7 +46,6 @@ EXCHANGES_CONVERSION = { // there should be a better way of doing this
 	YOBIT: 'Yobit',
 	KUCOIN: 'Kucoin',
 	ETHERDELTA: 'EtherDelta',
-	COINEXCHANGE: 'CoinExchange',
 	HUOBI: 'Huobi',
 	IDEX: 'IDEX',
 	BITFINEX: 'Bitfinex',
@@ -1287,7 +1285,7 @@ GanyTheBot.prototype.configuration_menu_exchanges = function(subscriber) {
 	options.push([{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }])
 	options.push([{ text: 'Kraken', callback_data: 'configure exchange Kraken' }, { text: 'Binance', callback_data: 'configure exchange Binance' }])
 	options.push([{ text: 'Kucoin', callback_data: 'configure exchange Kucoin' }, { text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' }])
-	options.push([{ text: 'CoinExchange', callback_data: 'configure exchange CoinExchange' }, { text: 'Huobi', callback_data: 'configure exchange Huobi' }])
+	options.push([{ text: 'Stellar', callback_data: 'configure exchange Stellar' }, { text: 'Huobi', callback_data: 'configure exchange Huobi' }])
 	options.push([{ text: 'IDEX', callback_data: 'configure exchange IDEX' }, { text: 'Bitfinex', callback_data: 'configure exchange Bitfinex' }])
 
 	options.push([{ text: 'Go Back', callback_data: 'configure' }])
