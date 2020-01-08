@@ -2,7 +2,7 @@ const AbstractExchange = require('./exchange');
 const STELLARPORT_URL = 'https://stellar.api.stellarport.io/Ticker';
 var request = require('request');
 
-class StellarDex extends AbstractExchange {
+class Stellar extends AbstractExchange {
 
 	constructor(logger, pumpEvents) {
 		super(logger, pumpEvents)
@@ -94,4 +94,4 @@ class StellarDex extends AbstractExchange {
 	}
 }
 
-module.exports = StellarDex;
+module.exports = Stellar;

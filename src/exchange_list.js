@@ -11,7 +11,7 @@ var ExchangeList = {
 	Huobi: require('./exchanges/huobi'),
 	IDEX: require('./exchanges/idex'),
 	Bitfinex: require('./exchanges/bitfinex'),
-	StellarDex: require('./exchanges/stellar_dex'),
+	Stellar: require('./exchanges/stellar'),
 }
 
 // Refactor me, im too tired to do it
@@ -52,7 +52,7 @@ ExchangeList.IDEX.cycle_time = 20
 ExchangeList.Bitfinex.ticker_speed = 20
 ExchangeList.Bitfinex.cycle_time = 20
 
-ExchangeList.StellarDex.ticker_speed = 30
-ExchangeList.StellarDex.cycle_time = 30
+ExchangeList.Stellar.ticker_speed = 30
+ExchangeList.Stellar.cycle_time = 30
 
 module.exports = ExchangeList
