@@ -78,6 +78,14 @@ class Stellar extends AbstractExchange {
 		return this.markets
 	}
 
+    static volume_for(pair) {
+        return pair.split("-")[1]
+    }
+
+    static symbol_for(pair) {
+        return pair.split("-")[0]
+    }
+
 	static market_url(market) {
 		return "https://bittrex.com/Market/Index?MarketName=" + market
 	}
@@ -88,8 +96,8 @@ class Stellar extends AbstractExchange {
 			low: data.low,
 			volume: data.volume,
 			last: data.close,
-			ask: data.close,
-			bid: data.close,
+			ask: null,
+			bid: null,
 		}
 	}
 }
