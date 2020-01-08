@@ -4,41 +4,94 @@ var request = require('request');
 
 class StellarDex extends AbstractExchange {
 
-    constructor(logger, pumpEvents) {
-        super(logger, pumpEvents)
-    }
+	constructor(logger, pumpEvents) {
+		super(logger, pumpEvents)
+		this.lastFetch = []
+	}
 
-    fetchTicker() {
-        return new Promise((resolve, reject) => {
-            request(STELLARPORT_URL, function (error, response, body) {
-                if (error)
-                    reject(error)
-                else {
-                    try { resolve(JSON.parse(response.body)) } catch(e) { reject(e)}
-                }
-            })
-        })
-    }
+	watch() {
+		this.watchFunction(() => { this._watch_tickers() }, this.ticker_speed * 1000)
+	}
 
-    marketList() {
-        return this.markets
-    }
+	_watch_tickers() {
+		this.fetchTickers().then((tickers) => {
+			return this.filterAndCleanAliveMarkets(tickers)
+		}).then((tickersAlive) => {
+			this.lastFetch = tickersAlive
+			this.emitTicker(tickersAlive)
+		}).catch((er) => {
+			console.log("ERROR: ", er)
+			this.emitTicker(this.lastFetch)
+		})
+	}
 
-    static market_url(market) {
-        return "https://bittrex.com/Market/Index?MarketName=" + market
-    }
+	emitTicker(tickers) {
+		Object.keys(tickers).forEach((marketName) => {
+			this.pumpEvents.emit('marketupdate', 'TICKER', this.code, marketName, tickers[marketName]);
+		})
+	}
 
-    _normalize_ticker_data(data) {
-        return {
-            high: data.High,
-            low: data.Low,
-            volume: data.BaseVolume,
-            last: data.Last,
-            ask: data.Ask,
-            bid: data.Bid,
-            updated: data.TimeStamp
-        }
-    }
+	fetchTickers() {
+		return new Promise((resolve, reject) => {
+			request(STELLARPORT_URL, function (error, response, body) {
+				if (error)
+					reject(error)
+				else {
+					try { resolve(JSON.parse(response.body)) } catch(e) { reject(e)}
+				}
+			})
+		})
+	}
+
+	filterAndCleanAliveMarkets(marketsData) {
+		return new Promise((resolve, reject) => {
+			let finalTickers = {}
+			Object.keys(marketsData).forEach((marketName) => {
+				let marketData = marketsData[marketName]
+				if (this.isAlive(marketData))
+					finalTickers[this.normalizeName(marketName)] = this.normalize_ticker_data(marketData)
+			})
+			resolve(finalTickers)
+		})
+
+	}
+
+	dataToArray() {
+		let array = []
+		Object.keys(this.lastFetch).forEach((marketName) => {
+			let data = this.lastFetch[marketName]
+			data.name = marketName
+			array.push(data)
+		})
+		return array
+	}
+
+	isAlive(data) {
+		return (data.open != null && data.close != null && data.high != null && data.low != null && data.volume > 0)
+	}
+
+	normalizeName(name) {
+		return name.replace(/\_/, '-')
+	}
+
+	marketList() {
+		return this.markets
+	}
+
+	static market_url(market) {
+		return "https://bittrex.com/Market/Index?MarketName=" + market
+	}
+
+	normalize_ticker_data(data) {
+		return {
+			high: data.high,
+			low: data.low,
+			volume: data.volume,
+			last: data.close,
+			ask: data.close,
+			bid: data.close,
+		}
+	}
 }
 
 module.exports = StellarDex;

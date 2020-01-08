@@ -36,6 +36,7 @@ EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart firs
 	Huobi: 10,
 	IDEX: 11,
 	Bitfinex: 12, // this should be higher but we need to wait for data to be collected before putting in higher rank for data-charts generation
+	StellarDex: 13,
 }
 EXCHANGES_CONVERSION = { // there should be a better way of doing this
 	BITTREX: 'Bittrex',
@@ -50,6 +51,7 @@ EXCHANGES_CONVERSION = { // there should be a better way of doing this
 	HUOBI: 'Huobi',
 	IDEX: 'IDEX',
 	BITFINEX: 'Bitfinex',
+	STELLAR: 'StellarDex',
 	ALL: 'All'
 }
 
