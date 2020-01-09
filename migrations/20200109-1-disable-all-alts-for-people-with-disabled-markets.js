@@ -14,7 +14,7 @@ Subscriber.find({}, function(err, subscribers) {
 	if (err) throw err;
 	subscribers.forEach((sub) => {
 		if (hasAnyOff(sub)) {
-			this.markets[market] = decision
+			this.markets['ALLALTS'] = false
 			this.save(function (err, subscriber) {
 				if (err) return console.error(err);
 			});

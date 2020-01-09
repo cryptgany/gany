@@ -1,6 +1,6 @@
 const AbstractExchange = require('./exchange');
 const STELLARPORT_URL = 'https://stellar.api.stellarport.io/Ticker';
-const SKIP_MARKETS = ['USDT_XLM']; // markets with erratic or bad numbers
+const SKIP_MARKETS = ['USDT_XLM', 'FASTPAY']; // markets with erratic or bad numbers
 var request = require('request');
 
 class Stellar extends AbstractExchange {
@@ -58,7 +58,7 @@ class Stellar extends AbstractExchange {
 	}
 
 	shouldSkipMarket(marketName) {
-		return SKIP_MARKETS.includes(marketName.toUpperCase())
+		return SKIP_MARKETS.find((m) => m.match(marketName.toUpperCase()))
 	}
 
 	dataToArray() {
