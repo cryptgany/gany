@@ -58,7 +58,7 @@ class Stellar extends AbstractExchange {
 	}
 
 	shouldSkipMarket(marketName) {
-		return SKIP_MARKETS.find((m) => m.match(marketName.toUpperCase()))
+		return SKIP_MARKETS.find((m) => marketName.toUpperCase().match(m))
 	}
 
 	dataToArray() {
