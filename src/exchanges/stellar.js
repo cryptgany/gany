@@ -1,5 +1,6 @@
 const AbstractExchange = require('./exchange');
 const STELLARPORT_URL = 'https://stellar.api.stellarport.io/Ticker';
+const SKIP_MARKETS = ['USDT_XLM']; // markets with erratic or bad numbers
 var request = require('request');
 
 class Stellar extends AbstractExchange {
@@ -48,12 +49,16 @@ class Stellar extends AbstractExchange {
 			let finalTickers = {}
 			Object.keys(marketsData).forEach((marketName) => {
 				let marketData = marketsData[marketName]
-				if (this.isAlive(marketData))
+				if (!this.shouldSkipMarket(marketName) && this.isAlive(marketData))
 					finalTickers[this.normalizeName(marketName)] = this.normalize_ticker_data(marketData)
 			})
 			resolve(finalTickers)
 		})
 
+	}
+
+	shouldSkipMarket(marketName) {
+		return SKIP_MARKETS.includes(marketName.toUpperCase())
 	}
 
 	dataToArray() {
