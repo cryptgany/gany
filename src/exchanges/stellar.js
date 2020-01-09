@@ -92,7 +92,7 @@ class Stellar extends AbstractExchange {
     }
 
 	static market_url(market) {
-		return "https://bittrex.com/Market/Index?MarketName=" + market
+		return "no_links"
 	}
 
 	normalize_ticker_data(data) {
