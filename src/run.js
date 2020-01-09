@@ -25,10 +25,10 @@ let kraken = new ExchangeList.Kraken(logger, pump_events);
 let binance = new ExchangeList.Binance(logger, pump_events);
 let etherDelta = new ExchangeList.EtherDelta(logger, pump_events);
 let kucoin = new ExchangeList.Kucoin(logger, pump_events);
-let coin_exchange = new ExchangeList.CoinExchange(logger, pump_events);
 let huobi = new ExchangeList.Huobi(logger, pump_events);
 let idex = new ExchangeList.IDEX(logger, pump_events);
 let bitfinex = new ExchangeList.Bitfinex(logger, pump_events);
+let stellar = new ExchangeList.Stellar(logger, pump_events);
 var database = new Database();
 
 // Start
@@ -36,20 +36,18 @@ pump_events.setMaxListeners(50) // max 50 listeners
 gany_the_bot.start()
 bittrex.watch()
 binance.watch()
-if (process.env.ENVIRONMENT == 'production' || process.env.ENVIRONMENT == 'testing') {
-  setTimeout(() => {
-    yobit.watch()
-    poloniex.watch()
-    cryptopia.watch()
-    kraken.watch()
-    etherDelta.watch()
-    kucoin.watch()
-    coin_exchange.watch()
-    huobi.watch()
-    idex.watch()
-    bitfinex.watch()
-  }, 5000)
-}
+setTimeout(() => {
+  yobit.watch()
+  poloniex.watch()
+  cryptopia.watch()
+  kraken.watch()
+  etherDelta.watch()
+  kucoin.watch()
+  huobi.watch()
+  idex.watch()
+  bitfinex.watch()
+  stellar.watch()
+}, 5000)
 Payment.setupIPNServer()
 gany_the_bot.expire_expired_users()
 gany_the_bot.check_recent_paid_users()
@@ -80,9 +78,6 @@ rules = {
   "Kucoin": [
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.25 }
   ],
-  "CoinExchange": [
-    (first_ticker, last_ticker, time, matcher) => { return (time <= 20 * 60) && matcher.volume_change(first_ticker, last_ticker) > 1.25 }
-  ],
   "Huobi": [
     (first_ticker, last_ticker, time, matcher) => { return (time <= 20 * 60) && matcher.volume_change(first_ticker, last_ticker) >= 1.08 }
   ],
@@ -90,6 +85,9 @@ rules = {
     (first_ticker, last_ticker, time, matcher) => { return matcher.volume_change(first_ticker, last_ticker) > 1.10 && matcher.last_change(first_ticker, last_ticker) > 1.025 }
   ],
   "Bitfinex": [
+    (first_ticker, last_ticker, time, matcher) => { return (time <= 30 * 60) && matcher.volume_change(first_ticker, last_ticker) >= 1.10 }
+  ],
+  "Stellar": [
     (first_ticker, last_ticker, time, matcher) => { return (time <= 30 * 60) && matcher.volume_change(first_ticker, last_ticker) >= 1.10 }
   ],
 }

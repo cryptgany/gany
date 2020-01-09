@@ -32,7 +32,7 @@ EXCHANGES_FOR_CHARTS = { // Defines which exchanges will get info for chart firs
 	Yobit: 6,
 	Kucoin: 7,
 	EtherDelta: 8,
-	CoinExchange: 9,
+	Stellar: 9,
 	Huobi: 10,
 	IDEX: 11,
 	Bitfinex: 12, // this should be higher but we need to wait for data to be collected before putting in higher rank for data-charts generation
@@ -46,10 +46,10 @@ EXCHANGES_CONVERSION = { // there should be a better way of doing this
 	YOBIT: 'Yobit',
 	KUCOIN: 'Kucoin',
 	ETHERDELTA: 'EtherDelta',
-	COINEXCHANGE: 'CoinExchange',
 	HUOBI: 'Huobi',
 	IDEX: 'IDEX',
 	BITFINEX: 'Bitfinex',
+	STELLAR: 'Stellar',
 	ALL: 'All'
 }
 
@@ -210,8 +210,15 @@ GanyTheBot.prototype.start = function() {
 			message += "/convert 0.3 btc eth\n"
 		} else {
 			let result = this.convert_curr(quantity, fromCur, toCur)
-			if (result.markets.length == 0)
-				message = "Not found."
+			if (result.markets.length == 0) {
+				// If no quick result, let's try direct conversion at least
+				let fixedPrice = this.quickConvert(quantity, fromCur, toCur)
+				if (fixedPrice && !isNaN(fixedPrice)) {
+					message = this.telegramSimplePriceInfo(quantity, fromCur, toCur, fixedPrice)
+				} else {
+					message = "Not found."
+				}
+			}
 			else {
 				if (result.type == 'complex') {
 					message = result.markets.map((currResult) => this.convertCurComplexMsg(result.from, currResult, quantity, fromCur, toCur)).join("\n\n")
@@ -1012,7 +1019,7 @@ GanyTheBot.prototype.telegramPostPriceCheck = function(exchange, market, ticker)
 }
 
 GanyTheBot.prototype.telegram_post_volume_analysis = function(exchange, market, ticker_info) {
-	message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, ticker_info.last) + ")"
+	let message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, ticker_info.last) + ")"
 	if (ticker_info.bid)
 		message += "\nB: " + ticker_info.bid.toFixed(8)
 	if (ticker_info.ask)
@@ -1025,9 +1032,9 @@ GanyTheBot.prototype.telegram_post_volume_analysis = function(exchange, market, 
 }
 
 GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market, firstTicker, lastTicker, time) {
-	diff = lastTicker.volume - firstTicker.volume
-	change = this.detektor.volume_change(firstTicker, lastTicker)
-	message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, lastTicker.last) + ")"
+	let diff = lastTicker.volume - firstTicker.volume
+	let change = this.detektor.volume_change(firstTicker, lastTicker)
+	let message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, lastTicker.last) + ")"
 	message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + smartTimeConvert(time * 60) + "*"
 	message += "\nVolume: " + lastTicker.volume.humanize() + " (*" + ((change - 1) * 100).humanize({significance: true}) + "%*)"
 	if (firstTicker.bid)
@@ -1043,9 +1050,9 @@ GanyTheBot.prototype.telegramPostPriceCheckWithTime = function(exchange, market,
 GanyTheBot.prototype.telegramInfluxSeeCommandComparisson = function(data, time) {
 	let exchange = data.exchange
 	let market = data.market
-	diff = data.close_volume24 - data.open_volume24
-	change = data.close_volume24 / data.open_volume24
-	message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
+	let diff = data.close_volume24 - data.open_volume24
+	let change = data.close_volume24 / data.open_volume24
+	let message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
 	message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + smartTimeConvert(time * 60) + "*"
 	message += "\nVol: " + data.open_volume24.humanize() + " " + this.telegram_arrow(data.open_volume24, data.close_volume24) + " " + data.close_volume24.humanize() + ' ' + ExchangeList[exchange].volume_for(market) + " (*" + ((change - 1) * 100).humanize({significance: true}) + "%*)"
 	message += "\nL: " + data.open_close.toFixed(8) + " " + this.telegram_arrow(data.open_close, data.close_close) + " " + data.close_close.toFixed(8)
@@ -1055,9 +1062,9 @@ GanyTheBot.prototype.telegramInfluxSeeCommandComparisson = function(data, time) 
 GanyTheBot.prototype.telegramInfluxVolPostComparisson = function(data, time) {
 	let exchange = data.exchange
 	let market = data.market
-	diff = data.close_volume24 - data.open_volume24
-	change = data.close_volume24 / data.open_volume24
-	message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
+	let diff = data.close_volume24 - data.open_volume24
+	let change = data.close_volume24 / data.open_volume24
+	let message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
 	message += "\nVol. changed by *" + diff.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + smartTimeConvert(time * 60) + "*"
 	message += "\nVol: " + data.open_volume24.humanize() + " " + this.telegram_arrow(data.open_volume24, data.close_volume24) + " " + data.close_volume24.humanize() + ' ' + ExchangeList[exchange].volume_for(market) + " (*" + ((change - 1) * 100).humanize({significance: true}) + "%*)"
 	message += "\nL: " + data.open_close.toFixed(8) + " " + this.telegram_arrow(data.open_close, data.close_close) + " " + data.close_close.toFixed(8)
@@ -1067,16 +1074,20 @@ GanyTheBot.prototype.telegramInfluxVolPostComparisson = function(data, time) {
 GanyTheBot.prototype.telegramInfluxPricePostComparisson = function(data, time) {
 	let exchange = data.exchange
 	let market = data.market
-	diff_vol = data.close_volume24 - data.open_volume24
-	change_vol = data.close_volume24 / data.open_volume24
-	diff_price = data.close_close - data.open_close
-	change_price = data.close_close / data.open_close
-	message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
+	let diff_vol = data.close_volume24 - data.open_volume24
+	let change_vol = data.close_volume24 / data.open_volume24
+	let diff_price = data.close_close - data.open_close
+	let change_price = data.close_close / data.open_close
+	let message = "[" + exchange + " - " + market + "](" + this.detektor.market_url(exchange, market) + ") - " + this.symbol_hashtag(exchange, market) + " (" + this.priceInUSD(exchange, market, data.close_close) + ")"
 	message += "\nVol. changed by *" + diff_vol.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " since *" + smartTimeConvert(time * 60) + "*"
 	message += "\nPrice changed by *" + diff_price.humanize({significance: true}) + "* " + ExchangeList[exchange].volume_for(market) + " " + " (*" + ((change_price - 1) * 100).humanize({significance: true}) + "%*)"
 	message += "\nVol: " + data.open_volume24.humanize() + " " + this.telegram_arrow(data.open_volume24, data.close_volume24) + " " + data.close_volume24.humanize() + ' ' + ExchangeList[exchange].volume_for(market) + " (*" + ((change_vol - 1) * 100).humanize({significance: true}) + "%*)"
 	message += "\nL: " + data.open_close.toFixed(8) + " " + this.telegram_arrow(data.open_close, data.close_close) + " " + data.close_close.toFixed(8)
 	return message
+}
+
+GanyTheBot.prototype.telegramSimplePriceInfo = function(quantity, from, to, result) {
+	return (quantity + " " + from + " is " + result.humanize() + " " + to);
 }
 
 GanyTheBot.prototype.quickConvert = function(quantity, from, to) { return this.detektor.convert(quantity, from, to)}
@@ -1157,7 +1168,7 @@ GanyTheBot.prototype.convert_curr = function(quantity, fromCur, toCur) {
 
 GanyTheBot.prototype.convertCurMsg = function(currResult, quantity, fromCur, toCur) {
 	message = "[" + currResult.exchange + " - " + currResult.market + "](" + this.detektor.market_url(currResult.exchange, currResult.market) + ")"
-	message += "\n" +	quantity + " " + fromCur + " (" + currResult.price + ") is " + currResult.result.humanize() + " " + toCur + " in " + currResult.exchange
+	message += "\n" +	quantity + " " + fromCur + " (" + currResult.price.humanize() + ") is " + currResult.result.humanize() + " " + toCur + " in " + currResult.exchange
 	return message
 }
 
@@ -1285,7 +1296,7 @@ GanyTheBot.prototype.configuration_menu_exchanges = function(subscriber) {
 	options.push([{ text: 'Yobit', callback_data: 'configure exchange Yobit' }, { text: 'Cryptopia', callback_data: 'configure exchange Cryptopia' }])
 	options.push([{ text: 'Kraken', callback_data: 'configure exchange Kraken' }, { text: 'Binance', callback_data: 'configure exchange Binance' }])
 	options.push([{ text: 'Kucoin', callback_data: 'configure exchange Kucoin' }, { text: 'EtherDelta', callback_data: 'configure exchange EtherDelta' }])
-	options.push([{ text: 'CoinExchange', callback_data: 'configure exchange CoinExchange' }, { text: 'Huobi', callback_data: 'configure exchange Huobi' }])
+	options.push([{ text: 'Stellar', callback_data: 'configure exchange Stellar' }, { text: 'Huobi', callback_data: 'configure exchange Huobi' }])
 	options.push([{ text: 'IDEX', callback_data: 'configure exchange IDEX' }, { text: 'Bitfinex', callback_data: 'configure exchange Bitfinex' }])
 
 	options.push([{ text: 'Go Back', callback_data: 'configure' }])

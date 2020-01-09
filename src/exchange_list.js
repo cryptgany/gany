@@ -7,10 +7,10 @@ var ExchangeList = {
 	Binance: require('./exchanges/binance'),
 	EtherDelta: require('./exchanges/ether_delta'),
 	Kucoin: require('./exchanges/kucoin'),
-	CoinExchange: require('./exchanges/coin_exchange'),
 	Huobi: require('./exchanges/huobi'),
 	IDEX: require('./exchanges/idex'),
 	Bitfinex: require('./exchanges/bitfinex'),
+	Stellar: require('./exchanges/stellar'),
 }
 
 // Refactor me, im too tired to do it
@@ -39,9 +39,6 @@ ExchangeList.Binance.cycle_time = 20
 ExchangeList.Cryptopia.ticker_speed = 20
 ExchangeList.Cryptopia.cycle_time = 20
 
-ExchangeList.CoinExchange.ticker_speed = 20
-ExchangeList.CoinExchange.cycle_time = 20
-
 ExchangeList.Huobi.ticker_speed = 30
 ExchangeList.Huobi.cycle_time = 30
 
@@ -51,5 +48,7 @@ ExchangeList.IDEX.cycle_time = 20
 ExchangeList.Bitfinex.ticker_speed = 20
 ExchangeList.Bitfinex.cycle_time = 20
 
+ExchangeList.Stellar.ticker_speed = 30
+ExchangeList.Stellar.cycle_time = 30
 
 module.exports = ExchangeList
