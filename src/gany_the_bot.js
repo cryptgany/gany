@@ -896,7 +896,7 @@ GanyTheBot.prototype.start = function() {
 					market_status = this.find_subscriber(msg.from.id).market_status(commands[2])
 					this.send_message(msg.from.id, "Receive info about " + commands[2] + " markets? (currently " + market_status + "):", this.configuration_menu_enable_disable("configure market " + commands[2]))
 				}
-				if (commands.length == 4) { // was enabled/disabled, show exchanges
+				if (commands.length == 4) { // was enabled/disabled, show markets
 					this.telegram_bot.answerCallbackQuery(msg.id, 'Market ' + commands[2] + " " + commands[3]);
 					_.find(this.subscribers, (s) => {return s.telegram_id == msg.from.id}).change_market_status(commands[2], commands[3])
 					this.send_message(msg.from.id, "Configure which markets you want to keep track of:", this.configuration_menu_markets())
@@ -1313,7 +1313,8 @@ GanyTheBot.prototype.configuration_menu_markets = function() {
 			inline_keyboard: [
 				[{ text: 'BTC', callback_data: 'configure market BTC' }, { text: 'ETH', callback_data: 'configure market ETH' }, { text: 'NEO', callback_data: 'configure market NEO' }],
 				[{ text: 'USD', callback_data: 'configure market USD' }, { text: 'GBP', callback_data: 'configure market GBP' }, { text: 'EUR', callback_data: 'configure market EUR' }],
-				[{ text: 'USDT', callback_data: 'configure market USDT' }, { text: 'TUSD', callback_data: 'configure market TUSD' }],
+				[{ text: 'USDT', callback_data: 'configure market USDT' }, { text: 'TUSD', callback_data: 'configure market TUSD' }, { text: 'XLM', callback_data: 'configure market XLM' }],
+				[{ text: 'ALL ALTS', callback_data: 'configure market ALLALTS' }],
 				[{ text: 'Go Back', callback_data: 'configure' }]
 			]
 		})

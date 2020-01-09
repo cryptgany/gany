@@ -30,7 +30,7 @@ var subscriberSchema = mongoose.Schema({
       Binance: { type: Boolean, default: true },
       EtherDelta: { type: Boolean, default: true },
       Kucoin: { type: Boolean, default: true },
-      CoinExchange: { type: Boolean, default: true },
+      Stellar: { type: Boolean, default: true },
       Huobi: { type: Boolean, default: true },
       IDEX: { type: Boolean, default: true },
       Bitfinex: { type: Boolean, default: true },
@@ -47,10 +47,12 @@ var subscriberSchema = mongoose.Schema({
       USD: { type: Boolean, default: true },
       GBP: { type: Boolean, default: true },
       EUR: { type: Boolean, default: true },
+      XLM: { type: Boolean, default: true },
+      ALLALTS: { type: Boolean, default: true },
     }
 }, { timestamps: true });
 
-subscriberSchema.methods.change_exchange_status = function (exchange, decision) {
+subscriberSchema.methods.change_exchange_status = function(exchange, decision) {
   decision = decision == 'enabled' ? true : false
   if (this.exchanges[exchange] != decision) {
     this.exchanges[exchange] = decision
@@ -60,7 +62,7 @@ subscriberSchema.methods.change_exchange_status = function (exchange, decision) 
   }
 }
 
-subscriberSchema.methods.change_market_status = function (market, decision) {
+subscriberSchema.methods.change_market_status = function(market, decision) {
   decision = decision == 'enabled' ? true : false
   if (this.markets[market] != decision) {
     this.markets[market] = decision
@@ -68,6 +70,10 @@ subscriberSchema.methods.change_market_status = function (market, decision) {
       if (err) return console.error(err);
     });
   }
+}
+
+subscriberSchema.methods.canViewMarket = function(market) {
+  return (this.markets[market] || this.markets['ALLALTS'])
 }
 
 subscriberSchema.methods.set_final_balance = function(amount) {
