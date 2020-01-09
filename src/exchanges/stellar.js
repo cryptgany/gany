@@ -21,7 +21,7 @@ class Stellar extends AbstractExchange {
 			this.lastFetch = tickersAlive
 			this.emitTicker(tickersAlive)
 		}).catch((er) => {
-			console.log("ERROR: ", er)
+			this.logger.log("ERROR: ", er)
 			this.emitTicker(this.lastFetch)
 		})
 	}
