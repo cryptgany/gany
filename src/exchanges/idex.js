@@ -1,6 +1,6 @@
 const AbstractExchange = require('./exchange');
 var request = require('request');
-const MARKETS_DATA = 'https://api.idex.market/returnTicker'
+const MARKETS_DATA = 'https://api-eth.idex.io/v1/tickers'
 
 class IDEX extends AbstractExchange {
     constructor(logger, pumpEvents, exchangeName) {
@@ -34,7 +34,7 @@ class IDEX extends AbstractExchange {
         	try {
 	        	if (Object.keys(marketsData).length > 0) {
 		            this.marketsData = {}
-		            Object.keys(marketsData).forEach((marketName) => { this.marketsData[this._normalizeMarketName(marketName)] = this._normalize_ticker_data(marketsData[marketName]) })
+		            Object.keys(marketsData).forEach((marketName) => { this.marketsData[marketName] = this._normalize_ticker_data(marketsData[marketName]) })
 		        }
 	            resolve()
         	} catch (e) { this.logger.error("Error storing IDEX data"); reject(e)}
@@ -60,7 +60,7 @@ class IDEX extends AbstractExchange {
     _makeRequest(url) {
         return new Promise((resolve, reject) => {
             request({
-					method: 'POST',
+					method: 'GET',
 					url: url,
 				}, function (error, response, body) {
 				if (error)
@@ -73,11 +73,7 @@ class IDEX extends AbstractExchange {
     }
 
     static market_url(market) {
-        return "https://idex.market/" + market.toLowerCase().replace(/\-/, '/')
-    }
-
-    _normalizeMarketName(marketName) {
-    	return marketName.replace(/\_/, '-')
+        return "https://exchange.idex.io/eth/trading/" + market
     }
 
     _normalize_ticker_data(data) {
@@ -85,9 +81,9 @@ class IDEX extends AbstractExchange {
             high: parseFloat(data.high),
             low: parseFloat(data.low),
             volume: parseFloat(data.baseVolume),
-            last: parseFloat(data.last),
-            ask: null, // parseFloat(data.lowestAsk), we are removing this cuz it's a random number
-            bid: null, // parseFloat(data.highestBid)
+            last: null,
+            ask: parseFloat(data.ask),
+            bid: parseFloat(data.bid)
         }
     }
 }

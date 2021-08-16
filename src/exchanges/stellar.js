@@ -1,5 +1,7 @@
 const AbstractExchange = require('./exchange');
 const STELLARPORT_URL = 'https://stellar.api.stellarport.io/Ticker';
+// TODO: implement https://ticker.stellar.org/markets.json
+
 const SKIP_MARKETS = ['USDT_XLM', 'FASTPAY']; // markets with erratic or bad numbers
 var request = require('request');
 

@@ -18,7 +18,7 @@ var pump_events = new PumpEvents();
 var logger = new Logger();
 var gany_the_bot = new GanyTheBot(logger)
 var bittrex = new ExchangeList.Bittrex(logger, pump_events);
-var yobit = new ExchangeList.Yobit(logger, pump_events);
+// var yobit = new ExchangeList.Yobit(logger, pump_events);
 var poloniex = new ExchangeList.Poloniex(logger, pump_events);
 var cryptopia = new ExchangeList.Cryptopia(logger, pump_events);
 let kraken = new ExchangeList.Kraken(logger, pump_events);
@@ -26,9 +26,9 @@ let binance = new ExchangeList.Binance(logger, pump_events);
 let etherDelta = new ExchangeList.EtherDelta(logger, pump_events);
 let kucoin = new ExchangeList.Kucoin(logger, pump_events);
 let huobi = new ExchangeList.Huobi(logger, pump_events);
-let idex = new ExchangeList.IDEX(logger, pump_events);
+// let idex = new ExchangeList.IDEX(logger, pump_events);
 let bitfinex = new ExchangeList.Bitfinex(logger, pump_events);
-let stellar = new ExchangeList.Stellar(logger, pump_events);
+// let stellar = new ExchangeList.Stellar(logger, pump_events);
 var database = new Database();
 
 // Start
@@ -37,16 +37,16 @@ gany_the_bot.start()
 bittrex.watch()
 binance.watch()
 setTimeout(() => {
-  yobit.watch()
+  // yobit.watch()
   poloniex.watch()
   cryptopia.watch()
   kraken.watch()
   etherDelta.watch()
   kucoin.watch()
   huobi.watch()
-  idex.watch()
+  // idex.watch()
   bitfinex.watch()
-  stellar.watch()
+  // stellar.watch()
 }, 5000)
 Payment.setupIPNServer()
 gany_the_bot.expire_expired_users()
