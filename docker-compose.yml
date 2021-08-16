@@ -5,6 +5,7 @@ services:
     restart: always
     volumes:
       - ./src:/gany/src
+      - ./.env:/gany/.env
     ports:
       - 3123:3123
     depends_on:
@@ -17,6 +18,7 @@ services:
     restart: always
     volumes:
       - ./src:/gany/src
+      - ./.env:/gany/.env
     depends_on:
       - influx
     command: ['node', 'src/cron/hourly_ticker_data_cron.js']
@@ -25,6 +27,7 @@ services:
     restart: always
     volumes:
       - ./src:/gany/src
+      - ./.env:/gany/.env
     depends_on:
       - influx
     command: ['node', 'src/cron/daily_ticker_data_cron.js']
